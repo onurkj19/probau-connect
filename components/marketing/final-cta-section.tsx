@@ -7,26 +7,15 @@ export const FinalCtaSection = () => (
     <div className="container">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="text-3xl font-bold text-white lg:text-4xl">
-          Ready to run your next construction tender professionally?
+          Ready to grow your construction business?
         </h2>
-        <p className="mt-4 text-base text-brand-100 lg:text-lg">
-          Launch ProBau workflows that companies trust enough to pay for.
+        <p className="mx-auto mt-4 max-w-2xl text-base text-brand-100 lg:text-lg">
+          Join ProBau.ch and access a procurement workflow trusted by Swiss construction teams.
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/register">
-            <Button variant="secondary" size="lg">
-              Create account
-            </Button>
-          </Link>
-          <Link href="/pricing">
-            <Button
-              variant="ghost"
-              size="lg"
-              className="border-white/30 text-white hover:bg-white/10 hover:text-white"
-            >
-              Compare plans
-            </Button>
-          </Link>
+        <div className="mt-8">
+          <Button asChild variant="secondary" size="lg">
+            <Link href="/register">Create Account</Link>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,42 +1,49 @@
 import Link from "next/link";
 
+import { Section } from "@/components/common/section";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export const PricingPreviewSection = () => (
-  <section className="border-b border-neutral-200 bg-neutral-50">
-    <div className="container py-16 lg:py-20">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-900">Transparent pricing</h2>
-          <p className="mt-3 max-w-xl text-neutral-600">
-            Arbeitsgeber use the platform free. Unternehmer subscribe monthly to submit offers.
-          </p>
+  <Section
+    className="bg-neutral-50"
+    eyebrow="Pricing preview"
+    title="Simple plans for Unternehmer"
+    description="Arbeitsgeber post projects free of charge. Contractors subscribe to submit offers."
+  >
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <p className="text-sm font-semibold text-brand-900">Basic</p>
+        <p className="mt-3 text-4xl font-bold text-brand-900">CHF 79</p>
+        <p className="text-sm text-neutral-500">per month</p>
+        <ul className="mt-5 space-y-2 text-sm text-neutral-600">
+          <li>Access active projects</li>
+          <li>Submit offers with attachments</li>
+          <li>Standard support</li>
+        </ul>
+      </Card>
+
+      <Card className="border-brand-900">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-brand-900">Pro</p>
+          <span className="rounded-full bg-brand-100 px-2.5 py-1 text-xs font-semibold text-brand-900">
+            Most chosen
+          </span>
         </div>
-        <Link href="/pricing">
-          <Button variant="secondary">View all pricing details</Button>
-        </Link>
-      </div>
-
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
-        <Card className="border-brand-900">
-          <p className="text-sm font-semibold text-brand-900">Arbeitsgeber</p>
-          <p className="mt-2 text-3xl font-bold text-brand-900">CHF 0</p>
-          <p className="mt-1 text-sm text-neutral-600">Post projects and review offers.</p>
-        </Card>
-
-        <Card>
-          <p className="text-sm font-semibold text-brand-900">Unternehmer Basic</p>
-          <p className="mt-2 text-3xl font-bold text-brand-900">CHF 79</p>
-          <p className="mt-1 text-sm text-neutral-600">For focused regional contractors.</p>
-        </Card>
-
-        <Card>
-          <p className="text-sm font-semibold text-brand-900">Unternehmer Pro</p>
-          <p className="mt-2 text-3xl font-bold text-brand-900">CHF 149</p>
-          <p className="mt-1 text-sm text-neutral-600">For multi-canton growth teams.</p>
-        </Card>
-      </div>
+        <p className="mt-3 text-4xl font-bold text-brand-900">CHF 149</p>
+        <p className="text-sm text-neutral-500">per month</p>
+        <ul className="mt-5 space-y-2 text-sm text-neutral-600">
+          <li>Everything in Basic</li>
+          <li>Unlimited offers</li>
+          <li>Priority matching and support</li>
+        </ul>
+      </Card>
     </div>
-  </section>
+
+    <div className="mt-8">
+      <Button asChild variant="secondary" size="lg">
+        <Link href="/pricing">View Full Pricing</Link>
+      </Button>
+    </div>
+  </Section>
 );

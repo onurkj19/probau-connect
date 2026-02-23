@@ -1,34 +1,80 @@
-const steps = [
+import { CheckCircle2, ClipboardList, FileSearch, FileText, Handshake, ReceiptText } from "lucide-react";
+
+import { Card } from "@/components/ui/card";
+import { Section } from "@/components/common/section";
+
+const workflows = [
   {
-    title: "1. Arbeitsgeber publishes project",
-    description: "Create structured tenders with deadlines, scope, and supporting documents.",
+    role: "For Arbeitsgeber",
+    steps: [
+      {
+        icon: ClipboardList,
+        title: "Post project for free",
+        description: "Publish scope, deadlines, budget ranges, and required documents in one flow.",
+      },
+      {
+        icon: FileSearch,
+        title: "Receive offers",
+        description: "Collect structured offers from subscribed professional contractors.",
+      },
+      {
+        icon: Handshake,
+        title: "Choose contractor",
+        description: "Compare submissions and award the best-fit partner for your project.",
+      },
+    ],
   },
   {
-    title: "2. Unternehmer submit offers",
-    description: "Qualified contractors submit secure offers before deadline with full transparency.",
-  },
-  {
-    title: "3. Award and execute",
-    description: "Compare submissions quickly, select the right partner, and kick off delivery.",
+    role: "For Unternehmer",
+    steps: [
+      {
+        icon: ReceiptText,
+        title: "Subscribe",
+        description: "Activate Basic or Pro access and unlock project participation.",
+      },
+      {
+        icon: FileText,
+        title: "Browse projects",
+        description: "Filter opportunities by canton, category, status, and deadlines.",
+      },
+      {
+        icon: CheckCircle2,
+        title: "Submit offers",
+        description: "Send clear commercial proposals with supporting documentation.",
+      },
+    ],
   },
 ];
 
 export const HowItWorksSection = () => (
-  <section className="border-b border-neutral-200 bg-neutral-50">
-    <div className="container py-16 lg:py-20">
-      <h2 className="text-3xl font-bold text-brand-900">How it works</h2>
-      <p className="mt-3 max-w-2xl text-neutral-600">
-        A streamlined 3-step workflow designed for Swiss construction teams.
-      </p>
-
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
-        {steps.map((step) => (
-          <article key={step.title} className="rounded-xl border border-neutral-200 bg-white p-6 shadow-card">
-            <h3 className="text-lg font-semibold text-brand-900">{step.title}</h3>
-            <p className="mt-2 text-sm text-neutral-600">{step.description}</p>
-          </article>
-        ))}
-      </div>
+  <Section
+    className="bg-neutral-50"
+    eyebrow="Process clarity"
+    title="How it works"
+    description="Two role-specific workflows designed for speed, transparency, and predictable tendering outcomes."
+  >
+    <div className="grid gap-6 lg:grid-cols-2">
+      {workflows.map((workflow) => (
+        <div key={workflow.role}>
+          <h3 className="text-lg font-semibold text-brand-900">{workflow.role}</h3>
+          <div className="mt-4 grid gap-3">
+            {workflow.steps.map((step, index) => (
+              <Card key={step.title} className="flex gap-4 p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white">
+                  <step.icon className="h-5 w-5 text-brand-900" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
+                    Step {index + 1}
+                  </p>
+                  <h4 className="mt-1 text-base font-semibold text-brand-900">{step.title}</h4>
+                  <p className="mt-1 text-sm text-neutral-600">{step.description}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
-  </section>
+  </Section>
 );
