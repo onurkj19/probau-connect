@@ -26,8 +26,8 @@ export async function createCheckoutSession(planType: "basic" | "pro", token: st
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "Failed to create checkout session");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Failed to create checkout session");
   }
 
   const { url } = await res.json();
@@ -35,7 +35,10 @@ export async function createCheckoutSession(planType: "basic" | "pro", token: st
   // Redirect to Stripe Checkout
   if (url) {
     window.location.href = url;
+    return;
   }
+
+  throw new Error("Checkout URL missing in API response");
 }
 
 export async function createPortalSession(token: string) {
@@ -48,15 +51,18 @@ export async function createPortalSession(token: string) {
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "Failed to create portal session");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Failed to create portal session");
   }
 
   const { url } = await res.json();
 
   if (url) {
     window.location.href = url;
+    return;
   }
+
+  throw new Error("Portal URL missing in API response");
 }
 
 export async function submitOffer(

@@ -14,6 +14,7 @@ const Subscription = () => {
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
   const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (!user || user.role !== "contractor") return null;
 
@@ -27,12 +28,16 @@ const Subscription = () => {
 
   const handleSubscribe = async (plan: PlanType) => {
     setLoading(true);
+    setActionError(null);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        throw new Error("Session expired. Please sign in again.");
+      }
       await createCheckoutSession(plan, token);
     } catch (err) {
       console.error("Checkout error:", err);
+      setActionError(err instanceof Error ? err.message : "Checkout failed");
     } finally {
       setLoading(false);
     }
@@ -40,12 +45,16 @@ const Subscription = () => {
 
   const handleManage = async () => {
     setLoading(true);
+    setActionError(null);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        throw new Error("Session expired. Please sign in again.");
+      }
       await createPortalSession(token);
     } catch (err) {
       console.error("Portal error:", err);
+      setActionError(err instanceof Error ? err.message : "Portal request failed");
     } finally {
       setLoading(false);
     }
@@ -64,6 +73,11 @@ const Subscription = () => {
       <h1 className="font-display text-2xl font-bold text-foreground">
         {t("subscription.title")}
       </h1>
+      {actionError && (
+        <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          {actionError}
+        </div>
+      )}
 
       {/* Status banner */}
       {isPastDue && (
@@ -73,7 +87,7 @@ const Subscription = () => {
             <p className="text-sm font-medium text-red-800">{t("subscription.payment_failed")}</p>
             <p className="text-xs text-red-600">{t("subscription.update_payment")}</p>
           </div>
-          <Button size="sm" variant="destructive" className="ml-auto" onClick={handleManage}>
+          <Button type="button" size="sm" variant="destructive" className="ml-auto" onClick={handleManage} disabled={loading}>
             {t("subscription.update_payment_button")}
           </Button>
         </div>
@@ -116,11 +130,11 @@ const Subscription = () => {
 
           <div className="mt-6 flex gap-3">
             {user.planType === "basic" && (
-              <Button onClick={() => handleSubscribe("pro")}>
+              <Button type="button" onClick={() => handleSubscribe("pro")} disabled={loading}>
                 {t("subscription.upgrade_to_pro")}
               </Button>
             )}
-            <Button variant="outline" onClick={handleManage}>
+            <Button type="button" variant="outline" onClick={handleManage} disabled={loading}>
               {t("subscription.manage")}
             </Button>
           </div>
@@ -150,7 +164,7 @@ const Subscription = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="mt-6 w-full" variant="outline" onClick={() => handleSubscribe("basic")}>
+              <Button type="button" className="mt-6 w-full" variant="outline" onClick={() => handleSubscribe("basic")} disabled={loading}>
                 {t("pricing.cta")}
               </Button>
             </div>
@@ -175,7 +189,7 @@ const Subscription = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => handleSubscribe("pro")}>
+              <Button type="button" className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => handleSubscribe("pro")} disabled={loading}>
                 {t("pricing.cta")}
               </Button>
             </div>
