@@ -13,9 +13,9 @@ const Impressum = () => {
           <p>{t("impressum.phone")}</p>
           <p>{t("impressum.uid")}</p>
           <h2 className="pt-4 font-display text-lg font-semibold text-foreground">{t("impressum.responsible")}</h2>
-          <p>Max Muster, CEO</p>
+          <p>{t("impressum.responsible_name")}</p>
           <h2 className="pt-4 font-display text-lg font-semibold text-foreground">{t("impressum.disclaimer")}</h2>
-          <p>Die Inhalte dieser Webseite werden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen.</p>
+          <p>{t("impressum.disclaimer_text")}</p>
         </div>
       </div>
     </main>

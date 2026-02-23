@@ -8,7 +8,8 @@
     "register": "S'inscrire",
     "impressum": "Mentions légales",
     "privacy": "Politique de confidentialité",
-    "terms": "CGV"
+    "terms": "CGV",
+    "dashboard": "Tableau de bord"
   },
   "hero": {
     "title": "La place de marché suisse pour les projets de construction",
@@ -87,7 +88,8 @@
     "legal": "Juridique",
     "contact": "Contact",
     "rights": "Tous droits réservés.",
-    "swiss_made": "Swiss Made"
+    "swiss_made": "Swiss Made",
+    "location": "Zurich, Suisse"
   },
   "impressum": {
     "title": "Mentions légales",
@@ -97,15 +99,81 @@
     "phone": "Téléphone : +41 44 000 00 00",
     "uid": "UID : CHE-000.000.000",
     "responsible": "Responsable du contenu",
-    "disclaimer": "Avertissement"
+    "responsible_name": "Max Muster, CEO",
+    "disclaimer": "Avertissement",
+    "disclaimer_text": "Le contenu de ce site web a été élaboré avec le plus grand soin. Toutefois, nous ne pouvons garantir l'exactitude, l'exhaustivité ou l'actualité du contenu."
   },
   "privacy": {
     "title": "Politique de confidentialité",
     "intro": "La protection de vos données personnelles est très importante pour nous.",
-    "dsg": "Cette politique est basée sur la loi suisse sur la protection des données (LPD) et le RGPD."
+    "dsg": "Cette politique est basée sur la loi suisse sur la protection des données (LPD) et le RGPD.",
+    "controller_title": "1. Responsable du traitement",
+    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "data_title": "2. Données collectées",
+    "data_text": "Nous ne collectons des données personnelles que dans le cadre de l'utilisation de notre plateforme : nom, e-mail, téléphone, données d'entreprise.",
+    "cookies_title": "3. Cookies",
+    "cookies_text": "Notre site utilise des cookies techniquement nécessaires. Vous pouvez désactiver les cookies dans votre navigateur.",
+    "rights_title": "4. Vos droits",
+    "rights_text": "Vous avez le droit d'accéder, de rectifier et de supprimer vos données. Contactez-nous à info@probau.ch."
   },
   "terms": {
     "title": "Conditions générales",
-    "intro": "En utilisant la plateforme ProBau.ch, vous acceptez ces conditions générales."
+    "intro": "En utilisant la plateforme ProBau.ch, vous acceptez ces conditions générales.",
+    "scope_title": "1. Champ d'application",
+    "scope_text": "Les présentes CGV s'appliquent à tous les utilisateurs de la plateforme ProBau.ch, y compris les maîtres d'ouvrage et les entrepreneurs.",
+    "registration_title": "2. Inscription",
+    "registration_text": "L'utilisation de la plateforme nécessite une inscription avec des informations véridiques.",
+    "services_title": "3. Prestations",
+    "services_text": "Les maîtres d'ouvrage peuvent publier des projets gratuitement. Les entrepreneurs ont besoin d'un abonnement payant.",
+    "liability_title": "4. Responsabilité",
+    "liability_text": "ProBau.ch n'est pas responsable du contenu des projets et offres publiés par les utilisateurs.",
+    "law_title": "5. Droit applicable",
+    "law_text": "Le droit suisse est applicable. Le for est à Zurich."
+  },
+  "projects": {
+    "subtitle": "Projets de construction actuels sur la plateforme",
+    "days_left": "{{count}} jours restants",
+    "status_active": "Actif",
+    "status_closed": "Fermé",
+    "login_prompt": "Connectez-vous ou inscrivez-vous pour voir tous les projets et soumettre des offres.",
+    "view_details": "Voir les détails"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "message": "La page demandée n'existe pas.",
+    "back": "Retour à l'accueil"
+  },
+  "auth": {
+    "login_title": "Se connecter",
+    "register_title": "S'inscrire",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "company_name": "Nom de l'entreprise",
+    "role_select": "Sélectionner le rôle",
+    "role_owner": "Maître d'ouvrage",
+    "role_contractor": "Entrepreneur",
+    "login_button": "Se connecter",
+    "register_button": "S'inscrire",
+    "no_account": "Pas encore de compte ?",
+    "has_account": "Déjà inscrit ?",
+    "unauthorized": "Accès refusé",
+    "unauthorized_message": "Vous n'êtes pas autorisé à consulter cette page."
+  },
+  "dashboard": {
+    "overview": "Vue d'ensemble",
+    "my_projects": "Mes projets",
+    "my_offers": "Mes offres",
+    "settings": "Paramètres",
+    "subscription": "Abonnement",
+    "new_project": "Nouveau projet",
+    "find_projects": "Trouver des projets",
+    "active_projects": "Projets actifs",
+    "total_offers": "Total des offres",
+    "pending_offers": "Offres en attente",
+    "submit_offer": "Soumettre une offre",
+    "subscription_required": "Abonnement requis",
+    "subscription_required_message": "Vous avez besoin d'un abonnement actif pour soumettre des offres.",
+    "upgrade_now": "Mettre à niveau"
   }
 }

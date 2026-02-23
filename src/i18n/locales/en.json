@@ -8,7 +8,8 @@
     "register": "Register",
     "impressum": "Imprint",
     "privacy": "Privacy Policy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "dashboard": "Dashboard"
   },
   "hero": {
     "title": "The Swiss Marketplace for Construction Projects",
@@ -87,7 +88,8 @@
     "legal": "Legal",
     "contact": "Contact",
     "rights": "All rights reserved.",
-    "swiss_made": "Swiss Made"
+    "swiss_made": "Swiss Made",
+    "location": "Zurich, Switzerland"
   },
   "impressum": {
     "title": "Imprint",
@@ -97,15 +99,81 @@
     "phone": "Phone: +41 44 000 00 00",
     "uid": "UID: CHE-000.000.000",
     "responsible": "Responsible for content",
-    "disclaimer": "Disclaimer"
+    "responsible_name": "Max Muster, CEO",
+    "disclaimer": "Disclaimer",
+    "disclaimer_text": "The content of this website has been prepared with the greatest care. However, we cannot guarantee the accuracy, completeness or timeliness of the content."
   },
   "privacy": {
     "title": "Privacy Policy",
     "intro": "The protection of your personal data is very important to us.",
-    "dsg": "This privacy policy is based on the Swiss Data Protection Act (DSG) and the GDPR."
+    "dsg": "This privacy policy is based on the Swiss Data Protection Act (DSG) and the GDPR.",
+    "controller_title": "1. Data Controller",
+    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "data_title": "2. Data Collected",
+    "data_text": "We only collect personal data in the context of platform usage: name, email, phone, company details.",
+    "cookies_title": "3. Cookies",
+    "cookies_text": "Our website uses technically necessary cookies. You can disable cookies in your browser settings.",
+    "rights_title": "4. Your Rights",
+    "rights_text": "You have the right to access, rectify and delete your data. Contact us at info@probau.ch."
   },
   "terms": {
     "title": "Terms and Conditions",
-    "intro": "By using the ProBau.ch platform, you agree to these terms and conditions."
+    "intro": "By using the ProBau.ch platform, you agree to these terms and conditions.",
+    "scope_title": "1. Scope",
+    "scope_text": "These terms apply to all users of the ProBau.ch platform, including project owners and contractors.",
+    "registration_title": "2. Registration",
+    "registration_text": "Use of the platform requires registration with truthful information.",
+    "services_title": "3. Services",
+    "services_text": "Project owners can post projects for free. Contractors require a paid subscription.",
+    "liability_title": "4. Liability",
+    "liability_text": "ProBau.ch is not liable for the content of projects and offers posted by users.",
+    "law_title": "5. Applicable Law",
+    "law_text": "Swiss law applies. The place of jurisdiction is Zurich."
+  },
+  "projects": {
+    "subtitle": "Current construction projects on the platform",
+    "days_left": "{{count}} days left",
+    "status_active": "Active",
+    "status_closed": "Closed",
+    "login_prompt": "Sign in or register to see all projects and submit offers.",
+    "view_details": "View details"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The requested page does not exist.",
+    "back": "Return to Home"
+  },
+  "auth": {
+    "login_title": "Sign In",
+    "register_title": "Register",
+    "email": "Email address",
+    "password": "Password",
+    "confirm_password": "Confirm password",
+    "company_name": "Company name",
+    "role_select": "Select role",
+    "role_owner": "Project Owner",
+    "role_contractor": "Contractor",
+    "login_button": "Sign In",
+    "register_button": "Register",
+    "no_account": "Don't have an account?",
+    "has_account": "Already registered?",
+    "unauthorized": "Access Denied",
+    "unauthorized_message": "You are not authorized to view this page."
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "my_projects": "My Projects",
+    "my_offers": "My Offers",
+    "settings": "Settings",
+    "subscription": "Subscription",
+    "new_project": "New Project",
+    "find_projects": "Find Projects",
+    "active_projects": "Active Projects",
+    "total_offers": "Total Offers",
+    "pending_offers": "Pending Offers",
+    "submit_offer": "Submit Offer",
+    "subscription_required": "Subscription required",
+    "subscription_required_message": "You need an active subscription to submit offers.",
+    "upgrade_now": "Upgrade now"
   }
 }

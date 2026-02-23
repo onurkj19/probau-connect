@@ -8,7 +8,8 @@
     "register": "Registrieren",
     "impressum": "Impressum",
     "privacy": "Datenschutz",
-    "terms": "AGB"
+    "terms": "AGB",
+    "dashboard": "Dashboard"
   },
   "hero": {
     "title": "Der Schweizer Marktplatz für Bauprojekte",
@@ -87,7 +88,8 @@
     "legal": "Rechtliches",
     "contact": "Kontakt",
     "rights": "Alle Rechte vorbehalten.",
-    "swiss_made": "Swiss Made"
+    "swiss_made": "Swiss Made",
+    "location": "Zürich, Schweiz"
   },
   "impressum": {
     "title": "Impressum",
@@ -97,15 +99,81 @@
     "phone": "Telefon: +41 44 000 00 00",
     "uid": "UID: CHE-000.000.000",
     "responsible": "Verantwortlich für den Inhalt",
-    "disclaimer": "Haftungsausschluss"
+    "responsible_name": "Max Muster, CEO",
+    "disclaimer": "Haftungsausschluss",
+    "disclaimer_text": "Die Inhalte dieser Webseite werden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen."
   },
   "privacy": {
     "title": "Datenschutzerklärung",
     "intro": "Der Schutz Ihrer persönlichen Daten ist uns sehr wichtig.",
-    "dsg": "Diese Datenschutzerklärung basiert auf dem Schweizer Datenschutzgesetz (DSG) und der DSGVO."
+    "dsg": "Diese Datenschutzerklärung basiert auf dem Schweizer Datenschutzgesetz (DSG) und der DSGVO.",
+    "controller_title": "1. Verantwortliche Stelle",
+    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "data_title": "2. Erhobene Daten",
+    "data_text": "Wir erheben personenbezogene Daten nur im Rahmen der Nutzung unserer Plattform: Name, E-Mail, Telefon, Firmenangaben.",
+    "cookies_title": "3. Cookies",
+    "cookies_text": "Unsere Webseite verwendet technisch notwendige Cookies. Sie können Cookies in Ihrem Browser deaktivieren.",
+    "rights_title": "4. Ihre Rechte",
+    "rights_text": "Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer Daten. Kontaktieren Sie uns unter info@probau.ch."
   },
   "terms": {
     "title": "Allgemeine Geschäftsbedingungen (AGB)",
-    "intro": "Durch die Nutzung der Plattform ProBau.ch erklären Sie sich mit diesen AGB einverstanden."
+    "intro": "Durch die Nutzung der Plattform ProBau.ch erklären Sie sich mit diesen AGB einverstanden.",
+    "scope_title": "1. Geltungsbereich",
+    "scope_text": "Diese AGB gelten für alle Nutzer der Plattform ProBau.ch, einschliesslich Arbeitgeber und Unternehmer.",
+    "registration_title": "2. Registrierung",
+    "registration_text": "Die Nutzung der Plattform erfordert eine Registrierung mit wahrheitsgemässen Angaben.",
+    "services_title": "3. Leistungen",
+    "services_text": "Arbeitgeber können kostenlos Projekte ausschreiben. Unternehmer benötigen ein kostenpflichtiges Abonnement.",
+    "liability_title": "4. Haftung",
+    "liability_text": "ProBau.ch haftet nicht für die Inhalte der von Nutzern eingestellten Projekte und Offerten.",
+    "law_title": "5. Anwendbares Recht",
+    "law_text": "Es gilt Schweizer Recht. Gerichtsstand ist Zürich."
+  },
+  "projects": {
+    "subtitle": "Aktuelle Bauprojekte auf der Plattform",
+    "days_left": "{{count}} Tage übrig",
+    "status_active": "Aktiv",
+    "status_closed": "Geschlossen",
+    "login_prompt": "Melden Sie sich an oder registrieren Sie sich, um alle Projekte zu sehen und Offerten einzureichen.",
+    "view_details": "Details ansehen"
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "message": "Die angeforderte Seite existiert leider nicht.",
+    "back": "Zur Startseite"
+  },
+  "auth": {
+    "login_title": "Anmelden",
+    "register_title": "Registrieren",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "confirm_password": "Passwort bestätigen",
+    "company_name": "Firmenname",
+    "role_select": "Rolle auswählen",
+    "role_owner": "Arbeitgeber",
+    "role_contractor": "Unternehmer",
+    "login_button": "Anmelden",
+    "register_button": "Registrieren",
+    "no_account": "Noch kein Konto?",
+    "has_account": "Bereits registriert?",
+    "unauthorized": "Zugriff verweigert",
+    "unauthorized_message": "Sie haben keine Berechtigung, diese Seite aufzurufen."
+  },
+  "dashboard": {
+    "overview": "Übersicht",
+    "my_projects": "Meine Projekte",
+    "my_offers": "Meine Offerten",
+    "settings": "Einstellungen",
+    "subscription": "Abonnement",
+    "new_project": "Neues Projekt",
+    "find_projects": "Projekte finden",
+    "active_projects": "Aktive Projekte",
+    "total_offers": "Offerten insgesamt",
+    "pending_offers": "Offerte ausstehend",
+    "submit_offer": "Offerte einreichen",
+    "subscription_required": "Abonnement erforderlich",
+    "subscription_required_message": "Sie benötigen ein aktives Abonnement, um Offerten einzureichen.",
+    "upgrade_now": "Jetzt upgraden"
   }
 }

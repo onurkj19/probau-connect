@@ -1,0 +1,127 @@
+import { useTranslation } from "react-i18next";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { LayoutDashboard, FolderOpen, FileText, Settings, CreditCard, LogOut, X, Menu } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+export function DashboardSidebar() {
+  const { t } = useTranslation();
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const { locale } = useParams<{ locale: string }>();
+  const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const basePath = `/${lang}/dashboard`;
+
+  const ownerLinks = [
+    { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
+    { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.my_projects") },
+    { to: `${basePath}/settings`, icon: Settings, label: t("dashboard.settings") },
+  ];
+
+  const contractorLinks = [
+    { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
+    { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.find_projects") },
+    { to: `${basePath}/offers`, icon: FileText, label: t("dashboard.my_offers") },
+    { to: `${basePath}/settings`, icon: Settings, label: t("dashboard.settings") },
+  ];
+
+  const links = user?.role === "contractor" ? contractorLinks : ownerLinks;
+
+  const isActive = (to: string, exact?: boolean) =>
+    exact ? location.pathname === to : location.pathname.startsWith(to);
+
+  const navContent = (
+    <>
+      <div className="flex items-center gap-2 border-b border-border px-4 py-5">
+        <Link to={`/${lang}`} className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-accent">
+            <span className="font-display text-sm font-bold text-accent-foreground">P</span>
+          </div>
+          <span className="font-display text-lg font-bold text-foreground">
+            Pro<span className="text-accent">Bau</span>.ch
+          </span>
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {links.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              isActive(link.to, link.exact)
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <link.icon className="h-4 w-4" />
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="border-t border-border px-3 py-4">
+        {user?.role === "contractor" && (
+          <Link
+            to={`/${lang}/pricing`}
+            onClick={() => setMobileOpen(false)}
+            className="mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <CreditCard className="h-4 w-4" />
+            {t("dashboard.subscription")}
+          </Link>
+        )}
+        <button
+          onClick={() => { logout(); setMobileOpen(false); }}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          {t("nav.login")}
+        </button>
+      </div>
+
+      {user && (
+        <div className="border-t border-border px-4 py-3">
+          <p className="truncate text-sm font-medium text-foreground">{user.companyName}</p>
+          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed left-4 top-4 z-50 md:hidden"
+        onClick={() => setMobileOpen(!mobileOpen)}
+      >
+        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-card transition-transform md:static md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        {navContent}
+      </aside>
+    </>
+  );
+}

@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock, Users, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -32,10 +31,7 @@ const Index = () => {
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-primary">
-        <div className="absolute inset-0">
-          <img src={heroBg} alt="" className="h-full w-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/70" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-navy" />
         <div className="container relative z-10 py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
