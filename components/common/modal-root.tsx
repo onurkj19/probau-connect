@@ -1,9 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal";
 
 export const ModalRoot = () => {
+  const t = useTranslations("common.modal");
   const { modal, closeModal } = useModal();
 
   if (!modal) {
@@ -18,7 +21,7 @@ export const ModalRoot = () => {
         {modal.content ? <div className="mt-4">{modal.content}</div> : null}
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="secondary" onClick={closeModal}>
-            {modal.cancelLabel ?? "Cancel"}
+            {modal.cancelLabel ?? t("cancel")}
           </Button>
           <Button
             variant={modal.tone === "danger" ? "danger" : "primary"}
@@ -27,7 +30,7 @@ export const ModalRoot = () => {
               closeModal();
             }}
           >
-            {modal.confirmLabel ?? "Confirm"}
+            {modal.confirmLabel ?? t("confirm")}
           </Button>
         </div>
       </div>

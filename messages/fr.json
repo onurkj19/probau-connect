@@ -1,0 +1,351 @@
+{
+  "common": {
+    "tagline": "SaaS suisse de la construction",
+    "roles": {
+      "employer": "Maître d'ouvrage",
+      "contractor": "Entrepreneur"
+    },
+    "languageSwitcher": {
+      "label": "Langue",
+      "de": "Deutsch",
+      "fr": "Français",
+      "it": "Italiano",
+      "en": "English"
+    },
+    "actions": {
+      "login": "Connexion",
+      "logout": "Déconnexion",
+      "getStarted": "Commencer",
+      "createAccount": "Créer un compte",
+      "save": "Enregistrer",
+      "menu": "Menu",
+      "publish": "Publier",
+      "viewFullPricing": "Voir tous les tarifs",
+      "browseProjects": "Parcourir les projets",
+      "postProjectFree": "Publier un projet (gratuit)",
+      "submitOffer": "Soumettre une offre",
+      "subscriptionRequired": "Abonnement requis"
+    },
+    "topbar": {
+      "signedInAs": "Connecté en tant que {company}"
+    },
+    "footer": {
+      "rights": "Tous droits réservés."
+    },
+    "modal": {
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "notifications": {
+      "dismiss": "Fermer la notification"
+    }
+  },
+  "meta": {
+    "root": {
+      "title": "ProBau.ch | Place de marché suisse de la construction",
+      "description": "ProBau.ch relie maîtres d'ouvrage et entrepreneurs qualifiés en Suisse."
+    },
+    "home": {
+      "title": "La place de marché suisse de la construction",
+      "description": "Connectez maîtres d'ouvrage et entrepreneurs professionnels en Suisse."
+    },
+    "pricing": {
+      "title": "Tarifs",
+      "description": "Tarification transparente pour maîtres d'ouvrage et entrepreneurs."
+    },
+    "login": {
+      "title": "Connexion",
+      "description": "Connectez-vous à votre compte ProBau.ch."
+    },
+    "register": {
+      "title": "Inscription",
+      "description": "Créez votre compte ProBau.ch."
+    },
+    "impressum": {
+      "title": "Mentions légales",
+      "description": "Informations légales de ProBau.ch."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "description": "Politique de confidentialité ProBau.ch."
+    },
+    "agb": {
+      "title": "Conditions générales",
+      "description": "Conditions d'utilisation de ProBau.ch."
+    }
+  },
+  "navigation": {
+    "public": {
+      "platform": "Plateforme",
+      "pricing": "Tarifs",
+      "impressum": "Mentions légales",
+      "privacy": "Confidentialité",
+      "agb": "CG"
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Swiss SaaS Marketplace",
+      "title": "La place de marché suisse de la construction",
+      "subtitle": "Connectez maîtres d'ouvrage et entrepreneurs professionnels dans toute la Suisse.",
+      "metrics": {
+        "cantons": "Cantons couverts",
+        "tenders": "Appels d'offres actifs",
+        "contractors": "Entrepreneurs vérifiés",
+        "responseTime": "Temps de réponse moyen"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Clarté du processus",
+      "title": "Fonctionnement",
+      "description": "Deux parcours par rôle pour des adjudications rapides et transparentes.",
+      "roleEmployer": "Pour les maîtres d'ouvrage",
+      "roleContractor": "Pour les entrepreneurs",
+      "step": "Étape {number}",
+      "employer": {
+        "step1Title": "Publier gratuitement",
+        "step1Description": "Publiez périmètre, délais, budget et documents en un seul flux.",
+        "step2Title": "Recevoir des offres",
+        "step2Description": "Collectez des offres structurées d'entrepreneurs abonnés.",
+        "step3Title": "Choisir un entrepreneur",
+        "step3Description": "Comparez les propositions et attribuez au meilleur partenaire."
+      },
+      "contractor": {
+        "step1Title": "S'abonner",
+        "step1Description": "Activez Basic ou Pro pour accéder aux projets.",
+        "step2Title": "Parcourir les projets",
+        "step2Description": "Filtrez par canton, catégorie, statut et échéance.",
+        "step3Title": "Soumettre des offres",
+        "step3Description": "Envoyez des offres claires avec documents justificatifs."
+      }
+    },
+    "why": {
+      "eyebrow": "Proposition de valeur",
+      "title": "Pourquoi ProBau.ch",
+      "description": "Conçu pour une passation de marché fiable dans la construction suisse.",
+      "card1Title": "Accès national",
+      "card1Description": "Accédez aux opportunités dans tous les cantons.",
+      "card2Title": "Délais transparents",
+      "card2Description": "Chaque projet inclut des fenêtres de soumission clairement définies.",
+      "card3Title": "Dépôt sécurisé des documents",
+      "card3Description": "Téléversement structuré et professionnel des pièces de projet.",
+      "card4Title": "Abonnement simple",
+      "card4Description": "Les plans Basic et Pro donnent un accès clair aux opportunités."
+    },
+    "pricingPreview": {
+      "eyebrow": "Aperçu des tarifs",
+      "title": "Plans simples pour entrepreneurs",
+      "description": "Les maîtres d'ouvrage publient gratuitement. Les entrepreneurs s'abonnent.",
+      "basic": {
+        "title": "Basic",
+        "price": "CHF 79",
+        "period": "par mois",
+        "feature1": "Accès aux projets actifs",
+        "feature2": "Soumission d'offres avec pièces jointes",
+        "feature3": "Support standard"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Le plus choisi",
+        "price": "CHF 149",
+        "period": "par mois",
+        "feature1": "Tout le plan Basic",
+        "feature2": "Offres illimitées",
+        "feature3": "Priorité de matching et support"
+      }
+    },
+    "trust": {
+      "eyebrow": "Confiance",
+      "title": "Conçu pour les professionnels suisses du bâtiment",
+      "description": "ProBau.ch privilégie la fiabilité, la transparence des délais et les partenariats durables.",
+      "logosPlaceholder": "Logos partenaires à venir",
+      "logoLabel": "Logo partenaire {index}"
+    },
+    "finalCta": {
+      "title": "Prêt à développer votre activité construction ?",
+      "description": "Adoptez un processus d'appel d'offres digne des standards suisses.",
+      "button": "Créer un compte"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Se connecter à ProBau.ch",
+      "description": "Accédez à votre tableau de bord selon votre rôle.",
+      "emailLabel": "E-mail professionnel",
+      "passwordLabel": "Mot de passe",
+      "fullNameLabel": "Nom complet",
+      "companyLabel": "Entreprise",
+      "roleLabel": "Rôle du compte",
+      "roleEmployer": "Maître d'ouvrage",
+      "roleContractor": "Entrepreneur",
+      "subscriptionSimulate": "Simuler un abonnement actif",
+      "subscriptionHint": "Activez pour soumettre des offres immédiatement après connexion.",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Se connecter",
+      "submitLoading": "Connexion...",
+      "toastErrorTitle": "Échec de connexion",
+      "toastErrorDescription": "Veuillez vérifier vos informations.",
+      "toastSuccessTitle": "Bon retour",
+      "toastSuccessDescription": "Connexion réussie."
+    },
+    "register": {
+      "title": "Créer votre compte",
+      "description": "Choisissez votre rôle et démarrez avec ProBau.ch.",
+      "emailLabel": "E-mail professionnel",
+      "passwordLabel": "Mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "fullNameLabel": "Nom complet",
+      "companyLabel": "Entreprise",
+      "roleLabel": "Rôle du compte",
+      "roleEmployer": "Maître d'ouvrage",
+      "roleContractor": "Entrepreneur",
+      "subscriptionStart": "Démarrer avec abonnement actif",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Créer un compte",
+      "submitLoading": "Création du compte...",
+      "toastErrorTitle": "Échec de l'inscription",
+      "toastErrorDescription": "Veuillez vérifier vos données.",
+      "toastSuccessTitle": "Compte créé",
+      "toastSuccessDescription": "Bienvenue sur ProBau.ch."
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "overview": "Vue d'ensemble",
+      "createProject": "Créer un projet",
+      "myProjects": "Mes projets",
+      "offersReceived": "Offres reçues",
+      "browseProjects": "Parcourir les projets",
+      "myOffers": "Mes offres",
+      "subscription": "Abonnement",
+      "settings": "Paramètres"
+    },
+    "employer": {
+      "overviewTitle": "Tableau de bord maître d'ouvrage",
+      "overviewDescription": "Gérez publications, délais et offres reçues.",
+      "activeProjects": "Projets actifs",
+      "closedProjects": "Projets clôturés",
+      "offersReceived": "Offres reçues",
+      "createProjectTitle": "Créer un projet",
+      "createProjectDescription": "Publiez un cahier des charges structuré.",
+      "myProjectsTitle": "Mes projets",
+      "myProjectsDescription": "Suivez vos projets et leurs échéances.",
+      "offersTitle": "Offres reçues",
+      "offersDescription": "Vue privée des offres par projet.",
+      "settingsTitle": "Paramètres",
+      "settingsDescription": "Gérez votre profil et vos notifications."
+    },
+    "contractor": {
+      "overviewTitle": "Tableau de bord entrepreneur",
+      "overviewDescription": "Suivez les opportunités, offres et abonnement.",
+      "availableProjects": "Projets disponibles",
+      "submittedOffers": "Offres soumises",
+      "subscriptionStatus": "Statut abonnement",
+      "statusActive": "Actif",
+      "statusInactive": "Inactif",
+      "currentAccessTitle": "Accès actuel",
+      "currentAccessDescription": "La soumission d'offres nécessite un abonnement actif.",
+      "browseTitle": "Parcourir les projets",
+      "browseDescription": "Filtrez les opportunités par canton et échéance.",
+      "offersTitle": "Mes offres",
+      "offersDescription": "Suivez le statut de vos offres.",
+      "subscriptionTitle": "Abonnement",
+      "subscriptionDescription": "Gérez votre plan actuel et les upgrades.",
+      "settingsTitle": "Paramètres",
+      "settingsDescription": "Mettez à jour vos informations de compte."
+    },
+    "shared": {
+      "contactName": "Nom du contact",
+      "company": "Entreprise",
+      "saveSettings": "Enregistrer les paramètres"
+    }
+  },
+  "projects": {
+    "table": {
+      "title": "Titre du projet",
+      "location": "Lieu",
+      "deadline": "Échéance",
+      "status": "Statut"
+    },
+    "card": {
+      "budget": "Budget",
+      "location": "Lieu",
+      "category": "Catégorie",
+      "deadline": "Échéance"
+    },
+    "filters": {
+      "allCantons": "Tous les cantons",
+      "deadlineAriaLabel": "Filtrer par échéance",
+      "searchPlaceholder": "Rechercher des projets...",
+      "allStatuses": "Tous les statuts",
+      "allCategories": "Toutes les catégories"
+    },
+    "countdown": {
+      "deadlineReached": "Échéance atteinte"
+    },
+    "createForm": {
+      "titleLabel": "Titre du projet",
+      "descriptionLabel": "Description du projet",
+      "categoryLabel": "Catégorie",
+      "cantonLabel": "Canton",
+      "locationLabel": "Lieu",
+      "budgetLabel": "Budget (CHF)",
+      "deadlineLabel": "Date limite",
+      "attachmentsLabel": "Pièces jointes",
+      "submitIdle": "Publier le projet",
+      "submitLoading": "Publication...",
+      "modalTitle": "Publier le projet",
+      "modalDescription": "Voulez-vous publier ce projet maintenant ?",
+      "toastTitle": "Projet publié",
+      "toastDescription": "Votre projet est désormais visible."
+    },
+    "offerForm": {
+      "amountLabel": "Montant de l'offre (CHF)",
+      "detailsLabel": "Détails de l'offre",
+      "filesLabel": "Fichiers justificatifs",
+      "submitIdle": "Soumettre l'offre",
+      "submitLoading": "Soumission..."
+    }
+  },
+  "pricing": {
+    "title": "Tarifs",
+    "description": "Les maîtres d'ouvrage publient gratuitement. Les entrepreneurs s'abonnent.",
+    "employerTitle": "Maîtres d'ouvrage",
+    "perMonth": "Par mois",
+    "createAccount": "Créer un compte",
+    "plans": {
+      "basic": {
+        "description": "Pour les équipes régionales et PME",
+        "feature1": "Accès aux projets actifs",
+        "feature2": "Jusqu'à 10 offres par mois",
+        "feature3": "Support standard"
+      },
+      "pro": {
+        "description": "Pour les entreprises en croissance multi-cantonales",
+        "feature1": "Offres illimitées",
+        "feature2": "Matching prioritaire",
+        "feature3": "Analyses avancées et support prioritaire"
+      }
+    }
+  },
+  "legal": {
+    "impressum": {
+      "title": "Mentions légales",
+      "email": "E-mail: legal@probau.ch",
+      "phone": "Téléphone: +41 44 000 00 00"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité"
+    },
+    "agb": {
+      "title": "Conditions générales"
+    }
+  },
+  "notFound": {
+    "title": "Page non trouvée",
+    "description": "La page demandée n'existe pas.",
+    "backHome": "Retour à l'accueil"
+  }
+}

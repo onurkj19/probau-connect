@@ -1,0 +1,18 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+
+export { default } from "@/app/(public)/agb/page";
+
+interface AgbMetadataProps {
+  params: Promise<{ locale: string }>;
+}
+
+export const generateMetadata = async ({ params }: AgbMetadataProps): Promise<Metadata> => {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.agb" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+};

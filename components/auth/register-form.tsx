@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -9,31 +9,33 @@ import { FormField } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useRouter } from "@/i18n/navigation";
 import { registerUser } from "@/lib/api/auth-client";
 import { getRoleHomePath } from "@/lib/navigation/role-paths";
 import { useNotifications } from "@/hooks/use-notifications";
 
-const registerSchema = z
-  .object({
-    email: z.string().email("Please enter a valid email."),
-    password: z.string().min(8, "Password must have at least 8 characters."),
-    confirmPassword: z.string().min(8, "Please confirm your password."),
-    role: z.enum(["employer", "contractor"]),
-    company: z.string().min(2, "Company is required."),
-    name: z.string().min(2, "Name is required."),
-    isSubscribed: z.boolean(),
-    plan: z.enum(["basic", "pro"]),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  });
-
-type RegisterInput = z.infer<typeof registerSchema>;
-
 export const RegisterForm = () => {
+  const t = useTranslations("auth.register");
   const router = useRouter();
   const { notify } = useNotifications();
+
+  const registerSchema = z
+    .object({
+      email: z.string().email(t("errors.email")),
+      password: z.string().min(8, t("errors.password")),
+      confirmPassword: z.string().min(8, t("errors.confirmPassword")),
+      role: z.enum(["employer", "contractor"]),
+      company: z.string().min(2, t("errors.company")),
+      name: z.string().min(2, t("errors.name")),
+      isSubscribed: z.boolean(),
+      plan: z.enum(["basic", "pro"]),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("errors.passwordMatch"),
+      path: ["confirmPassword"],
+    });
+
+  type RegisterInput = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -65,16 +67,16 @@ export const RegisterForm = () => {
     if (!response.ok) {
       notify({
         tone: "error",
-        title: "Registration failed",
-        description: response.message ?? "Please verify your information and retry.",
+        title: t("toastErrorTitle"),
+        description: response.message ?? t("toastErrorDescription"),
       });
       return;
     }
 
     notify({
       tone: "success",
-      title: "Account created",
-      description: "Welcome to ProBau.ch.",
+      title: t("toastSuccessTitle"),
+      description: t("toastSuccessDescription"),
     });
 
     const fallbackPath = response.session ? getRoleHomePath(response.session.role) : "/login";
@@ -85,51 +87,51 @@ export const RegisterForm = () => {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-4 md:grid-cols-2">
-        <FormField label="Full name" error={errors.name?.message}>
+        <FormField label={t("fullNameLabel")} error={errors.name?.message}>
           <Input placeholder="Max Muster" {...register("name")} />
         </FormField>
-        <FormField label="Company" error={errors.company?.message}>
+        <FormField label={t("companyLabel")} error={errors.company?.message}>
           <Input placeholder="Musterbau AG" {...register("company")} />
         </FormField>
       </div>
 
-      <FormField label="Business email" error={errors.email?.message}>
+      <FormField label={t("emailLabel")} error={errors.email?.message}>
         <Input type="email" placeholder="name@company.ch" {...register("email")} />
       </FormField>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <FormField label="Password" error={errors.password?.message}>
+        <FormField label={t("passwordLabel")} error={errors.password?.message}>
           <Input type="password" placeholder="••••••••" {...register("password")} />
         </FormField>
-        <FormField label="Confirm password" error={errors.confirmPassword?.message}>
+        <FormField label={t("confirmPasswordLabel")} error={errors.confirmPassword?.message}>
           <Input type="password" placeholder="••••••••" {...register("confirmPassword")} />
         </FormField>
       </div>
 
-      <FormField label="Account role" error={errors.role?.message}>
+      <FormField label={t("roleLabel")} error={errors.role?.message}>
         <Select {...register("role")}>
-          <option value="employer">Arbeitsgeber</option>
-          <option value="contractor">Unternehmer</option>
+          <option value="employer">{t("roleEmployer")}</option>
+          <option value="contractor">{t("roleContractor")}</option>
         </Select>
       </FormField>
 
       {role === "contractor" ? (
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <label className="flex items-center justify-between gap-3 text-sm font-medium text-brand-900">
-            Start with active subscription
+            {t("subscriptionStart")}
             <input type="checkbox" className="h-4 w-4" {...register("isSubscribed")} />
           </label>
           <div className="mt-3">
             <Select {...register("plan")}>
-              <option value="basic">Basic (CHF 79)</option>
-              <option value="pro">Pro (CHF 149)</option>
+              <option value="basic">{t("planBasic")}</option>
+              <option value="pro">{t("planPro")}</option>
             </Select>
           </div>
         </div>
       ) : null}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Creating account..." : "Create account"}
+        {isSubmitting ? t("submitLoading") : t("submitIdle")}
       </Button>
     </form>
   );

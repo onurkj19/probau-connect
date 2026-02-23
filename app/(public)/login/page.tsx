@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 
-export const metadata: Metadata = {
-  title: "Login",
-  description: "Sign in to your ProBau.ch account.",
-};
+export const metadata: Metadata = {};
 
 interface LoginPageProps {
   searchParams: Promise<{
@@ -15,12 +13,13 @@ interface LoginPageProps {
 }
 
 const LoginPage = async ({ searchParams }: LoginPageProps) => {
+  const t = await getTranslations("auth.login");
   const params = await searchParams;
 
   return (
     <AuthShell
-      title="Sign in to ProBau.ch"
-      description="Access your role-based dashboard and manage projects or offers."
+      title={t("title")}
+      description={t("description")}
     >
       <LoginForm redirectPath={params.redirect} />
     </AuthShell>

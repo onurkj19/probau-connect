@@ -1,17 +1,19 @@
 "use client";
 
 import { Clock4 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useCountdown } from "@/hooks/use-countdown";
 
 export const CountdownTimer = ({ deadlineIso }: { deadlineIso: string }) => {
+  const t = useTranslations("projects.countdown");
   const { days, hours, minutes, seconds, isExpired } = useCountdown(deadlineIso);
 
   if (isExpired) {
     return (
       <div className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700">
         <Clock4 className="h-3.5 w-3.5" />
-        Deadline reached
+        {t("deadlineReached")}
       </div>
     );
   }

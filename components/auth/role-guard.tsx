@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { getRoleHomePath } from "@/lib/navigation/role-paths";
@@ -10,13 +11,23 @@ interface RoleGuardProps {
   children: ReactNode;
 }
 
-export const RoleGuard = ({ user, allow, children }: RoleGuardProps) => {
+const withLocalePrefix = (locale: string, pathname: string): string => {
+  if (pathname === "/") {
+    return `/${locale}`;
+  }
+
+  return pathname.startsWith(`/${locale}`) ? pathname : `/${locale}${pathname}`;
+};
+
+export const RoleGuard = async ({ user, allow, children }: RoleGuardProps) => {
+  const locale = await getLocale();
+
   if (!user) {
-    redirect("/login");
+    redirect(withLocalePrefix(locale, "/login"));
   }
 
   if (user.role !== allow) {
-    redirect(getRoleHomePath(user.role));
+    redirect(withLocalePrefix(locale, getRoleHomePath(user.role)));
   }
 
   return <>{children}</>;

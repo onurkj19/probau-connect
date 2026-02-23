@@ -38,6 +38,7 @@
     "components/**/*.tsx",
     "hooks/**/*.ts",
     "hooks/**/*.tsx",
+    "i18n/**/*.ts",
     "lib/**/*.ts",
     "lib/**/*.tsx",
     "types/**/*.ts",

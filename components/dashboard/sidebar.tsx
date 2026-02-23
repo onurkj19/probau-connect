@@ -8,10 +8,10 @@ import {
   Settings,
   WalletCards,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
+import { Link, usePathname } from "@/i18n/navigation";
 import type { NavItem } from "@/lib/navigation/menu";
 
 interface SidebarProps {
@@ -21,6 +21,8 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ items, isOpen, onClose }: SidebarProps) => {
+  const tCommon = useTranslations("common");
+  const tNav = useTranslations("dashboard.nav");
   const pathname = usePathname();
   const iconMap = {
     dashboard: LayoutDashboard,
@@ -36,7 +38,7 @@ export const Sidebar = ({ items, isOpen, onClose }: SidebarProps) => {
       {isOpen ? (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label={tCommon("actions.menu")}
           onClick={onClose}
           className="fixed inset-0 z-30 bg-brand-950/30 md:hidden"
         />
@@ -52,7 +54,7 @@ export const Sidebar = ({ items, isOpen, onClose }: SidebarProps) => {
           <Link href="/" className="text-lg font-bold text-brand-900">
             ProBau<span className="text-swiss-red">.ch</span>
           </Link>
-          <p className="mt-1 text-xs text-neutral-500">Swiss Construction SaaS</p>
+          <p className="mt-1 text-xs text-neutral-500">{tCommon("tagline")}</p>
         </div>
 
         <nav className="space-y-1.5 px-3 py-4">
@@ -72,7 +74,7 @@ export const Sidebar = ({ items, isOpen, onClose }: SidebarProps) => {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <span>{tNav(item.labelKey)}</span>
               </Link>
             );
           })}

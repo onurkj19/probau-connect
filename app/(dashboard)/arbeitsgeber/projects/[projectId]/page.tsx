@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -13,6 +14,8 @@ interface ProjectDetailPageProps {
 }
 
 const ArbeitsgeberProjectDetailPage = async ({ params }: ProjectDetailPageProps) => {
+  const tEmployer = await getTranslations("dashboard.employer");
+  const tProjects = await getTranslations("projects.card");
   const routeParams = await params;
   const user = await getServerSessionUser();
   const project = await getProjectById(routeParams.projectId);
@@ -33,23 +36,25 @@ const ArbeitsgeberProjectDetailPage = async ({ params }: ProjectDetailPageProps)
         <p className="text-sm text-neutral-600">{project.description}</p>
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-neutral-500">Location</p>
+            <p className="text-xs text-neutral-500">{tProjects("location")}</p>
             <p className="font-semibold text-brand-900">{project.location}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Deadline</p>
+            <p className="text-xs text-neutral-500">{tProjects("deadline")}</p>
             <p className="font-semibold text-brand-900">{formatDate(project.deadlineIso)}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budget</p>
+            <p className="text-xs text-neutral-500">{tProjects("budget")}</p>
             <p className="font-semibold text-brand-900">{formatCurrency(project.budgetChf)}</p>
           </div>
         </div>
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-brand-900">Offers for this project</h2>
-        <p className="mt-1 text-sm text-neutral-600">{projectOffers.length} offers received.</p>
+        <h2 className="text-lg font-semibold text-brand-900">{tEmployer("projectDetailOffersTitle")}</h2>
+        <p className="mt-1 text-sm text-neutral-600">
+          {tEmployer("projectDetailOffersCount", { count: projectOffers.length })}
+        </p>
       </Card>
     </div>
   );

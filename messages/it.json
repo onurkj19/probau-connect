@@ -1,0 +1,351 @@
+{
+  "common": {
+    "tagline": "SaaS svizzero per le costruzioni",
+    "roles": {
+      "employer": "Committente",
+      "contractor": "Imprenditore"
+    },
+    "languageSwitcher": {
+      "label": "Lingua",
+      "de": "Deutsch",
+      "fr": "Français",
+      "it": "Italiano",
+      "en": "English"
+    },
+    "actions": {
+      "login": "Accesso",
+      "logout": "Esci",
+      "getStarted": "Inizia",
+      "createAccount": "Crea account",
+      "save": "Salva",
+      "menu": "Menu",
+      "publish": "Pubblica",
+      "viewFullPricing": "Vedi tutti i prezzi",
+      "browseProjects": "Sfoglia progetti",
+      "postProjectFree": "Pubblica progetto (gratis)",
+      "submitOffer": "Invia offerta",
+      "subscriptionRequired": "Abbonamento richiesto"
+    },
+    "topbar": {
+      "signedInAs": "Accesso come {company}"
+    },
+    "footer": {
+      "rights": "Tutti i diritti riservati."
+    },
+    "modal": {
+      "cancel": "Annulla",
+      "confirm": "Conferma"
+    },
+    "notifications": {
+      "dismiss": "Chiudi notifica"
+    }
+  },
+  "meta": {
+    "root": {
+      "title": "ProBau.ch | Marketplace svizzero delle costruzioni",
+      "description": "ProBau.ch collega committenti e imprenditori qualificati in tutta la Svizzera."
+    },
+    "home": {
+      "title": "Il marketplace svizzero delle costruzioni",
+      "description": "Collega committenti e imprenditori professionali in tutta la Svizzera."
+    },
+    "pricing": {
+      "title": "Prezzi",
+      "description": "Prezzi trasparenti per committenti e imprenditori."
+    },
+    "login": {
+      "title": "Accesso",
+      "description": "Accedi al tuo account ProBau.ch."
+    },
+    "register": {
+      "title": "Registrazione",
+      "description": "Crea il tuo account ProBau.ch."
+    },
+    "impressum": {
+      "title": "Note legali",
+      "description": "Informazioni legali di ProBau.ch."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Informativa sulla privacy di ProBau.ch."
+    },
+    "agb": {
+      "title": "Condizioni generali",
+      "description": "Condizioni di utilizzo di ProBau.ch."
+    }
+  },
+  "navigation": {
+    "public": {
+      "platform": "Piattaforma",
+      "pricing": "Prezzi",
+      "impressum": "Note legali",
+      "privacy": "Privacy",
+      "agb": "CG"
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Swiss SaaS Marketplace",
+      "title": "Il marketplace svizzero delle costruzioni",
+      "subtitle": "Collega committenti e imprenditori professionali in tutta la Svizzera.",
+      "metrics": {
+        "cantons": "Cantoni coperti",
+        "tenders": "Gare attive",
+        "contractors": "Imprenditori verificati",
+        "responseTime": "Tempo medio di risposta"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Chiarezza del processo",
+      "title": "Come funziona",
+      "description": "Due flussi per ruolo, orientati a velocità e trasparenza.",
+      "roleEmployer": "Per committenti",
+      "roleContractor": "Per imprenditori",
+      "step": "Fase {number}",
+      "employer": {
+        "step1Title": "Pubblica gratis",
+        "step1Description": "Pubblica requisiti, scadenze, budget e documenti in un unico flusso.",
+        "step2Title": "Ricevi offerte",
+        "step2Description": "Raccogli offerte strutturate da imprese abbonate.",
+        "step3Title": "Scegli l'imprenditore",
+        "step3Description": "Confronta le proposte e assegna il progetto al partner migliore."
+      },
+      "contractor": {
+        "step1Title": "Abbonati",
+        "step1Description": "Attiva Basic o Pro per accedere ai progetti.",
+        "step2Title": "Sfoglia i progetti",
+        "step2Description": "Filtra per cantone, categoria, stato e scadenza.",
+        "step3Title": "Invia offerte",
+        "step3Description": "Invia offerte chiare con documentazione di supporto."
+      }
+    },
+    "why": {
+      "eyebrow": "Valore",
+      "title": "Perché ProBau.ch",
+      "description": "Pensato per una procurement affidabile nel settore svizzero.",
+      "card1Title": "Accesso nazionale",
+      "card1Description": "Opportunità in tutti i cantoni su una piattaforma unica.",
+      "card2Title": "Scadenze trasparenti",
+      "card2Description": "Ogni progetto include finestre di invio ben definite.",
+      "card3Title": "Upload documenti sicuro",
+      "card3Description": "Caricamento documenti in un processo strutturato.",
+      "card4Title": "Abbonamento semplice",
+      "card4Description": "Piani Basic e Pro con accesso chiaro alle opportunità."
+    },
+    "pricingPreview": {
+      "eyebrow": "Anteprima prezzi",
+      "title": "Piani semplici per imprenditori",
+      "description": "I committenti pubblicano gratis. Gli imprenditori si abbonano.",
+      "basic": {
+        "title": "Basic",
+        "price": "CHF 79",
+        "period": "al mese",
+        "feature1": "Accesso ai progetti attivi",
+        "feature2": "Invio offerte con allegati",
+        "feature3": "Supporto standard"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Più scelto",
+        "price": "CHF 149",
+        "period": "al mese",
+        "feature1": "Tutto di Basic",
+        "feature2": "Offerte illimitate",
+        "feature3": "Matching prioritario e supporto"
+      }
+    },
+    "trust": {
+      "eyebrow": "Fiducia",
+      "title": "Creato per professionisti svizzeri delle costruzioni",
+      "description": "ProBau.ch punta su affidabilità, scadenze chiare e partnership di lungo periodo.",
+      "logosPlaceholder": "Loghi partner in arrivo",
+      "logoLabel": "Logo partner {index}"
+    },
+    "finalCta": {
+      "title": "Pronto a far crescere la tua attività?",
+      "description": "Adotta un processo di gara all'altezza degli standard svizzeri.",
+      "button": "Crea account"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Accedi a ProBau.ch",
+      "description": "Accedi al tuo dashboard in base al ruolo.",
+      "emailLabel": "E-mail aziendale",
+      "passwordLabel": "Password",
+      "fullNameLabel": "Nome completo",
+      "companyLabel": "Azienda",
+      "roleLabel": "Ruolo account",
+      "roleEmployer": "Committente",
+      "roleContractor": "Imprenditore",
+      "subscriptionSimulate": "Simula abbonamento attivo",
+      "subscriptionHint": "Attiva per inviare offerte subito dopo il login.",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Accedi",
+      "submitLoading": "Accesso in corso...",
+      "toastErrorTitle": "Accesso fallito",
+      "toastErrorDescription": "Controlla le credenziali.",
+      "toastSuccessTitle": "Bentornato",
+      "toastSuccessDescription": "Accesso riuscito."
+    },
+    "register": {
+      "title": "Crea il tuo account",
+      "description": "Scegli il ruolo e inizia con ProBau.ch.",
+      "emailLabel": "E-mail aziendale",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Conferma password",
+      "fullNameLabel": "Nome completo",
+      "companyLabel": "Azienda",
+      "roleLabel": "Ruolo account",
+      "roleEmployer": "Committente",
+      "roleContractor": "Imprenditore",
+      "subscriptionStart": "Inizia con abbonamento attivo",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Crea account",
+      "submitLoading": "Creazione account...",
+      "toastErrorTitle": "Registrazione fallita",
+      "toastErrorDescription": "Verifica i dati e riprova.",
+      "toastSuccessTitle": "Account creato",
+      "toastSuccessDescription": "Benvenuto su ProBau.ch."
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "overview": "Panoramica",
+      "createProject": "Crea progetto",
+      "myProjects": "I miei progetti",
+      "offersReceived": "Offerte ricevute",
+      "browseProjects": "Sfoglia progetti",
+      "myOffers": "Le mie offerte",
+      "subscription": "Abbonamento",
+      "settings": "Impostazioni"
+    },
+    "employer": {
+      "overviewTitle": "Dashboard committente",
+      "overviewDescription": "Gestisci pubblicazioni, scadenze e offerte ricevute.",
+      "activeProjects": "Progetti attivi",
+      "closedProjects": "Progetti chiusi",
+      "offersReceived": "Offerte ricevute",
+      "createProjectTitle": "Crea progetto",
+      "createProjectDescription": "Pubblica un brief strutturato e ricevi offerte professionali.",
+      "myProjectsTitle": "I miei progetti",
+      "myProjectsDescription": "Monitora tutti i progetti con scadenze e stato.",
+      "offersTitle": "Offerte ricevute",
+      "offersDescription": "Vista privata delle offerte raggruppate per progetto.",
+      "settingsTitle": "Impostazioni",
+      "settingsDescription": "Gestisci profilo aziendale e notifiche."
+    },
+    "contractor": {
+      "overviewTitle": "Dashboard imprenditore",
+      "overviewDescription": "Monitora opportunità, offerte e stato abbonamento.",
+      "availableProjects": "Progetti disponibili",
+      "submittedOffers": "Offerte inviate",
+      "subscriptionStatus": "Stato abbonamento",
+      "statusActive": "Attivo",
+      "statusInactive": "Inattivo",
+      "currentAccessTitle": "Accesso attuale",
+      "currentAccessDescription": "Per inviare offerte è richiesto un abbonamento attivo.",
+      "browseTitle": "Sfoglia progetti",
+      "browseDescription": "Filtra opportunità per cantone e scadenza.",
+      "offersTitle": "Le mie offerte",
+      "offersDescription": "Controlla lo stato delle offerte inviate.",
+      "subscriptionTitle": "Abbonamento",
+      "subscriptionDescription": "Gestisci il piano corrente e gli upgrade.",
+      "settingsTitle": "Impostazioni",
+      "settingsDescription": "Aggiorna i dati del tuo account."
+    },
+    "shared": {
+      "contactName": "Nome contatto",
+      "company": "Azienda",
+      "saveSettings": "Salva impostazioni"
+    }
+  },
+  "projects": {
+    "table": {
+      "title": "Titolo progetto",
+      "location": "Luogo",
+      "deadline": "Scadenza",
+      "status": "Stato"
+    },
+    "card": {
+      "budget": "Budget",
+      "location": "Luogo",
+      "category": "Categoria",
+      "deadline": "Scadenza"
+    },
+    "filters": {
+      "allCantons": "Tutti i cantoni",
+      "deadlineAriaLabel": "Filtra per scadenza",
+      "searchPlaceholder": "Cerca progetti...",
+      "allStatuses": "Tutti gli stati",
+      "allCategories": "Tutte le categorie"
+    },
+    "countdown": {
+      "deadlineReached": "Scadenza raggiunta"
+    },
+    "createForm": {
+      "titleLabel": "Titolo progetto",
+      "descriptionLabel": "Descrizione progetto",
+      "categoryLabel": "Categoria",
+      "cantonLabel": "Cantone",
+      "locationLabel": "Luogo",
+      "budgetLabel": "Budget (CHF)",
+      "deadlineLabel": "Scadenza invio",
+      "attachmentsLabel": "Allegati",
+      "submitIdle": "Pubblica progetto",
+      "submitLoading": "Pubblicazione...",
+      "modalTitle": "Pubblica progetto",
+      "modalDescription": "Vuoi pubblicare questo progetto ora?",
+      "toastTitle": "Progetto pubblicato",
+      "toastDescription": "Il progetto è ora visibile agli imprenditori."
+    },
+    "offerForm": {
+      "amountLabel": "Importo offerta (CHF)",
+      "detailsLabel": "Dettagli offerta",
+      "filesLabel": "File di supporto",
+      "submitIdle": "Invia offerta",
+      "submitLoading": "Invio..."
+    }
+  },
+  "pricing": {
+    "title": "Prezzi",
+    "description": "I committenti pubblicano gratis. Gli imprenditori si abbonano.",
+    "employerTitle": "Committenti",
+    "perMonth": "Al mese",
+    "createAccount": "Crea account",
+    "plans": {
+      "basic": {
+        "description": "Per team regionali e piccole aziende",
+        "feature1": "Accesso ai progetti attivi",
+        "feature2": "Fino a 10 offerte al mese",
+        "feature3": "Supporto standard"
+      },
+      "pro": {
+        "description": "Per aziende in crescita su più cantoni",
+        "feature1": "Offerte illimitate",
+        "feature2": "Matching prioritario",
+        "feature3": "Analisi avanzate e supporto prioritario"
+      }
+    }
+  },
+  "legal": {
+    "impressum": {
+      "title": "Note legali",
+      "email": "E-mail: legal@probau.ch",
+      "phone": "Telefono: +41 44 000 00 00"
+    },
+    "privacy": {
+      "title": "Privacy"
+    },
+    "agb": {
+      "title": "Condizioni generali"
+    }
+  },
+  "notFound": {
+    "title": "Pagina non trovata",
+    "description": "La pagina richiesta non esiste.",
+    "backHome": "Torna alla home"
+  }
+}

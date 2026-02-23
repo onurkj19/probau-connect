@@ -4,24 +4,32 @@ export type NavIcon = "dashboard" | "create" | "projects" | "offers" | "subscrip
 
 export interface NavItem {
   href: string;
-  label: string;
+  labelKey:
+    | "overview"
+    | "createProject"
+    | "myProjects"
+    | "offersReceived"
+    | "browseProjects"
+    | "myOffers"
+    | "subscription"
+    | "settings";
   icon: NavIcon;
 }
 
 const employerMenu: NavItem[] = [
-  { href: "/arbeitsgeber", label: "Dashboard overview", icon: "dashboard" },
-  { href: "/arbeitsgeber/create-project", label: "Create Project", icon: "create" },
-  { href: "/arbeitsgeber/projects", label: "My Projects", icon: "projects" },
-  { href: "/arbeitsgeber/offers", label: "Offers Received", icon: "offers" },
-  { href: "/arbeitsgeber/settings", label: "Settings", icon: "settings" },
+  { href: "/arbeitsgeber", labelKey: "overview", icon: "dashboard" },
+  { href: "/arbeitsgeber/create-project", labelKey: "createProject", icon: "create" },
+  { href: "/arbeitsgeber/projects", labelKey: "myProjects", icon: "projects" },
+  { href: "/arbeitsgeber/offers", labelKey: "offersReceived", icon: "offers" },
+  { href: "/arbeitsgeber/settings", labelKey: "settings", icon: "settings" },
 ];
 
 const contractorMenu: NavItem[] = [
-  { href: "/unternehmer", label: "Dashboard overview", icon: "dashboard" },
-  { href: "/unternehmer/projects", label: "Browse Projects", icon: "projects" },
-  { href: "/unternehmer/offers", label: "My Offers", icon: "offers" },
-  { href: "/unternehmer/subscription", label: "Subscription", icon: "subscription" },
-  { href: "/unternehmer/settings", label: "Settings", icon: "settings" },
+  { href: "/unternehmer", labelKey: "overview", icon: "dashboard" },
+  { href: "/unternehmer/projects", labelKey: "browseProjects", icon: "projects" },
+  { href: "/unternehmer/offers", labelKey: "myOffers", icon: "offers" },
+  { href: "/unternehmer/subscription", labelKey: "subscription", icon: "subscription" },
+  { href: "/unternehmer/settings", labelKey: "settings", icon: "settings" },
 ];
 
 export const getMenuByRole = (role: UserRole): NavItem[] =>

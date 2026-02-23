@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/components/auth/register-form";
 
-export const metadata: Metadata = {
-  title: "Register",
-  description: "Create your ProBau.ch account as Arbeitsgeber or Unternehmer.",
-};
+export const metadata: Metadata = {};
 
-const RegisterPage = () => (
-  <AuthShell
-    title="Create your account"
-    description="Choose your role and start using the professional Swiss construction marketplace."
-  >
-    <RegisterForm />
-  </AuthShell>
-);
+const RegisterPage = async () => {
+  const t = await getTranslations("auth.register");
+
+  return (
+    <AuthShell title={t("title")} description={t("description")}>
+      <RegisterForm />
+    </AuthShell>
+  );
+};
 
 export default RegisterPage;

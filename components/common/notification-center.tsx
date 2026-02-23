@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Info, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useNotifications } from "@/hooks/use-notifications";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ const notificationIcon = {
 };
 
 export const NotificationCenter = () => {
+  const t = useTranslations("common.notifications");
   const { notifications, dismiss } = useNotifications();
 
   return (
@@ -45,7 +47,7 @@ export const NotificationCenter = () => {
                 type="button"
                 className="text-neutral-500 hover:text-neutral-900"
                 onClick={() => dismiss(notification.id)}
-                aria-label="Dismiss notification"
+                aria-label={t("dismiss")}
               >
                 ×
               </button>
