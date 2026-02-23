@@ -24,21 +24,18 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2. Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- 3. RLS Policies
+-- 3. RLS Policies (drop first to avoid conflicts)
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 
--- Users can read their own profile
 CREATE POLICY "Users can read own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
--- Users can update their own profile (but NOT subscription fields)
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
-
--- Service role can do everything (for webhooks/API)
--- This is handled automatically by supabase service_role key
 
 -- 4. Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -56,7 +53,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Drop trigger if exists, then create
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
