@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "projects": "Projets",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "impressum": "Mentions légales",
+    "privacy": "Politique de confidentialité",
+    "terms": "CGV"
+  },
+  "hero": {
+    "title": "La place de marché suisse pour les projets de construction",
+    "subtitle": "Connectez les maîtres d'ouvrage avec des entrepreneurs qualifiés. Transparent, efficace et sécurisé.",
+    "cta_owner": "Publier un projet",
+    "cta_contractor": "Trouver des projets",
+    "trusted": "Fiable & Sécurisé"
+  },
+  "features": {
+    "title": "Pourquoi ProBau.ch ?",
+    "subtitle": "La plateforme leader pour les appels d'offres de construction en Suisse",
+    "free_posting": {
+      "title": "Publication gratuite",
+      "description": "Les maîtres d'ouvrage peuvent publier leurs projets et recevoir des offres gratuitement."
+    },
+    "qualified": {
+      "title": "Entrepreneurs qualifiés",
+      "description": "Seuls les entrepreneurs vérifiés avec un abonnement peuvent soumettre des offres."
+    },
+    "secure": {
+      "title": "Sécurisé & Confidentiel",
+      "description": "Les offres ne sont visibles que par le propriétaire du projet. Conforme au droit suisse."
+    },
+    "multilingual": {
+      "title": "Multilingue",
+      "description": "Disponible en allemand, français, italien et anglais."
+    }
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "step1": { "title": "Créer un projet", "description": "Décrivez votre projet de construction et téléchargez les documents." },
+    "step2": { "title": "Recevoir des offres", "description": "Les entrepreneurs qualifiés soumettent leurs meilleures propositions." },
+    "step3": { "title": "Attribuer le contrat", "description": "Choisissez la meilleure offre et démarrez votre projet." }
+  },
+  "pricing": {
+    "title": "Tarifs transparents",
+    "subtitle": "Choisissez le plan adapté à votre entreprise",
+    "monthly": "/mois",
+    "basic": {
+      "name": "Basic",
+      "price": "79",
+      "description": "Idéal pour les petites entreprises",
+      "features": ["Jusqu'à 10 offres/mois", "Notifications de projets", "Support standard"]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "149",
+      "description": "Pour les entreprises en croissance",
+      "features": ["Offres illimitées", "Notifications prioritaires", "Support premium", "Statistiques avancées"]
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "price": "Sur demande",
+      "description": "Solution sur mesure",
+      "features": ["Tout de Pro", "Account manager dédié", "Accès API", "Personnalisations"]
+    },
+    "cta": "Commencer",
+    "contact": "Contactez-nous",
+    "popular": "Populaire",
+    "free_owner": "Gratuit pour les maîtres d'ouvrage"
+  },
+  "stats": {
+    "projects": "Projets",
+    "contractors": "Entrepreneurs",
+    "cantons": "Cantons",
+    "satisfaction": "Satisfaction"
+  },
+  "cta": {
+    "title": "Prêt pour votre prochain projet de construction ?",
+    "subtitle": "Inscrivez-vous aujourd'hui et profitez de la plus grande place de marché de construction en Suisse.",
+    "button": "S'inscrire gratuitement"
+  },
+  "footer": {
+    "description": "La place de marché suisse leader pour les projets de construction.",
+    "platform": "Plateforme",
+    "legal": "Juridique",
+    "contact": "Contact",
+    "rights": "Tous droits réservés.",
+    "swiss_made": "Swiss Made"
+  },
+  "impressum": {
+    "title": "Mentions légales",
+    "company": "Société : ProBau.ch AG",
+    "address": "Adresse : Musterstrasse 1, 8001 Zürich, Suisse",
+    "email": "E-mail : info@probau.ch",
+    "phone": "Téléphone : +41 44 000 00 00",
+    "uid": "UID : CHE-000.000.000",
+    "responsible": "Responsable du contenu",
+    "disclaimer": "Avertissement"
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "intro": "La protection de vos données personnelles est très importante pour nous.",
+    "dsg": "Cette politique est basée sur la loi suisse sur la protection des données (LPD) et le RGPD."
+  },
+  "terms": {
+    "title": "Conditions générales",
+    "intro": "En utilisant la plateforme ProBau.ch, vous acceptez ces conditions générales."
+  }
+}

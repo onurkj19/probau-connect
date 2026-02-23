@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Home",
+    "projects": "Projects",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Sign In",
+    "register": "Register",
+    "impressum": "Imprint",
+    "privacy": "Privacy Policy",
+    "terms": "Terms"
+  },
+  "hero": {
+    "title": "The Swiss Marketplace for Construction Projects",
+    "subtitle": "Connect project owners with qualified contractors. Transparent, efficient and secure.",
+    "cta_owner": "Post a Project",
+    "cta_contractor": "Find Projects",
+    "trusted": "Trusted & Secure"
+  },
+  "features": {
+    "title": "Why ProBau.ch?",
+    "subtitle": "The leading platform for construction tenders in Switzerland",
+    "free_posting": {
+      "title": "Post for Free",
+      "description": "Project owners can publish their projects and receive offers at no cost."
+    },
+    "qualified": {
+      "title": "Qualified Contractors",
+      "description": "Only verified contractors with a subscription can submit offers."
+    },
+    "secure": {
+      "title": "Secure & Confidential",
+      "description": "Offers are only visible to the project owner. Privacy compliant with Swiss law."
+    },
+    "multilingual": {
+      "title": "Multilingual",
+      "description": "Available in German, French, Italian and English."
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "step1": { "title": "Create Project", "description": "Describe your construction project and upload relevant documents." },
+    "step2": { "title": "Receive Offers", "description": "Qualified contractors submit their best proposals." },
+    "step3": { "title": "Award Contract", "description": "Choose the best offer and start your project." }
+  },
+  "pricing": {
+    "title": "Transparent Pricing",
+    "subtitle": "Choose the right plan for your business",
+    "monthly": "/month",
+    "basic": {
+      "name": "Basic",
+      "price": "79",
+      "description": "Ideal for small businesses",
+      "features": ["Up to 10 offers/month", "Project notifications", "Standard support"]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "149",
+      "description": "For growing businesses",
+      "features": ["Unlimited offers", "Priority notifications", "Premium support", "Advanced analytics"]
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "price": "On request",
+      "description": "Custom solution",
+      "features": ["Everything in Pro", "Dedicated account manager", "API access", "Custom integrations"]
+    },
+    "cta": "Get Started",
+    "contact": "Contact Us",
+    "popular": "Popular",
+    "free_owner": "Free for project owners"
+  },
+  "stats": {
+    "projects": "Projects",
+    "contractors": "Contractors",
+    "cantons": "Cantons",
+    "satisfaction": "Satisfaction"
+  },
+  "cta": {
+    "title": "Ready for your next construction project?",
+    "subtitle": "Register today and benefit from Switzerland's largest construction marketplace.",
+    "button": "Register for Free"
+  },
+  "footer": {
+    "description": "The leading Swiss marketplace for construction projects. Connecting project owners with qualified contractors.",
+    "platform": "Platform",
+    "legal": "Legal",
+    "contact": "Contact",
+    "rights": "All rights reserved.",
+    "swiss_made": "Swiss Made"
+  },
+  "impressum": {
+    "title": "Imprint",
+    "company": "Company: ProBau.ch AG",
+    "address": "Address: Musterstrasse 1, 8001 Zürich, Switzerland",
+    "email": "Email: info@probau.ch",
+    "phone": "Phone: +41 44 000 00 00",
+    "uid": "UID: CHE-000.000.000",
+    "responsible": "Responsible for content",
+    "disclaimer": "Disclaimer"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "The protection of your personal data is very important to us.",
+    "dsg": "This privacy policy is based on the Swiss Data Protection Act (DSG) and the GDPR."
+  },
+  "terms": {
+    "title": "Terms and Conditions",
+    "intro": "By using the ProBau.ch platform, you agree to these terms and conditions."
+  }
+}

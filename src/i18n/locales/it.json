@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Home",
+    "projects": "Progetti",
+    "pricing": "Prezzi",
+    "about": "Chi siamo",
+    "login": "Accedi",
+    "register": "Registrati",
+    "impressum": "Impressum",
+    "privacy": "Privacy",
+    "terms": "Condizioni"
+  },
+  "hero": {
+    "title": "Il marketplace svizzero per i progetti di costruzione",
+    "subtitle": "Collega i committenti con imprenditori qualificati. Trasparente, efficiente e sicuro.",
+    "cta_owner": "Pubblica un progetto",
+    "cta_contractor": "Trova progetti",
+    "trusted": "Affidabile & Sicuro"
+  },
+  "features": {
+    "title": "Perché ProBau.ch?",
+    "subtitle": "La piattaforma leader per le gare d'appalto in Svizzera",
+    "free_posting": {
+      "title": "Pubblica gratis",
+      "description": "I committenti possono pubblicare i loro progetti e ricevere offerte gratuitamente."
+    },
+    "qualified": {
+      "title": "Imprenditori qualificati",
+      "description": "Solo imprenditori verificati con abbonamento possono inviare offerte."
+    },
+    "secure": {
+      "title": "Sicuro & Riservato",
+      "description": "Le offerte sono visibili solo al proprietario del progetto. Conforme al diritto svizzero."
+    },
+    "multilingual": {
+      "title": "Multilingue",
+      "description": "Disponibile in tedesco, francese, italiano e inglese."
+    }
+  },
+  "howItWorks": {
+    "title": "Come funziona",
+    "step1": { "title": "Crea un progetto", "description": "Descrivi il tuo progetto di costruzione e carica i documenti." },
+    "step2": { "title": "Ricevi offerte", "description": "Gli imprenditori qualificati inviano le loro migliori proposte." },
+    "step3": { "title": "Assegna il contratto", "description": "Scegli la migliore offerta e avvia il tuo progetto." }
+  },
+  "pricing": {
+    "title": "Prezzi trasparenti",
+    "subtitle": "Scegli il piano giusto per la tua azienda",
+    "monthly": "/mese",
+    "basic": {
+      "name": "Basic",
+      "price": "79",
+      "description": "Ideale per piccole aziende",
+      "features": ["Fino a 10 offerte/mese", "Notifiche progetti", "Supporto standard"]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "149",
+      "description": "Per aziende in crescita",
+      "features": ["Offerte illimitate", "Notifiche prioritarie", "Supporto premium", "Statistiche avanzate"]
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "price": "Su richiesta",
+      "description": "Soluzione personalizzata",
+      "features": ["Tutto di Pro", "Account manager dedicato", "Accesso API", "Personalizzazioni"]
+    },
+    "cta": "Inizia ora",
+    "contact": "Contattaci",
+    "popular": "Popolare",
+    "free_owner": "Gratuito per i committenti"
+  },
+  "stats": {
+    "projects": "Progetti",
+    "contractors": "Imprenditori",
+    "cantons": "Cantoni",
+    "satisfaction": "Soddisfazione"
+  },
+  "cta": {
+    "title": "Pronto per il tuo prossimo progetto di costruzione?",
+    "subtitle": "Registrati oggi e approfitta del più grande marketplace di costruzione in Svizzera.",
+    "button": "Registrati gratis"
+  },
+  "footer": {
+    "description": "Il marketplace svizzero leader per i progetti di costruzione.",
+    "platform": "Piattaforma",
+    "legal": "Legale",
+    "contact": "Contatto",
+    "rights": "Tutti i diritti riservati.",
+    "swiss_made": "Swiss Made"
+  },
+  "impressum": {
+    "title": "Impressum",
+    "company": "Azienda: ProBau.ch AG",
+    "address": "Indirizzo: Musterstrasse 1, 8001 Zürich, Svizzera",
+    "email": "E-mail: info@probau.ch",
+    "phone": "Telefono: +41 44 000 00 00",
+    "uid": "UID: CHE-000.000.000",
+    "responsible": "Responsabile del contenuto",
+    "disclaimer": "Disclaimer"
+  },
+  "privacy": {
+    "title": "Informativa sulla privacy",
+    "intro": "La protezione dei vostri dati personali è molto importante per noi.",
+    "dsg": "Questa informativa è basata sulla legge svizzera sulla protezione dei dati (LPD) e sul GDPR."
+  },
+  "terms": {
+    "title": "Condizioni generali",
+    "intro": "Utilizzando la piattaforma ProBau.ch, accetti queste condizioni generali."
+  }
+}

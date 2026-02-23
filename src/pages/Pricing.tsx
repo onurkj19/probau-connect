@@ -1,0 +1,75 @@
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
+import { CheckCircle, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const Pricing = () => {
+  const { t } = useTranslation();
+
+  const plans = ["basic", "pro", "enterprise"] as const;
+
+  return (
+    <main className="bg-background py-20">
+      <div className="container">
+        <div className="mx-auto max-w-xl text-center">
+          <h1 className="font-display text-4xl font-bold text-foreground">{t("pricing.title")}</h1>
+          <p className="mt-2 text-lg text-muted-foreground">{t("pricing.subtitle")}</p>
+          <p className="mt-1 text-sm font-medium text-accent">{t("pricing.free_owner")}</p>
+        </div>
+
+        <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3">
+          {plans.map((plan, i) => {
+            const isPopular = plan === "pro";
+            return (
+              <motion.div
+                key={plan}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`relative rounded-lg border p-6 ${
+                  isPopular ? "border-accent bg-card shadow-elevated" : "border-border bg-card shadow-card"
+                }`}
+              >
+                {isPopular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-semibold text-accent-foreground">
+                    {t("pricing.popular")}
+                  </span>
+                )}
+                <h2 className="font-display text-lg font-semibold text-foreground">{t(`pricing.${plan}.name`)}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t(`pricing.${plan}.description`)}</p>
+                <div className="mt-4">
+                  {plan !== "enterprise" ? (
+                    <span className="font-display text-3xl font-bold text-foreground">
+                      CHF {t(`pricing.${plan}.price`)}
+                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                    </span>
+                  ) : (
+                    <span className="font-display text-xl font-bold text-foreground">{t(`pricing.${plan}.price`)}</span>
+                  )}
+                </div>
+                <ul className="mt-6 space-y-2">
+                  {(t(`pricing.${plan}.features`, { returnObjects: true }) as string[]).map((feat, fi) => (
+                    <li key={fi} className="flex items-center gap-2 text-sm text-foreground">
+                      <CheckCircle className="h-4 w-4 text-accent" />
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className={`mt-6 w-full ${
+                    isPopular ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""
+                  }`}
+                  variant={isPopular ? "default" : "outline"}
+                >
+                  {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
+                </Button>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </main>
+  );
+};
+
+export default Pricing;

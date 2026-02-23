@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "projects": "Projekte",
+    "pricing": "Preise",
+    "about": "Über uns",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "impressum": "Impressum",
+    "privacy": "Datenschutz",
+    "terms": "AGB"
+  },
+  "hero": {
+    "title": "Der Schweizer Marktplatz für Bauprojekte",
+    "subtitle": "Verbinden Sie Bauherren mit qualifizierten Unternehmern. Transparent, effizient und sicher.",
+    "cta_owner": "Projekt ausschreiben",
+    "cta_contractor": "Aufträge finden",
+    "trusted": "Vertrauenswürdig & sicher"
+  },
+  "features": {
+    "title": "Warum ProBau.ch?",
+    "subtitle": "Die führende Plattform für Bauausschreibungen in der Schweiz",
+    "free_posting": {
+      "title": "Kostenlos ausschreiben",
+      "description": "Arbeitgeber können ihre Projekte kostenlos veröffentlichen und Offerten erhalten."
+    },
+    "qualified": {
+      "title": "Qualifizierte Unternehmer",
+      "description": "Nur geprüfte Unternehmer mit Abonnement können Offerten einreichen."
+    },
+    "secure": {
+      "title": "Sicher & Vertraulich",
+      "description": "Offerten sind nur für den Projektinhaber sichtbar. Datenschutz nach Schweizer Recht."
+    },
+    "multilingual": {
+      "title": "Mehrsprachig",
+      "description": "Verfügbar in Deutsch, Französisch, Italienisch und Englisch."
+    }
+  },
+  "howItWorks": {
+    "title": "So funktioniert es",
+    "step1": { "title": "Projekt erstellen", "description": "Beschreiben Sie Ihr Bauprojekt und laden Sie relevante Dokumente hoch." },
+    "step2": { "title": "Offerten erhalten", "description": "Qualifizierte Unternehmer reichen ihre besten Angebote ein." },
+    "step3": { "title": "Auftrag vergeben", "description": "Wählen Sie das beste Angebot und starten Sie Ihr Projekt." }
+  },
+  "pricing": {
+    "title": "Transparente Preise",
+    "subtitle": "Wählen Sie das passende Abo für Ihr Unternehmen",
+    "monthly": "/Monat",
+    "basic": {
+      "name": "Basic",
+      "price": "79",
+      "description": "Ideal für kleine Unternehmen",
+      "features": ["Bis zu 10 Offerten/Monat", "Projektbenachrichtigungen", "Standard-Support"]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "149",
+      "description": "Für wachsende Unternehmen",
+      "features": ["Unbegrenzte Offerten", "Prioritäts-Benachrichtigungen", "Premium-Support", "Erweiterte Statistiken"]
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "price": "Auf Anfrage",
+      "description": "Massgeschneiderte Lösung",
+      "features": ["Alles aus Pro", "Dedizierter Account Manager", "API-Zugang", "Individuelle Anpassungen"]
+    },
+    "cta": "Jetzt starten",
+    "contact": "Kontaktieren Sie uns",
+    "popular": "Beliebt",
+    "free_owner": "Für Arbeitgeber kostenlos"
+  },
+  "stats": {
+    "projects": "Projekte",
+    "contractors": "Unternehmer",
+    "cantons": "Kantone",
+    "satisfaction": "Zufriedenheit"
+  },
+  "cta": {
+    "title": "Bereit für Ihr nächstes Bauprojekt?",
+    "subtitle": "Registrieren Sie sich noch heute und profitieren Sie vom grössten Bau-Marktplatz der Schweiz.",
+    "button": "Kostenlos registrieren"
+  },
+  "footer": {
+    "description": "Der führende Schweizer Marktplatz für Bauprojekte. Verbinden wir Bauherren mit qualifizierten Unternehmern.",
+    "platform": "Plattform",
+    "legal": "Rechtliches",
+    "contact": "Kontakt",
+    "rights": "Alle Rechte vorbehalten.",
+    "swiss_made": "Swiss Made"
+  },
+  "impressum": {
+    "title": "Impressum",
+    "company": "Firmenname: ProBau.ch AG",
+    "address": "Adresse: Musterstrasse 1, 8001 Zürich, Schweiz",
+    "email": "E-Mail: info@probau.ch",
+    "phone": "Telefon: +41 44 000 00 00",
+    "uid": "UID: CHE-000.000.000",
+    "responsible": "Verantwortlich für den Inhalt",
+    "disclaimer": "Haftungsausschluss"
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "intro": "Der Schutz Ihrer persönlichen Daten ist uns sehr wichtig.",
+    "dsg": "Diese Datenschutzerklärung basiert auf dem Schweizer Datenschutzgesetz (DSG) und der DSGVO."
+  },
+  "terms": {
+    "title": "Allgemeine Geschäftsbedingungen (AGB)",
+    "intro": "Durch die Nutzung der Plattform ProBau.ch erklären Sie sich mit diesen AGB einverstanden."
+  }
+}
