@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock, Users, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useLocalePath } from "@/lib/i18n-routing";
 
 const Index = () => {
   const { t } = useTranslation();
+  const localePath = useLocalePath();
 
   const features = [
     { icon: FileText, title: t("features.free_posting.title"), desc: t("features.free_posting.description") },
@@ -206,7 +208,7 @@ const Index = () => {
                     variant={!isPopular && plan !== "enterprise" ? "outline" : "default"}
                     asChild
                   >
-                    <Link to="/pricing">
+                    <Link to={localePath("/pricing")}>
                       {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
                     </Link>
                   </Button>

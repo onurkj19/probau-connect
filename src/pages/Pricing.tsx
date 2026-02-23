@@ -2,9 +2,15 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link, useParams } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 
 const Pricing = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { locale } = useParams<{ locale: string }>();
+  const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
 
   const plans = ["basic", "pro", "enterprise"] as const;
 
@@ -60,8 +66,17 @@ const Pricing = () => {
                     isPopular ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""
                   }`}
                   variant={isPopular ? "default" : "outline"}
+                  asChild
                 >
-                  {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
+                  {user ? (
+                    <Link to={`/${lang}/dashboard/subscription`}>
+                      {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
+                    </Link>
+                  ) : (
+                    <Link to={`/${lang}/register`}>
+                      {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
+                    </Link>
+                  )}
                 </Button>
               </motion.div>
             );
