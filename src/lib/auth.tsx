@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
 export type UserRole = "owner" | "contractor";
+export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
+export type PlanType = "basic" | "pro";
 
 export interface User {
   id: string;
@@ -8,7 +10,11 @@ export interface User {
   name: string;
   companyName: string;
   role: UserRole;
-  subscriptionActive: boolean;
+  stripeCustomerId: string | null;
+  subscriptionStatus: SubscriptionStatus;
+  planType: PlanType | null;
+  offerCountThisMonth: number;
+  subscriptionCurrentPeriodEnd: string | null;
 }
 
 interface AuthState {
@@ -20,7 +26,10 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   canSubmitOffer: boolean;
+  offerLimitReached: boolean;
+  offerLimit: number | null;
 }
 
 interface RegisterData {
@@ -30,6 +39,11 @@ interface RegisterData {
   companyName: string;
   role: UserRole;
 }
+
+const OFFER_LIMITS: Record<PlanType, number | null> = {
+  basic: 10,
+  pro: null,
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -51,7 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: "Demo User",
         companyName: "Demo AG",
         role: "owner",
-        subscriptionActive: false,
+        stripeCustomerId: null,
+        subscriptionStatus: "none",
+        planType: null,
+        offerCountThisMonth: 0,
+        subscriptionCurrentPeriodEnd: null,
       },
     });
   }, []);
@@ -68,7 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: data.name,
         companyName: data.companyName,
         role: data.role,
-        subscriptionActive: false,
+        stripeCustomerId: null,
+        subscriptionStatus: "none",
+        planType: null,
+        offerCountThisMonth: 0,
+        subscriptionCurrentPeriodEnd: null,
       },
     });
   }, []);
@@ -77,11 +99,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user: null, isLoading: false });
   }, []);
 
-  const canSubmitOffer =
-    state.user?.role === "contractor" && state.user.subscriptionActive;
+  const refreshUser = useCallback(async () => {
+    // TODO: Re-fetch user data from API to get updated subscription status
+    // const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+    // const data = await res.json();
+    // setState((s) => ({ ...s, user: data }));
+  }, []);
+
+  const user = state.user;
+  const isContractor = user?.role === "contractor";
+  const hasActiveSubscription = user?.subscriptionStatus === "active";
+  const canSubmitOffer = isContractor && hasActiveSubscription;
+
+  const offerLimit = user?.planType ? OFFER_LIMITS[user.planType] : null;
+  const offerLimitReached =
+    canSubmitOffer && offerLimit !== null && user.offerCountThisMonth >= offerLimit;
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, canSubmitOffer }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        logout,
+        refreshUser,
+        canSubmitOffer: canSubmitOffer && !offerLimitReached,
+        offerLimitReached,
+        offerLimit,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

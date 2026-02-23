@@ -175,5 +175,23 @@
     "subscription_required": "Abonnement erforderlich",
     "subscription_required_message": "Sie benötigen ein aktives Abonnement, um Offerten einzureichen.",
     "upgrade_now": "Jetzt upgraden"
+  },
+  "subscription": {
+    "title": "Abonnement verwalten",
+    "choose_plan": "Wählen Sie einen Plan, um Offerten einreichen zu können.",
+    "active_status": "Aktiv",
+    "renews_on": "Verlängerung am",
+    "offers_used": "Offerten diesen Monat",
+    "basic_limit": "Max. 10 pro Monat (Basic)",
+    "unlimited": "Unbegrenzt (Pro)",
+    "upgrade_to_pro": "Auf Pro upgraden",
+    "manage": "Abonnement verwalten",
+    "cancel": "Abonnement kündigen",
+    "payment_failed": "Zahlung fehlgeschlagen",
+    "update_payment": "Bitte aktualisieren Sie Ihre Zahlungsmethode.",
+    "update_payment_button": "Zahlungsmethode aktualisieren",
+    "canceled_info": "Ihr Abonnement wurde gekündigt. Sie können jederzeit ein neues Abonnement abschliessen.",
+    "limit_reached": "Offerten-Limit für diesen Abrechnungszeitraum erreicht.",
+    "used_of_limit": "{{used}} von {{limit}} Offerten verwendet"
   }
 }

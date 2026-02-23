@@ -27,6 +27,7 @@ export function DashboardSidebar() {
     { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.find_projects") },
     { to: `${basePath}/offers`, icon: FileText, label: t("dashboard.my_offers") },
+    { to: `${basePath}/subscription`, icon: CreditCard, label: t("dashboard.subscription") },
     { to: `${basePath}/settings`, icon: Settings, label: t("dashboard.settings") },
   ];
 
@@ -68,16 +69,6 @@ export function DashboardSidebar() {
       </nav>
 
       <div className="border-t border-border px-3 py-4">
-        {user?.role === "contractor" && (
-          <Link
-            to={`/${lang}/pricing`}
-            onClick={() => setMobileOpen(false)}
-            className="mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <CreditCard className="h-4 w-4" />
-            {t("dashboard.subscription")}
-          </Link>
-        )}
         <button
           onClick={() => { logout(); setMobileOpen(false); }}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"

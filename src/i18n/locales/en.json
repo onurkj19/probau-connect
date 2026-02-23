@@ -175,5 +175,23 @@
     "subscription_required": "Subscription required",
     "subscription_required_message": "You need an active subscription to submit offers.",
     "upgrade_now": "Upgrade now"
+  },
+  "subscription": {
+    "title": "Manage Subscription",
+    "choose_plan": "Choose a plan to start submitting offers.",
+    "active_status": "Active",
+    "renews_on": "Renews on",
+    "offers_used": "Offers this month",
+    "basic_limit": "Max 10 per month (Basic)",
+    "unlimited": "Unlimited (Pro)",
+    "upgrade_to_pro": "Upgrade to Pro",
+    "manage": "Manage subscription",
+    "cancel": "Cancel subscription",
+    "payment_failed": "Payment failed",
+    "update_payment": "Please update your payment method.",
+    "update_payment_button": "Update payment method",
+    "canceled_info": "Your subscription has been canceled. You can subscribe again at any time.",
+    "limit_reached": "Offer limit reached for this billing cycle.",
+    "used_of_limit": "{{used}} of {{limit}} offers used"
   }
 }

@@ -175,5 +175,23 @@
     "subscription_required": "Abbonamento richiesto",
     "subscription_required_message": "Hai bisogno di un abbonamento attivo per inviare offerte.",
     "upgrade_now": "Aggiorna ora"
+  },
+  "subscription": {
+    "title": "Gestisci abbonamento",
+    "choose_plan": "Scegli un piano per iniziare a inviare offerte.",
+    "active_status": "Attivo",
+    "renews_on": "Rinnovo il",
+    "offers_used": "Offerte questo mese",
+    "basic_limit": "Max 10 al mese (Basic)",
+    "unlimited": "Illimitate (Pro)",
+    "upgrade_to_pro": "Passa a Pro",
+    "manage": "Gestisci abbonamento",
+    "cancel": "Annulla abbonamento",
+    "payment_failed": "Pagamento fallito",
+    "update_payment": "Aggiorna il metodo di pagamento.",
+    "update_payment_button": "Aggiorna pagamento",
+    "canceled_info": "Il tuo abbonamento è stato annullato. Puoi abbonarti di nuovo in qualsiasi momento.",
+    "limit_reached": "Limite offerte raggiunto per questo ciclo di fatturazione.",
+    "used_of_limit": "{{used}} di {{limit}} offerte utilizzate"
   }
 }

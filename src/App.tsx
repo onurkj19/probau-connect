@@ -20,6 +20,7 @@ import DashboardOverview from "./pages/dashboard/Overview";
 import DashboardProjects from "./pages/dashboard/Projects";
 import DashboardOffers from "./pages/dashboard/Offers";
 import DashboardSettings from "./pages/dashboard/Settings";
+import DashboardSubscription from "./pages/dashboard/Subscription";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import Unauthorized from "./pages/Unauthorized";
 import "./i18n";
@@ -55,6 +56,7 @@ const App = () => (
                 <Route index element={<DashboardOverview />} />
                 <Route path="projects" element={<DashboardProjects />} />
                 <Route path="offers" element={<RoleGuard allowedRoles={["contractor"]}><DashboardOffers /></RoleGuard>} />
+                <Route path="subscription" element={<RoleGuard allowedRoles={["contractor"]}><DashboardSubscription /></RoleGuard>} />
                 <Route path="settings" element={<DashboardSettings />} />
               </Route>
             </Route>

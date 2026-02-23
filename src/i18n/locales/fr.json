@@ -175,5 +175,23 @@
     "subscription_required": "Abonnement requis",
     "subscription_required_message": "Vous avez besoin d'un abonnement actif pour soumettre des offres.",
     "upgrade_now": "Mettre à niveau"
+  },
+  "subscription": {
+    "title": "Gérer l'abonnement",
+    "choose_plan": "Choisissez un plan pour commencer à soumettre des offres.",
+    "active_status": "Actif",
+    "renews_on": "Renouvellement le",
+    "offers_used": "Offres ce mois",
+    "basic_limit": "Max 10 par mois (Basic)",
+    "unlimited": "Illimitées (Pro)",
+    "upgrade_to_pro": "Passer au Pro",
+    "manage": "Gérer l'abonnement",
+    "cancel": "Annuler l'abonnement",
+    "payment_failed": "Paiement échoué",
+    "update_payment": "Veuillez mettre à jour votre méthode de paiement.",
+    "update_payment_button": "Mettre à jour le paiement",
+    "canceled_info": "Votre abonnement a été annulé. Vous pouvez vous réabonner à tout moment.",
+    "limit_reached": "Limite d'offres atteinte pour ce cycle de facturation.",
+    "used_of_limit": "{{used}} sur {{limit}} offres utilisées"
   }
 }
