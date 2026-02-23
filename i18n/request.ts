@@ -25,14 +25,20 @@ const mergeMessages = (base: MessageTree, localized: MessageTree): MessageTree =
   return result;
 };
 
+const loadMessages = async (locale: string): Promise<MessageTree> => {
+  const localeBundle = (await import(`../messages/${locale}.json`).catch(() =>
+    import("../messages/de.json"),
+  )) as { default: MessageTree };
+
+  return localeBundle.default;
+};
+
 export default getRequestConfig(async ({requestLocale}) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
 
-  const baseMessages = (await import("../messages/de.json")).default as MessageTree;
-  const localizedMessages = (
-    await import(`../messages/${locale}.json`).catch(() => import("../messages/de.json"))
-  ).default as MessageTree;
+  const baseMessages = await loadMessages(routing.defaultLocale);
+  const localizedMessages = await loadMessages(locale);
 
   return {
     locale,
