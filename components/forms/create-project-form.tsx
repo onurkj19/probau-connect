@@ -41,7 +41,7 @@ export const CreateProjectForm = () => {
     resolver: zodResolver(createProjectSchema),
   });
 
-  const onSubmit = async (_values: CreateProjectInput) => {
+  const onSubmit = (_values: CreateProjectInput) => {
     openModal({
       title: "Publish project",
       description: "Do you want to publish this project now?",

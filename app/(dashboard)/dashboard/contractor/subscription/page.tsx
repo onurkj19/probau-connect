@@ -6,9 +6,9 @@ import { getServerSessionUser } from "@/lib/auth/server-session";
 import { listSubscriptionPlans } from "@/lib/api/subscription";
 
 interface SubscriptionPageProps {
-  searchParams: {
+  searchParams: Promise<{
     upgrade?: string;
-  };
+  }>;
 }
 
 const SubscriptionPage = async ({ searchParams }: SubscriptionPageProps) => {
@@ -19,6 +19,8 @@ const SubscriptionPage = async ({ searchParams }: SubscriptionPageProps) => {
 
   const plans = await listSubscriptionPlans();
 
+  const params = await searchParams;
+
   return (
     <div className="space-y-5">
       <div>
@@ -28,7 +30,7 @@ const SubscriptionPage = async ({ searchParams }: SubscriptionPageProps) => {
         </p>
       </div>
 
-      {searchParams.upgrade === "required" ? (
+      {params.upgrade === "required" ? (
         <Card className="border-swiss-red bg-swiss-soft">
           <p className="text-sm font-semibold text-swiss-red">
             Offer submission is locked. Please activate a subscription first.

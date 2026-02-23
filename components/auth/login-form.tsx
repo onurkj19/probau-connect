@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -24,12 +24,9 @@ const loginSchema = z.object({
 
 type LoginInput = z.infer<typeof loginSchema>;
 
-export const LoginForm = () => {
+export const LoginForm = ({ redirectPath }: { redirectPath?: string }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { notify } = useNotifications();
-
-  const redirectPath = searchParams.get("redirect");
 
   const {
     register,
@@ -65,7 +62,7 @@ export const LoginForm = () => {
       description: "Login successful.",
     });
 
-    router.push(redirectPath ?? "/dashboard");
+    router.push(redirectPath || "/dashboard");
     router.refresh();
   };
 

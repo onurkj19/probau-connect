@@ -8,12 +8,13 @@ import { getProjectById } from "@/lib/api/projects";
 import { formatCurrency } from "@/lib/utils";
 
 interface SubmitOfferPageProps {
-  params: {
+  params: Promise<{
     projectId: string;
-  };
+  }>;
 }
 
 const SubmitOfferPage = async ({ params }: SubmitOfferPageProps) => {
+  const routeParams = await params;
   const user = await getServerSessionUser();
   if (!user) {
     redirect("/login");
@@ -25,7 +26,7 @@ const SubmitOfferPage = async ({ params }: SubmitOfferPageProps) => {
     redirect("/dashboard/contractor/subscription?upgrade=required");
   }
 
-  const project = await getProjectById(params.projectId);
+  const project = await getProjectById(routeParams.projectId);
   if (!project) {
     notFound();
   }

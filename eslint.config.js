@@ -20,6 +20,12 @@ export default tseslint.config(
     },
     rules: {
       ...nextPlugin.configs["core-web-vitals"].rules,
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        {
+          checksVoidReturn: false,
+        },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

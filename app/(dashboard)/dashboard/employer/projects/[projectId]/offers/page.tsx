@@ -7,18 +7,19 @@ import { getProjectById, listOffersByProject } from "@/lib/api/projects";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface OffersByProjectPageProps {
-  params: {
+  params: Promise<{
     projectId: string;
-  };
+  }>;
 }
 
 const OffersByProjectPage = async ({ params }: OffersByProjectPageProps) => {
+  const routeParams = await params;
   const user = await getServerSessionUser();
   if (!user) {
     redirect("/login");
   }
 
-  const project = await getProjectById(params.projectId);
+  const project = await getProjectById(routeParams.projectId);
   if (!project || project.ownerId !== user.id) {
     notFound();
   }

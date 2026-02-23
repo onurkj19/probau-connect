@@ -36,7 +36,7 @@ export const SubmitOfferForm = ({ project }: { project: Project }) => {
     },
   });
 
-  const onSubmit = async (_values: SubmitOfferInput) => {
+  const onSubmit = (_values: SubmitOfferInput) => {
     notify({
       tone: "success",
       title: "Offer submitted",
