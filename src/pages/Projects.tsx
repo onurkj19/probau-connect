@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Building2, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link, useParams } from "react-router-dom";
+import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 
 const sampleProjects = [
   { company: "Müller Bau AG", location: "Zürich", deadline: "2026-04-15", description: "Sanierung Mehrfamilienhaus" },
@@ -10,6 +12,8 @@ const sampleProjects = [
 
 const Projects = () => {
   const { t } = useTranslation();
+  const { locale } = useParams<{ locale: string }>();
+  const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
 
   return (
     <main className="bg-background py-20">
@@ -38,7 +42,9 @@ const Projects = () => {
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
                     {isActive ? t("projects.status_active") : t("projects.status_closed")}
                   </span>
-                  <Button size="sm" variant="outline">{t("nav.login")}</Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/${lang}/login`}>{t("nav.login")}</Link>
+                  </Button>
                 </div>
               </div>
             );

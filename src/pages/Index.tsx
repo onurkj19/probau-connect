@@ -4,10 +4,20 @@ import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock,
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLocalePath } from "@/lib/i18n-routing";
+import { useAuth } from "@/lib/auth";
 
 const Index = () => {
   const { t } = useTranslation();
   const localePath = useLocalePath();
+  const { user } = useAuth();
+
+  const contractorPrimaryPath = user
+    ? user.role === "contractor"
+      ? localePath("/dashboard/subscription")
+      : localePath("/dashboard")
+    : localePath("/register");
+
+  const ownerPrimaryPath = user ? localePath("/dashboard/projects") : localePath("/register");
 
   const features = [
     { icon: FileText, title: t("features.free_posting.title"), desc: t("features.free_posting.description") },
@@ -52,16 +62,19 @@ const Index = () => {
               {t("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-                {t("hero.cta_owner")}
-                <ArrowRight className="h-4 w-4" />
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2" asChild>
+                <Link to={ownerPrimaryPath}>
+                  {t("hero.cta_owner")}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                asChild
               >
-                {t("hero.cta_contractor")}
+                <Link to={contractorPrimaryPath}>{t("hero.cta_contractor")}</Link>
               </Button>
             </div>
           </motion.div>
@@ -229,9 +242,11 @@ const Index = () => {
           >
             <h2 className="font-display text-3xl font-bold text-primary-foreground">{t("cta.title")}</h2>
             <p className="mx-auto mt-3 max-w-lg text-primary-foreground/70">{t("cta.subtitle")}</p>
-            <Button size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-              {t("cta.button")}
-              <ArrowRight className="h-4 w-4" />
+            <Button size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90 gap-2" asChild>
+              <Link to={contractorPrimaryPath} className="inline-flex items-center gap-2">
+                {t("cta.button")}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </motion.div>
         </div>
