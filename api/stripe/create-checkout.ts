@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Stripe from "stripe";
 import { stripe, PLANS, type PlanType } from "../_lib/stripe.js";
 import { authenticateRequest } from "../_lib/auth.js";
 import { updateUserSubscription } from "../_lib/db.js";
@@ -16,13 +15,6 @@ function sanitizePublicError(message: string): string {
     return "Stripe configuration error: invalid STRIPE_SECRET_KEY.";
   }
   return message;
-}
-
-function isUnsupportedPaymentMethodError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const stripeErr = err as Stripe.StripeRawError;
-  const msg = String(stripeErr.message || "").toLowerCase();
-  return stripeErr.type === "invalid_request_error" && msg.includes("payment_method_types");
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -72,9 +64,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const appUrl = process.env.VITE_APP_URL || "http://localhost:8080";
 
-    const baseParams: Stripe.Checkout.SessionCreateParams = {
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
+      payment_method_types: ["card"],
       line_items: [
         {
           price: plan.priceId,
@@ -93,25 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         userId: user.id,
         planType: plan.type,
       },
-    };
-
-    let session: Stripe.Checkout.Session;
-    try {
-      // Explicitly request PayPal in addition to card.
-      // Apple Pay / Google Pay are surfaced via card when eligible.
-      session = await stripe.checkout.sessions.create({
-        ...baseParams,
-        payment_method_types: ["card", "paypal"],
-      });
-    } catch (pmErr: unknown) {
-      // Some Stripe account/currency/subscription combinations don't allow PayPal.
-      // Fallback to default methods instead of breaking checkout.
-      if (isUnsupportedPaymentMethodError(pmErr)) {
-        session = await stripe.checkout.sessions.create(baseParams);
-      } else {
-        throw pmErr;
-      }
-    }
+    });
 
     return res.status(200).json({ url: session.url });
   } catch (err: unknown) {
