@@ -1,34 +1,58 @@
-# ProBau.ch
+# ProBau.ch Frontend
 
-Marketplace web application for construction projects in Switzerland.
+Production-grade frontend architecture for a Swiss construction SaaS marketplace.
 
-## Tech stack
+## Stack
 
-- React
-- TypeScript
-- Vite
+- Next.js (App Router)
+- TypeScript (strict)
 - Tailwind CSS
-- shadcn/ui
+- Modular component architecture
 
-## Getting started
+## Business roles
 
-Requirements:
+1. **Arbeitsgeber** (free)
+   - Create projects
+   - View own projects
+   - Review received offers
+2. **Unternehmer** (paid)
+   - Browse projects
+   - Submit offers (requires active subscription)
+   - Manage subscription
+   - Track own offers
 
-- Node.js
-- npm
+## Project structure
 
-Install dependencies and run the development server:
+```txt
+app/
+  (public)/
+  (dashboard)/dashboard/
+  api/auth/
+components/
+  auth/
+  common/
+  dashboard/
+  forms/
+  layout/
+  marketing/
+  projects/
+  subscription/
+  ui/
+hooks/
+lib/
+types/
+```
 
-```sh
+## Development
+
+```bash
 npm install
 npm run dev
 ```
 
-## Available scripts
+## Scripts
 
-- `npm run dev` - start local development server
-- `npm run build` - build production bundle
-- `npm run preview` - preview production build locally
+- `npm run dev` - start local server
+- `npm run build` - build production app
+- `npm run start` - run production server
 - `npm run lint` - run ESLint
-- `npm run test` - run test suite once
-- `npm run test:watch` - run tests in watch mode
