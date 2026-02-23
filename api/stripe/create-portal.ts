@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { stripe } from "../_lib/stripe";
-import { authenticateRequest } from "../_lib/auth";
+import { stripe } from "../_lib/stripe.js";
+import { authenticateRequest } from "../_lib/auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {

@@ -1,6 +1,6 @@
 import type { VercelRequest } from "@vercel/node";
-import { supabaseAdmin } from "./supabase";
-import { getUserById, type UserSubscription } from "./db";
+import { supabaseAdmin } from "./supabase.js";
+import { getUserById, type UserSubscription } from "./db.js";
 
 /**
  * Extracts the Supabase JWT from the Authorization header,

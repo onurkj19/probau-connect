@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "./supabase";
-import type { PlanType } from "./stripe";
+import { supabaseAdmin } from "./supabase.js";
+import type { PlanType } from "./stripe.js";
 
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
 

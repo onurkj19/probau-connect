@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { authenticateRequest } from "../_lib/auth";
-import { incrementOfferCount } from "../_lib/db";
-import { PLANS } from "../_lib/stripe";
+import { authenticateRequest } from "../_lib/auth.js";
+import { incrementOfferCount } from "../_lib/db.js";
+import { PLANS } from "../_lib/stripe.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
-import { stripe, getPlanByPriceId } from "../_lib/stripe";
-import { updateUserByStripeCustomerId } from "../_lib/db";
+import { stripe, getPlanByPriceId } from "../_lib/stripe.js";
+import { updateUserByStripeCustomerId } from "../_lib/db.js";
 
 /**
  * Stripe webhook endpoint.
