@@ -32,6 +32,11 @@ async function getRawBody(req: VercelRequest): Promise<Buffer> {
   });
 }
 
+function getSubscriptionPeriodEndUnix(subscription: Stripe.Subscription): number | null {
+  // Stripe moved period boundaries to subscription items in newer API versions.
+  return subscription.items.data[0]?.current_period_end ?? null;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -107,13 +112,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const priceId = subscription.items.data[0]?.price.id;
   const plan = priceId ? getPlanByPriceId(priceId) : undefined;
+  const periodEndUnix = getSubscriptionPeriodEndUnix(subscription as Stripe.Subscription);
 
   await updateUserByStripeCustomerId(customerId, {
     subscriptionStatus: "active",
     planType: plan?.type || null,
-    subscriptionCurrentPeriodEnd: new Date(
-      subscription.current_period_end * 1000,
-    ).toISOString(),
+    subscriptionCurrentPeriodEnd: periodEndUnix
+      ? new Date(periodEndUnix * 1000).toISOString()
+      : null,
     offerCountThisMonth: 0,
   });
 
@@ -142,13 +148,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const mappedStatus = (statusMap[subscription.status] || "none") as
     "active" | "canceled" | "past_due" | "none";
+  const periodEndUnix = getSubscriptionPeriodEndUnix(subscription);
 
   const update: Parameters<typeof updateUserByStripeCustomerId>[1] = {
     subscriptionStatus: mappedStatus,
     planType: mappedStatus === "active" ? (plan?.type || null) : null,
-    subscriptionCurrentPeriodEnd: new Date(
-      subscription.current_period_end * 1000,
-    ).toISOString(),
+    subscriptionCurrentPeriodEnd: periodEndUnix
+      ? new Date(periodEndUnix * 1000).toISOString()
+      : null,
   };
 
   // Reset offer count when a new billing period starts (plan upgrade/renewal)
