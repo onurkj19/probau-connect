@@ -1,0 +1,437 @@
+{
+  "common": {
+    "tagline": "Swiss Construction SaaS",
+    "roles": {
+      "employer": "Project owner",
+      "contractor": "Contractor"
+    },
+    "languageSwitcher": {
+      "label": "Language",
+      "de": "Deutsch",
+      "fr": "Français",
+      "it": "Italiano",
+      "en": "English"
+    },
+    "actions": {
+      "login": "Login",
+      "logout": "Logout",
+      "getStarted": "Get started",
+      "createAccount": "Create account",
+      "save": "Save",
+      "menu": "Menu",
+      "publish": "Publish",
+      "viewFullPricing": "View Full Pricing",
+      "browseProjects": "Browse Projects",
+      "postProjectFree": "Post a Project (Free)",
+      "submitOffer": "Submit Offer",
+      "subscriptionRequired": "Subscription required"
+    },
+    "status": {
+      "active": "Active",
+      "closed": "Closed",
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "subscribed": "Subscribed",
+      "unsubscribed": "Not subscribed"
+    },
+    "topbar": {
+      "signedInAs": "Signed in as {company}"
+    },
+    "footer": {
+      "rights": "All rights reserved."
+    },
+    "modal": {
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "notifications": {
+      "dismiss": "Dismiss notification"
+    }
+  },
+  "meta": {
+    "root": {
+      "title": "ProBau.ch | Swiss Construction Marketplace",
+      "description": "ProBau.ch connects project owners and qualified contractors across Switzerland."
+    },
+    "home": {
+      "title": "The Swiss Construction Marketplace",
+      "description": "Connect project owners and professional contractors across Switzerland."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "description": "Transparent pricing for project owners and contractors."
+    },
+    "login": {
+      "title": "Login",
+      "description": "Sign in to your ProBau.ch account."
+    },
+    "register": {
+      "title": "Register",
+      "description": "Create your ProBau.ch account as project owner or contractor."
+    },
+    "impressum": {
+      "title": "Impressum",
+      "description": "Legal company information for ProBau.ch."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "Privacy policy according to Swiss and EU regulations."
+    },
+    "agb": {
+      "title": "Terms & Conditions",
+      "description": "General terms for using ProBau.ch."
+    }
+  },
+  "navigation": {
+    "public": {
+      "platform": "Platform",
+      "pricing": "Pricing",
+      "impressum": "Impressum",
+      "privacy": "Privacy",
+      "agb": "AGB"
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Swiss SaaS Marketplace",
+      "title": "The Swiss Construction Marketplace",
+      "subtitle": "Connect project owners and professional contractors across Switzerland.",
+      "metrics": {
+        "cantons": "Cantons covered",
+        "tenders": "Active tenders",
+        "contractors": "Verified contractors",
+        "responseTime": "Avg. response time"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Process clarity",
+      "title": "How it works",
+      "description": "Two role-based workflows designed for speed, transparency and predictable outcomes.",
+      "roleEmployer": "For project owners",
+      "roleContractor": "For contractors",
+      "step": "Step {number}",
+      "employer": {
+        "step1Title": "Post project for free",
+        "step1Description": "Publish scope, deadlines, budget ranges and documents in one process.",
+        "step2Title": "Receive offers",
+        "step2Description": "Collect structured offers from subscribed professional contractors.",
+        "step3Title": "Choose contractor",
+        "step3Description": "Compare submissions and award the best-fit partner."
+      },
+      "contractor": {
+        "step1Title": "Subscribe",
+        "step1Description": "Activate Basic or Pro access and unlock project participation.",
+        "step2Title": "Browse projects",
+        "step2Description": "Filter opportunities by canton, category, status and deadlines.",
+        "step3Title": "Submit offers",
+        "step3Description": "Send clear commercial proposals with documentation."
+      }
+    },
+    "why": {
+      "eyebrow": "Value proposition",
+      "title": "Why ProBau.ch",
+      "description": "Built for trust-first procurement in Swiss construction markets.",
+      "card1Title": "Swiss-wide access",
+      "card1Description": "Reach construction opportunities across all cantons from one platform.",
+      "card2Title": "Transparent deadlines",
+      "card2Description": "Each project includes clear submission windows and real-time deadline visibility.",
+      "card3Title": "Secure document uploads",
+      "card3Description": "Upload project files in a structured procurement process.",
+      "card4Title": "Simple subscription model",
+      "card4Description": "Basic and Pro plans provide straightforward access to project opportunities."
+    },
+    "pricingPreview": {
+      "eyebrow": "Pricing preview",
+      "title": "Simple plans for contractors",
+      "description": "Project owners publish for free. Contractors subscribe to submit offers.",
+      "basic": {
+        "title": "Basic",
+        "price": "CHF 79",
+        "period": "per month",
+        "feature1": "Access active projects",
+        "feature2": "Submit offers with attachments",
+        "feature3": "Standard support"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Most chosen",
+        "price": "CHF 149",
+        "period": "per month",
+        "feature1": "Everything in Basic",
+        "feature2": "Unlimited offers",
+        "feature3": "Priority matching and support"
+      }
+    },
+    "trust": {
+      "eyebrow": "Trust",
+      "title": "Built for Swiss construction professionals",
+      "description": "ProBau.ch is designed for procurement reliability, clear deadlines and long-term partnerships.",
+      "logosPlaceholder": "Partner logos coming soon",
+      "logoLabel": "Partner logo {index}"
+    },
+    "finalCta": {
+      "title": "Ready to grow your construction business?",
+      "description": "Use a procurement workflow trusted by Swiss construction companies.",
+      "button": "Create Account"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to ProBau.ch",
+      "description": "Access your role-based dashboard.",
+      "emailLabel": "Business email",
+      "passwordLabel": "Password",
+      "fullNameLabel": "Full name",
+      "companyLabel": "Company",
+      "roleLabel": "Account role",
+      "roleEmployer": "Project owner",
+      "roleContractor": "Contractor",
+      "subscriptionSimulate": "Simulate active subscription",
+      "subscriptionHint": "Enable this for direct offer submission access after login.",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Sign in",
+      "submitLoading": "Signing in...",
+      "errors": {
+        "email": "Please enter a valid email.",
+        "password": "Password must have at least 6 characters.",
+        "company": "Company is required.",
+        "name": "Name is required."
+      },
+      "toastErrorTitle": "Login failed",
+      "toastErrorDescription": "Please check your credentials.",
+      "toastSuccessTitle": "Welcome back",
+      "toastSuccessDescription": "Login successful."
+    },
+    "register": {
+      "title": "Create your account",
+      "description": "Choose your role and start with ProBau.ch.",
+      "emailLabel": "Business email",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "fullNameLabel": "Full name",
+      "companyLabel": "Company",
+      "roleLabel": "Account role",
+      "roleEmployer": "Project owner",
+      "roleContractor": "Contractor",
+      "subscriptionStart": "Start with active subscription",
+      "planBasic": "Basic (CHF 79)",
+      "planPro": "Pro (CHF 149)",
+      "submitIdle": "Create account",
+      "submitLoading": "Creating account...",
+      "errors": {
+        "email": "Please enter a valid email.",
+        "password": "Password must have at least 8 characters.",
+        "confirmPassword": "Please confirm your password.",
+        "passwordMatch": "Passwords do not match.",
+        "company": "Company is required.",
+        "name": "Name is required."
+      },
+      "toastErrorTitle": "Registration failed",
+      "toastErrorDescription": "Please verify your information and retry.",
+      "toastSuccessTitle": "Account created",
+      "toastSuccessDescription": "Welcome to ProBau.ch."
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "overview": "Dashboard overview",
+      "createProject": "Create Project",
+      "myProjects": "My Projects",
+      "offersReceived": "Offers Received",
+      "browseProjects": "Browse Projects",
+      "myOffers": "My Offers",
+      "subscription": "Subscription",
+      "settings": "Settings"
+    },
+    "employer": {
+      "overviewTitle": "Project Owner Dashboard",
+      "overviewDescription": "Manage tenders, deadlines and incoming offers.",
+      "activeProjects": "Active Projects",
+      "closedProjects": "Closed Projects",
+      "offersReceived": "Offers Received",
+      "operationalTitle": "Operational overview",
+      "operationalDescription": "Track open tender windows and prioritize projects for evaluation.",
+      "createProjectTitle": "Create Project",
+      "createProjectDescription": "Publish a structured brief and receive professional offers.",
+      "myProjectsTitle": "My Projects",
+      "myProjectsDescription": "Monitor all projects with deadlines and status visibility.",
+      "offersTitle": "Offers Received",
+      "offersDescription": "Private offer overview grouped by project.",
+      "settingsTitle": "Settings",
+      "settingsDescription": "Manage company profile and notification preferences.",
+      "projectDetailOffersTitle": "Offers for this project",
+      "projectDetailOffersCount": "{count} offers received."
+    },
+    "contractor": {
+      "overviewTitle": "Contractor Dashboard",
+      "overviewDescription": "Track opportunities, offers and subscription status.",
+      "availableProjects": "Available Projects",
+      "submittedOffers": "Submitted Offers",
+      "subscriptionStatus": "Subscription Status",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "planLabel": "Plan: {plan}",
+      "noPlan": "No active plan",
+      "currentAccessTitle": "Current Access",
+      "currentAccessDescription": "Offer submission requires an active subscription.",
+      "browseTitle": "Browse Projects",
+      "browseDescription": "Filter opportunities by canton and deadline, then submit offers.",
+      "offersTitle": "My Offers",
+      "offersDescription": "Review submitted offers and track decision status.",
+      "noOffersYet": "No offers submitted yet. Browse projects to start participating in tenders.",
+      "projectUnavailable": "Project unavailable",
+      "subscriptionTitle": "Subscription",
+      "subscriptionDescription": "Manage your current plan and upgrade access.",
+      "currentPlanLabel": "Current plan",
+      "noActivePlan": "No active plan",
+      "upgradeTo": "Upgrade to {plan}",
+      "currentPlanButton": "Current plan",
+      "billingTitle": "Billing integration",
+      "billingDescription": "Stripe Checkout integration placeholder. Next step: customer portal and invoices.",
+      "billingButton": "Open billing portal (placeholder)",
+      "settingsTitle": "Settings",
+      "settingsDescription": "Maintain account details and communication preferences."
+    },
+    "shared": {
+      "contactName": "Contact Name",
+      "company": "Company",
+      "saveSettings": "Save settings",
+      "publishedOn": "Submitted on {date}",
+      "noOffersForProject": "No offers submitted for this project yet."
+    }
+  },
+  "projects": {
+    "table": {
+      "title": "Project Title",
+      "location": "Location",
+      "deadline": "Deadline",
+      "status": "Status"
+    },
+    "card": {
+      "budget": "Budget",
+      "location": "Location",
+      "category": "Category",
+      "deadline": "Deadline"
+    },
+    "filters": {
+      "allCantons": "All cantons",
+      "deadlineAriaLabel": "Filter by deadline",
+      "searchPlaceholder": "Search projects...",
+      "allStatuses": "All statuses",
+      "allCategories": "All categories"
+    },
+    "groupedOffers": {
+      "submittedOn": "Submitted on {date}"
+    },
+    "countdown": {
+      "deadlineReached": "Deadline reached"
+    },
+    "createForm": {
+      "titleLabel": "Project title",
+      "titlePlaceholder": "New residential building - facade works",
+      "descriptionLabel": "Project description",
+      "descriptionPlaceholder": "Describe scope, technical requirements, timeline and access conditions.",
+      "categoryLabel": "Category",
+      "categoryPlaceholder": "Select category",
+      "cantonLabel": "Canton",
+      "cantonPlaceholder": "Select canton",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Zurich",
+      "budgetLabel": "Budget (CHF)",
+      "deadlineLabel": "Submission deadline",
+      "attachmentsLabel": "Attachments",
+      "submitIdle": "Publish project",
+      "submitLoading": "Publishing...",
+      "modalTitle": "Publish project",
+      "modalDescription": "Do you want to publish this project now?",
+      "toastTitle": "Project published",
+      "toastDescription": "Your project is now visible to contractors.",
+      "errors": {
+        "title": "Project title is required.",
+        "description": "Please provide a clear project description.",
+        "category": "Category is required.",
+        "canton": "Canton is required.",
+        "location": "Location is required.",
+        "budget": "Budget must be at least CHF 1,000.",
+        "deadline": "Please choose a deadline."
+      }
+    },
+    "offerForm": {
+      "referenceBudget": "Reference budget: {budget}",
+      "amountLabel": "Offer amount (CHF)",
+      "detailsLabel": "Offer details",
+      "detailsPlaceholder": "Scope, schedule, assumptions, guarantees and exclusions.",
+      "filesLabel": "Supporting files",
+      "submitIdle": "Submit offer",
+      "submitLoading": "Submitting...",
+      "toastTitle": "Offer submitted",
+      "toastDescription": "Your offer was submitted successfully.",
+      "errors": {
+        "amount": "Offer amount must be at least CHF 1,000.",
+        "message": "Please add enough details for your offer."
+      }
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "description": "Project owners publish for free. Contractors subscribe to submit offers.",
+    "employerTitle": "Project Owners",
+    "perMonth": "Per month",
+    "employerFeature1": "Unlimited project postings",
+    "employerFeature2": "Review all received offers",
+    "employerFeature3": "Project history and tracking",
+    "createAccount": "Create account",
+    "plans": {
+      "basic": {
+        "description": "For regional teams and small companies",
+        "feature1": "Access active projects",
+        "feature2": "Up to 10 offers per month",
+        "feature3": "Standard support"
+      },
+      "pro": {
+        "description": "For growing companies across multiple cantons",
+        "feature1": "Unlimited offers",
+        "feature2": "Priority matching",
+        "feature3": "Advanced analytics and priority support"
+      }
+    }
+  },
+  "legal": {
+    "impressum": {
+      "title": "Impressum",
+      "company": "ProBau.ch AG",
+      "address": "Musterstrasse 10, 8001 Zürich, Switzerland",
+      "email": "Email: legal@probau.ch",
+      "phone": "Phone: +41 44 000 00 00",
+      "uid": "UID: CHE-000.000.000",
+      "responsible": "Responsible for content: Management Board, ProBau.ch AG."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "Protecting your personal data is a top priority at ProBau.ch.",
+      "processingTitle": "Data processing",
+      "processingText": "We process account, contact and project data to provide platform services.",
+      "retentionTitle": "Data retention",
+      "retentionText": "Data is stored only as long as contractually, legally or operationally required.",
+      "rightsTitle": "Your rights",
+      "rightsText": "You may request access, correction or deletion at privacy@probau.ch."
+    },
+    "agb": {
+      "title": "General Terms and Conditions",
+      "intro": "These terms govern the use of ProBau.ch by project owners and contractors.",
+      "scopeTitle": "Scope",
+      "scopeText": "ProBau.ch provides a digital marketplace for construction projects in Switzerland.",
+      "subscriptionsTitle": "Subscriptions",
+      "subscriptionsText": "Contractors require an active subscription to submit offers. Fees are billed monthly.",
+      "liabilityTitle": "Liability",
+      "liabilityText": "ProBau.ch is a platform intermediary and not a contractual party between users."
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you requested does not exist.",
+    "backHome": "Back to home"
+  }
+}
