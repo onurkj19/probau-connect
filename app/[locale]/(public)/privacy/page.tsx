@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: PrivacyMetadataProps): Promis
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/privacy",
+        fr: "/fr/privacy",
+        it: "/it/privacy",
+        en: "/en/privacy",
+      },
+    },
   };
 };

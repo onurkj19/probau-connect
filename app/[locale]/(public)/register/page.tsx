@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: RegisterMetadataProps): Promi
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/register",
+        fr: "/fr/register",
+        it: "/it/register",
+        en: "/en/register",
+      },
+    },
   };
 };

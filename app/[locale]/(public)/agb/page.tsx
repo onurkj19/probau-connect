@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: AgbMetadataProps): Promise<Me
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/agb",
+        fr: "/fr/agb",
+        it: "/it/agb",
+        en: "/en/agb",
+      },
+    },
   };
 };

@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: LoginMetadataProps): Promise<
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/login",
+        fr: "/fr/login",
+        it: "/it/login",
+        en: "/en/login",
+      },
+    },
   };
 };

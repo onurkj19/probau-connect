@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: PricingMetadataProps): Promis
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/pricing",
+        fr: "/fr/pricing",
+        it: "/it/pricing",
+        en: "/en/pricing",
+      },
+    },
   };
 };

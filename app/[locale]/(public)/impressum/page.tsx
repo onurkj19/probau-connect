@@ -14,5 +14,13 @@ export const generateMetadata = async ({ params }: ImpressumMetadataProps): Prom
   return {
     title: t("title"),
     description: t("description"),
+    alternates: {
+      languages: {
+        de: "/de/impressum",
+        fr: "/fr/impressum",
+        it: "/it/impressum",
+        en: "/en/impressum",
+      },
+    },
   };
 };
