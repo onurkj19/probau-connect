@@ -3,6 +3,13 @@ import { stripe, PLANS, type PlanType } from "../_lib/stripe.js";
 import { authenticateRequest } from "../_lib/auth.js";
 import { updateUserSubscription } from "../_lib/db.js";
 
+function getErrorMessage(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as { message?: unknown }).message || "Unknown error");
+  }
+  return "Unknown error";
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -75,8 +82,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     return res.status(200).json({ url: session.url });
-  } catch (err: any) {
-    console.error("Checkout session error:", err);
-    return res.status(500).json({ error: "Failed to create checkout session" });
+  } catch (err: unknown) {
+    const details = getErrorMessage(err);
+    console.error("Checkout session error:", details, err);
+    return res.status(500).json({
+      error: "Failed to create checkout session",
+      details,
+    });
   }
 }

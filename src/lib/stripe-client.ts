@@ -27,7 +27,8 @@ export async function createCheckoutSession(planType: "basic" | "pro", token: st
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || err.message || "Failed to create checkout session");
+    const details = err.details ? `: ${err.details}` : "";
+    throw new Error((err.error || err.message || "Failed to create checkout session") + details);
   }
 
   const { url } = await res.json();
@@ -52,7 +53,8 @@ export async function createPortalSession(token: string) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || err.message || "Failed to create portal session");
+    const details = err.details ? `: ${err.details}` : "";
+    throw new Error((err.error || err.message || "Failed to create portal session") + details);
   }
 
   const { url } = await res.json();
