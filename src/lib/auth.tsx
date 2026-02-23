@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { supabase } from "./supabase";
+import type { Session } from "@supabase/supabase-js";
 
 export type UserRole = "owner" | "contractor";
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
@@ -19,6 +21,7 @@ export interface User {
 
 interface AuthState {
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
 }
 
@@ -27,6 +30,7 @@ interface AuthContextValue extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  getToken: () => Promise<string | null>;
   canSubmitOffer: boolean;
   offerLimitReached: boolean;
   offerLimit: number | null;
@@ -47,63 +51,105 @@ const OFFER_LIMITS: Record<PlanType, number | null> = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function fetchProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    email: data.email,
+    name: data.name,
+    companyName: data.company_name,
+    role: data.role as UserRole,
+    stripeCustomerId: data.stripe_customer_id,
+    subscriptionStatus: data.subscription_status as SubscriptionStatus,
+    planType: data.plan_type as PlanType | null,
+    offerCountThisMonth: data.offer_count_this_month,
+    subscriptionCurrentPeriodEnd: data.subscription_current_period_end,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
-    isLoading: false,
+    session: null,
+    isLoading: true,
   });
 
-  const login = useCallback(async (_email: string, _password: string) => {
-    setState((s) => ({ ...s, isLoading: true }));
-    // TODO: Replace with real auth API call (e.g. Supabase)
-    await new Promise((r) => setTimeout(r, 500));
-    setState({
-      isLoading: false,
-      user: {
-        id: "demo-1",
-        email: _email,
-        name: "Demo User",
-        companyName: "Demo AG",
-        role: "owner",
-        stripeCustomerId: null,
-        subscriptionStatus: "none",
-        planType: null,
-        offerCountThisMonth: 0,
-        subscriptionCurrentPeriodEnd: null,
-      },
+  const loadUser = useCallback(async (session: Session | null) => {
+    if (!session?.user) {
+      setState({ user: null, session: null, isLoading: false });
+      return;
+    }
+
+    const profile = await fetchProfile(session.user.id);
+    setState({ user: profile, session, isLoading: false });
+  }, []);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadUser(session);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        loadUser(session);
+      },
+    );
+
+    return () => subscription.unsubscribe();
+  }, [loadUser]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    setState((s) => ({ ...s, isLoading: true }));
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw error;
+    }
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {
     setState((s) => ({ ...s, isLoading: true }));
-    // TODO: Replace with real auth API call (e.g. Supabase)
-    await new Promise((r) => setTimeout(r, 500));
-    setState({
-      isLoading: false,
-      user: {
-        id: "demo-2",
-        email: data.email,
-        name: data.name,
-        companyName: data.companyName,
-        role: data.role,
-        stripeCustomerId: null,
-        subscriptionStatus: "none",
-        planType: null,
-        offerCountThisMonth: 0,
-        subscriptionCurrentPeriodEnd: null,
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          company_name: data.companyName,
+          role: data.role,
+        },
       },
     });
+    if (error) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw error;
+    }
   }, []);
 
-  const logout = useCallback(() => {
-    setState({ user: null, isLoading: false });
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setState({ user: null, session: null, isLoading: false });
   }, []);
 
   const refreshUser = useCallback(async () => {
-    // TODO: Re-fetch user data from API to get updated subscription status
-    // const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-    // const data = await res.json();
-    // setState((s) => ({ ...s, user: data }));
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const profile = await fetchProfile(session.user.id);
+      setState((s) => ({ ...s, user: profile, session }));
+    }
+  }, []);
+
+  const getToken = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
   }, []);
 
   const user = state.user;
@@ -123,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshUser,
+        getToken,
         canSubmitOffer: canSubmitOffer && !offerLimitReached,
         offerLimitReached,
         offerLimit,

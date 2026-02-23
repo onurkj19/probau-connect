@@ -16,11 +16,17 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
-    navigate(`/${lang}/dashboard`);
+    setError(null);
+    try {
+      await login(email, password);
+      navigate(`/${lang}/dashboard`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    }
   };
 
   return (
@@ -28,6 +34,12 @@ const Login = () => {
       <div className="container flex justify-center">
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-card">
           <h1 className="font-display text-2xl font-bold text-foreground">{t("auth.login_title")}</h1>
+
+          {error && (
+            <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
@@ -51,7 +63,7 @@ const Login = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {t("auth.login_button")}
+              {isLoading ? "..." : t("auth.login_button")}
             </Button>
           </form>
 

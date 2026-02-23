@@ -1,13 +1,4 @@
-/**
- * Database abstraction layer.
- *
- * This module defines the schema and operations for user subscription data.
- * Replace the implementation with your actual database (Supabase, Prisma, etc.).
- *
- * The interface is designed so that swapping the backend requires zero
- * changes to the API route handlers.
- */
-
+import { supabaseAdmin } from "./supabase";
 import type { PlanType } from "./stripe";
 
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
@@ -20,26 +11,44 @@ export interface UserSubscription {
   subscriptionStatus: SubscriptionStatus;
   planType: PlanType | null;
   offerCountThisMonth: number;
-  subscriptionCurrentPeriodEnd: string | null; // ISO date
+  subscriptionCurrentPeriodEnd: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// Database operations — replace these bodies with real DB queries
-// ---------------------------------------------------------------------------
+function mapRow(row: any): UserSubscription {
+  return {
+    id: row.id,
+    role: row.role,
+    email: row.email,
+    stripeCustomerId: row.stripe_customer_id,
+    subscriptionStatus: row.subscription_status,
+    planType: row.plan_type,
+    offerCountThisMonth: row.offer_count_this_month,
+    subscriptionCurrentPeriodEnd: row.subscription_current_period_end,
+  };
+}
 
 export async function getUserById(userId: string): Promise<UserSubscription | null> {
-  // TODO: Replace with real query, e.g.:
-  // return supabase.from('users').select('*').eq('id', userId).single()
-  void userId;
-  return null;
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return null;
+  return mapRow(data);
 }
 
 export async function getUserByStripeCustomerId(
   customerId: string,
 ): Promise<UserSubscription | null> {
-  // TODO: Replace with real query
-  void customerId;
-  return null;
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("*")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (error || !data) return null;
+  return mapRow(data);
 }
 
 export async function updateUserSubscription(
@@ -55,10 +64,22 @@ export async function updateUserSubscription(
     >
   >,
 ): Promise<void> {
-  // TODO: Replace with real update, e.g.:
-  // await supabase.from('users').update(data).eq('id', userId)
-  void userId;
-  void data;
+  const updateData: Record<string, any> = {};
+  if (data.stripeCustomerId !== undefined) updateData.stripe_customer_id = data.stripeCustomerId;
+  if (data.subscriptionStatus !== undefined) updateData.subscription_status = data.subscriptionStatus;
+  if (data.planType !== undefined) updateData.plan_type = data.planType;
+  if (data.subscriptionCurrentPeriodEnd !== undefined) updateData.subscription_current_period_end = data.subscriptionCurrentPeriodEnd;
+  if (data.offerCountThisMonth !== undefined) updateData.offer_count_this_month = data.offerCountThisMonth;
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update(updateData)
+    .eq("id", userId);
+
+  if (error) {
+    console.error("Failed to update user subscription:", error);
+    throw error;
+  }
 }
 
 export async function updateUserByStripeCustomerId(
@@ -70,49 +91,36 @@ export async function updateUserByStripeCustomerId(
     >
   >,
 ): Promise<void> {
-  // TODO: Replace with real update
-  void customerId;
-  void data;
+  const updateData: Record<string, any> = {};
+  if (data.subscriptionStatus !== undefined) updateData.subscription_status = data.subscriptionStatus;
+  if (data.planType !== undefined) updateData.plan_type = data.planType;
+  if (data.subscriptionCurrentPeriodEnd !== undefined) updateData.subscription_current_period_end = data.subscriptionCurrentPeriodEnd;
+  if (data.offerCountThisMonth !== undefined) updateData.offer_count_this_month = data.offerCountThisMonth;
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update(updateData)
+    .eq("stripe_customer_id", customerId);
+
+  if (error) {
+    console.error("Failed to update user by stripe customer:", error);
+    throw error;
+  }
 }
 
 export async function incrementOfferCount(userId: string): Promise<number> {
-  // TODO: Replace with atomic increment, e.g.:
-  // const { data } = await supabase.rpc('increment_offer_count', { user_id: userId })
-  // return data.offer_count_this_month
-  void userId;
-  return 0;
+  const { data, error } = await supabaseAdmin.rpc("increment_offer_count", {
+    user_id: userId,
+  });
+
+  if (error) {
+    console.error("Failed to increment offer count:", error);
+    throw error;
+  }
+
+  return data as number;
 }
 
 export async function resetOfferCountForUser(userId: string): Promise<void> {
   await updateUserSubscription(userId, { offerCountThisMonth: 0 });
 }
-
-/*
- * SQL schema for reference (PostgreSQL / Supabase):
- *
- * CREATE TABLE users (
- *   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
- *   email           TEXT UNIQUE NOT NULL,
- *   name            TEXT NOT NULL,
- *   company_name    TEXT NOT NULL,
- *   role            TEXT NOT NULL CHECK (role IN ('owner', 'contractor')),
- *   stripe_customer_id          TEXT UNIQUE,
- *   subscription_status         TEXT NOT NULL DEFAULT 'none'
- *                                CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'none')),
- *   plan_type                   TEXT CHECK (plan_type IN ('basic', 'pro')),
- *   offer_count_this_month      INTEGER NOT NULL DEFAULT 0,
- *   subscription_current_period_end TIMESTAMPTZ,
- *   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
- *   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
- * );
- *
- * -- Atomic offer count increment
- * CREATE OR REPLACE FUNCTION increment_offer_count(user_id UUID)
- * RETURNS TABLE(offer_count_this_month INTEGER) AS $$
- * UPDATE users
- *   SET offer_count_this_month = offer_count_this_month + 1,
- *       updated_at = now()
- *   WHERE id = user_id
- *   RETURNING offer_count_this_month;
- * $$ LANGUAGE sql;
- */

@@ -4,14 +4,16 @@ import { CreditCard, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { useAuth, type PlanType } from "@/lib/auth";
 import { createCheckoutSession, createPortalSession } from "@/lib/stripe-client";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 
 const Subscription = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
+  const [loading, setLoading] = useState(false);
 
   if (!user || user.role !== "contractor") return null;
 
@@ -24,19 +26,28 @@ const Subscription = () => {
   const offerUsage = user.offerCountThisMonth;
 
   const handleSubscribe = async (plan: PlanType) => {
+    setLoading(true);
     try {
-      // TODO: Replace with real auth token
-      await createCheckoutSession(plan, user.id);
+      const token = await getToken();
+      if (!token) return;
+      await createCheckoutSession(plan, token);
     } catch (err) {
       console.error("Checkout error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleManage = async () => {
+    setLoading(true);
     try {
-      await createPortalSession(user.id);
+      const token = await getToken();
+      if (!token) return;
+      await createPortalSession(token);
     } catch (err) {
       console.error("Portal error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 

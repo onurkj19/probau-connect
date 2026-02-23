@@ -1,29 +1,25 @@
-/**
- * Server-side authentication helper.
- *
- * Extracts and verifies the user from the request.
- * Replace the implementation with your actual auth system (Supabase JWT, etc.).
- */
-
 import type { VercelRequest } from "@vercel/node";
+import { supabaseAdmin } from "./supabase";
 import { getUserById, type UserSubscription } from "./db";
 
+/**
+ * Extracts the Supabase JWT from the Authorization header,
+ * verifies it, and returns the user's profile with subscription data.
+ */
 export async function authenticateRequest(
   req: VercelRequest,
 ): Promise<UserSubscription | null> {
-  // TODO: Replace with real auth token verification, e.g.:
-  //
-  // const token = req.headers.authorization?.replace('Bearer ', '');
-  // if (!token) return null;
-  // const { data: { user } } = await supabase.auth.getUser(token);
-  // if (!user) return null;
-  // return getUserById(user.id);
-
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) return null;
 
-  const userId = authHeader.replace("Bearer ", "");
-  if (!userId) return null;
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
 
-  return getUserById(userId);
+  // Verify the JWT with Supabase
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !user) return null;
+
+  // Get the full profile with subscription data
+  return getUserById(user.id);
 }

@@ -19,11 +19,17 @@ const Register = () => {
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [role, setRole] = useState<UserRole>("owner");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await register({ email, password, name, companyName, role });
-    navigate(`/${lang}/dashboard`);
+    setError(null);
+    try {
+      await register({ email, password, name, companyName, role });
+      navigate(`/${lang}/dashboard`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    }
   };
 
   return (
@@ -31,6 +37,12 @@ const Register = () => {
       <div className="container flex justify-center">
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-card">
           <h1 className="font-display text-2xl font-bold text-foreground">{t("auth.register_title")}</h1>
+
+          {error && (
+            <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
@@ -71,7 +83,7 @@ const Register = () => {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {t("auth.register_button")}
+              {isLoading ? "..." : t("auth.register_button")}
             </Button>
           </form>
 
