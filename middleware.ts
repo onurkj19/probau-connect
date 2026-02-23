@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { getRoleHomePath } from "@/lib/navigation/role-paths";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/session-cookie";
 
 const publicPaths = new Set(["/", "/pricing", "/login", "/register", "/impressum", "/privacy", "/agb"]);
@@ -29,28 +30,32 @@ export const middleware = (request: NextRequest) => {
 
   if (isPublicPath(pathname)) {
     if (session && (pathname === "/login" || pathname === "/register")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL(getRoleHomePath(session.role), request.url));
     }
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/dashboard")) {
+  if (
+    pathname.startsWith("/arbeitsgeber") ||
+    pathname.startsWith("/unternehmer") ||
+    pathname.startsWith("/dashboard")
+  ) {
     if (!session) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    if (pathname.startsWith("/dashboard/employer") && session.role !== "employer") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (pathname.startsWith("/dashboard")) {
+      return NextResponse.redirect(new URL(getRoleHomePath(session.role), request.url));
     }
 
-    if (pathname.startsWith("/dashboard/contractor") && session.role !== "contractor") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (pathname.startsWith("/arbeitsgeber") && session.role !== "employer") {
+      return NextResponse.redirect(new URL(getRoleHomePath(session.role), request.url));
     }
 
-    if (pathname.includes("/submit-offer") && (!session.isSubscribed || session.role !== "contractor")) {
-      return NextResponse.redirect(new URL("/dashboard/contractor/subscription?upgrade=required", request.url));
+    if (pathname.startsWith("/unternehmer") && session.role !== "contractor") {
+      return NextResponse.redirect(new URL(getRoleHomePath(session.role), request.url));
     }
   }
 

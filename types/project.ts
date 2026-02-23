@@ -1,4 +1,5 @@
 export type ProjectStatus = "active" | "closed";
+export type OfferStatus = "pending" | "accepted" | "rejected";
 
 export interface Project {
   id: string;
@@ -21,6 +22,7 @@ export interface ProjectOffer {
   amountChf: number;
   message: string;
   submittedAtIso: string;
+  status: OfferStatus;
 }
 
 export interface ProjectFilters {

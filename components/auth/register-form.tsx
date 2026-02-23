@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { registerUser } from "@/lib/api/auth-client";
+import { getRoleHomePath } from "@/lib/navigation/role-paths";
 import { useNotifications } from "@/hooks/use-notifications";
 
 const registerSchema = z
@@ -76,7 +77,8 @@ export const RegisterForm = () => {
       description: "Welcome to ProBau.ch.",
     });
 
-    router.push("/dashboard");
+    const fallbackPath = response.session ? getRoleHomePath(response.session.role) : "/login";
+    router.push(fallbackPath);
     router.refresh();
   };
 

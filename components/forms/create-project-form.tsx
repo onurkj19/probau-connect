@@ -102,7 +102,7 @@ export const CreateProjectForm = () => {
           <Input type="number" min={1000} step={1000} placeholder="250000" {...register("budgetChf")} />
         </FormField>
         <FormField label="Submission deadline" error={errors.deadlineIso?.message}>
-          <Input type="datetime-local" {...register("deadlineIso")} />
+          <Input type="date" {...register("deadlineIso")} />
         </FormField>
       </div>
 

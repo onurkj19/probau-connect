@@ -104,6 +104,7 @@ export const offers: ProjectOffer[] = [
     amountChf: 398000,
     message: "Ausführung in 22 Wochen inkl. Bauleitung und QS-Dokumentation.",
     submittedAtIso: "2026-02-03T10:00:00.000Z",
+    status: "pending",
   },
   {
     id: "off-2002",
@@ -113,6 +114,7 @@ export const offers: ProjectOffer[] = [
     amountChf: 411000,
     message: "Alternative Offerte mit Fassaden-Upgrade und erweitertem Wartungspaket.",
     submittedAtIso: "2026-02-07T11:30:00.000Z",
+    status: "accepted",
   },
   {
     id: "off-2003",
@@ -122,5 +124,6 @@ export const offers: ProjectOffer[] = [
     amountChf: 151000,
     message: "Elektroinstallation mit dokumentierter Übergabe und 24 Monate Garantie.",
     submittedAtIso: "2026-01-21T09:15:00.000Z",
+    status: "rejected",
   },
 ];

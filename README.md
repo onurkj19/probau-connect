@@ -26,7 +26,9 @@ Production-grade frontend architecture for a Swiss construction SaaS marketplace
 ```txt
 app/
   (public)/
-  (dashboard)/dashboard/
+  (dashboard)/
+    arbeitsgeber/
+    unternehmer/
   api/auth/
 components/
   auth/

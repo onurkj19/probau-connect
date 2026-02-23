@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { loginUser } from "@/lib/api/auth-client";
+import { getRoleHomePath } from "@/lib/navigation/role-paths";
 import { useNotifications } from "@/hooks/use-notifications";
 
 const loginSchema = z.object({
@@ -62,7 +63,8 @@ export const LoginForm = ({ redirectPath }: { redirectPath?: string }) => {
       description: "Login successful.",
     });
 
-    router.push(redirectPath || "/dashboard");
+    const fallbackPath = response.session ? getRoleHomePath(response.session.role) : "/login";
+    router.push(redirectPath || fallbackPath);
     router.refresh();
   };
 

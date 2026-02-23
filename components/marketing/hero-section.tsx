@@ -26,7 +26,7 @@ export const HeroSection = () => (
           <Link href="/register">Post a Project (Free)</Link>
         </Button>
         <Button asChild size="lg" variant="secondary">
-          <Link href="/dashboard/contractor/projects">Browse Projects</Link>
+          <Link href="/unternehmer/projects">Browse Projects</Link>
         </Button>
       </div>
 

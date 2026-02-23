@@ -42,7 +42,7 @@ export const SubmitOfferForm = ({ project }: { project: Project }) => {
       title: "Offer submitted",
       description: "Your offer was submitted successfully.",
     });
-    router.push("/dashboard/contractor/my-offers");
+    router.push("/unternehmer/offers");
     router.refresh();
   };
 
