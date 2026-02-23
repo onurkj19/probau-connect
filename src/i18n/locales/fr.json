@@ -9,7 +9,8 @@
     "impressum": "Mentions légales",
     "privacy": "Politique de confidentialité",
     "terms": "CGV",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "logout": "Se déconnecter"
   },
   "hero": {
     "title": "La place de marché suisse pour les projets de construction",
@@ -174,7 +175,30 @@
     "submit_offer": "Soumettre une offre",
     "subscription_required": "Abonnement requis",
     "subscription_required_message": "Vous avez besoin d'un abonnement actif pour soumettre des offres.",
-    "upgrade_now": "Mettre à niveau"
+    "upgrade_now": "Mettre à niveau",
+    "create_project_title": "Publier un projet",
+    "create_project_subtitle": "Créez un nouveau projet de construction avec toutes les informations et fichiers pertinents.",
+    "project_title": "Titre du projet",
+    "project_title_placeholder": "ex. Rénovation de façade d'immeuble",
+    "project_address": "Adresse",
+    "project_address_placeholder": "Rue, code postal, ville",
+    "project_category": "Catégorie",
+    "project_service": "Service demandé",
+    "project_service_placeholder": "Décrivez brièvement les travaux souhaités.",
+    "project_files": "Télécharger des fichiers",
+    "project_files_hint": "Plans, photos, cahier des charges, PDF, etc.",
+    "files_selected": "{{count}} fichier(s) sélectionné(s)",
+    "publish_project": "Publier le projet",
+    "clear_form": "Effacer le formulaire",
+    "project_saved_note": "Projet enregistré localement. Prochaine étape : intégrer l'API pour sauvegarder en base de données.",
+    "category_fassade": "Façade",
+    "category_gerust": "Échafaudage",
+    "category_elektriker": "Électricien",
+    "category_reinigung": "Nettoyage",
+    "category_heizung": "Chauffage",
+    "category_sanitar": "Sanitaire",
+    "save_changes": "Enregistrer les modifications",
+    "settings_saved": "Modifications enregistrées localement."
   },
   "subscription": {
     "title": "Gérer l'abonnement",

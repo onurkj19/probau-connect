@@ -9,7 +9,8 @@
     "impressum": "Impressum",
     "privacy": "Privacy",
     "terms": "Condizioni",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "logout": "Disconnetti"
   },
   "hero": {
     "title": "Il marketplace svizzero per i progetti di costruzione",
@@ -174,7 +175,30 @@
     "submit_offer": "Invia offerta",
     "subscription_required": "Abbonamento richiesto",
     "subscription_required_message": "Hai bisogno di un abbonamento attivo per inviare offerte.",
-    "upgrade_now": "Aggiorna ora"
+    "upgrade_now": "Aggiorna ora",
+    "create_project_title": "Pubblica un progetto",
+    "create_project_subtitle": "Crea un nuovo progetto edilizio con tutte le informazioni e i file rilevanti.",
+    "project_title": "Titolo del progetto",
+    "project_title_placeholder": "es. Ristrutturazione facciata condominio",
+    "project_address": "Indirizzo",
+    "project_address_placeholder": "Via, CAP, città",
+    "project_category": "Categoria",
+    "project_service": "Servizio richiesto",
+    "project_service_placeholder": "Descrivi brevemente i lavori richiesti.",
+    "project_files": "Carica file",
+    "project_files_hint": "Piani, foto, capitolato, PDF, ecc.",
+    "files_selected": "{{count}} file selezionato/i",
+    "publish_project": "Pubblica progetto",
+    "clear_form": "Pulisci modulo",
+    "project_saved_note": "Progetto salvato localmente. Passo successivo: integrazione API per il salvataggio nel database.",
+    "category_fassade": "Facciata",
+    "category_gerust": "Ponteggio",
+    "category_elektriker": "Elettricista",
+    "category_reinigung": "Pulizia",
+    "category_heizung": "Riscaldamento",
+    "category_sanitar": "Sanitario",
+    "save_changes": "Salva modifiche",
+    "settings_saved": "Modifiche salvate localmente."
   },
   "subscription": {
     "title": "Gestisci abbonamento",

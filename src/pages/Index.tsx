@@ -44,6 +44,8 @@ const Index = () => {
       {/* Hero */}
       <section className="relative overflow-hidden bg-primary">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-navy" />
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
         <div className="container relative z-10 py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -62,7 +64,7 @@ const Index = () => {
               {t("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2" asChild>
+              <Button size="lg" className="gap-2 bg-accent text-accent-foreground shadow-hero hover:bg-accent/90" asChild>
                 <Link to={ownerPrimaryPath}>
                   {t("hero.cta_owner")}
                   <ArrowRight className="h-4 w-4" />
@@ -71,7 +73,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="border-primary-foreground/60 bg-white/15 text-primary-foreground shadow-hero backdrop-blur-md hover:bg-white/25 hover:text-primary-foreground"
                 asChild
               >
                 <Link to={contractorPrimaryPath}>{t("hero.cta_contractor")}</Link>

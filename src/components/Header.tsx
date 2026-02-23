@@ -83,7 +83,7 @@ const Header = () => {
                 <Link to={`/${lang}/dashboard`}>{t("nav.dashboard")}</Link>
               </Button>
               <Button size="sm" variant="outline" onClick={logout}>
-                {t("nav.login")}
+                {t("nav.logout")}
               </Button>
             </>
           ) : (
@@ -138,7 +138,7 @@ const Header = () => {
                     </Link>
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1" onClick={() => { logout(); setMobileOpen(false); }}>
-                    {t("nav.login")}
+                    {t("nav.logout")}
                   </Button>
                 </>
               ) : (

@@ -9,7 +9,8 @@
     "impressum": "Imprint",
     "privacy": "Privacy Policy",
     "terms": "Terms",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "logout": "Sign Out"
   },
   "hero": {
     "title": "The Swiss Marketplace for Construction Projects",
@@ -174,7 +175,30 @@
     "submit_offer": "Submit Offer",
     "subscription_required": "Subscription required",
     "subscription_required_message": "You need an active subscription to submit offers.",
-    "upgrade_now": "Upgrade now"
+    "upgrade_now": "Upgrade now",
+    "create_project_title": "Post a Project",
+    "create_project_subtitle": "Create a new construction project with all relevant details and files.",
+    "project_title": "Project title",
+    "project_title_placeholder": "e.g. Facade renovation apartment building",
+    "project_address": "Address",
+    "project_address_placeholder": "Street, ZIP code, city",
+    "project_category": "Category",
+    "project_service": "Required service",
+    "project_service_placeholder": "Briefly describe what kind of work is needed.",
+    "project_files": "Upload files",
+    "project_files_hint": "Plans, photos, scope document, PDF, etc.",
+    "files_selected": "{{count}} file(s) selected",
+    "publish_project": "Publish project",
+    "clear_form": "Clear form",
+    "project_saved_note": "Project captured locally. Next step: API integration to persist it in the database.",
+    "category_fassade": "Facade",
+    "category_gerust": "Scaffolding",
+    "category_elektriker": "Electrician",
+    "category_reinigung": "Cleaning",
+    "category_heizung": "Heating",
+    "category_sanitar": "Sanitary",
+    "save_changes": "Save changes",
+    "settings_saved": "Changes saved locally."
   },
   "subscription": {
     "title": "Manage Subscription",

@@ -9,7 +9,8 @@
     "impressum": "Impressum",
     "privacy": "Datenschutz",
     "terms": "AGB",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "logout": "Abmelden"
   },
   "hero": {
     "title": "Der Schweizer Marktplatz für Bauprojekte",
@@ -174,7 +175,30 @@
     "submit_offer": "Offerte einreichen",
     "subscription_required": "Abonnement erforderlich",
     "subscription_required_message": "Sie benötigen ein aktives Abonnement, um Offerten einzureichen.",
-    "upgrade_now": "Jetzt upgraden"
+    "upgrade_now": "Jetzt upgraden",
+    "create_project_title": "Projekt ausschreiben",
+    "create_project_subtitle": "Erstellen Sie ein neues Bauprojekt mit allen relevanten Informationen und Dateien.",
+    "project_title": "Projekttitel",
+    "project_title_placeholder": "z. B. Fassadensanierung Mehrfamilienhaus",
+    "project_address": "Adresse",
+    "project_address_placeholder": "Straße, PLZ, Ort",
+    "project_category": "Kategorie",
+    "project_service": "Gewünschte Dienstleistung",
+    "project_service_placeholder": "Beschreiben Sie kurz, welche Arbeiten ausgeführt werden sollen.",
+    "project_files": "Dateien hochladen",
+    "project_files_hint": "Pläne, Bilder, Leistungsverzeichnis, PDF, etc.",
+    "files_selected": "{{count}} Datei(en) ausgewählt",
+    "publish_project": "Projekt veröffentlichen",
+    "clear_form": "Formular leeren",
+    "project_saved_note": "Projekt lokal erfasst. Nächster Schritt: API-Integration zum Speichern in der Datenbank.",
+    "category_fassade": "Fassade",
+    "category_gerust": "Gerüst",
+    "category_elektriker": "Elektriker",
+    "category_reinigung": "Reinigung",
+    "category_heizung": "Heizung",
+    "category_sanitar": "Sanitär",
+    "save_changes": "Änderungen speichern",
+    "settings_saved": "Änderungen lokal gespeichert."
   },
   "subscription": {
     "title": "Abonnement verwalten",
