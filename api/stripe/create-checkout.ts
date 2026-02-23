@@ -10,6 +10,13 @@ function getErrorMessage(err: unknown): string {
   return "Unknown error";
 }
 
+function sanitizePublicError(message: string): string {
+  if (message.includes("Invalid API Key")) {
+    return "Stripe configuration error: invalid STRIPE_SECRET_KEY.";
+  }
+  return message;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -83,8 +90,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ url: session.url });
   } catch (err: unknown) {
-    const details = getErrorMessage(err);
-    console.error("Checkout session error:", details, err);
+    const rawDetails = getErrorMessage(err);
+    const details = sanitizePublicError(rawDetails);
+    console.error("Checkout session error:", rawDetails, err);
     return res.status(500).json({
       error: "Failed to create checkout session",
       details,
