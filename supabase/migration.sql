@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email                           TEXT NOT NULL,
   name                            TEXT NOT NULL DEFAULT '',
   company_name                    TEXT NOT NULL DEFAULT '',
+  profile_title                   TEXT,
+  avatar_url                      TEXT,
   role                            TEXT NOT NULL DEFAULT 'owner'
                                     CHECK (role IN ('owner', 'contractor')),
   stripe_customer_id              TEXT UNIQUE,
@@ -20,6 +22,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at                      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at                      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_title TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- 2. Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -41,12 +46,14 @@ CREATE POLICY "Users can update own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, company_name, role)
+  INSERT INTO public.profiles (id, email, name, company_name, profile_title, avatar_url, role)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'name', ''),
     COALESCE(NEW.raw_user_meta_data->>'company_name', ''),
+    NULLIF(COALESCE(NEW.raw_user_meta_data->>'profile_title', ''), ''),
+    NULLIF(COALESCE(NEW.raw_user_meta_data->>'avatar_url', ''), ''),
     COALESCE(NEW.raw_user_meta_data->>'role', 'owner')
   );
   RETURN NEW;

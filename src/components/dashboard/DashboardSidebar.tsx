@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function DashboardSidebar() {
   const { t } = useTranslation();
@@ -32,6 +33,12 @@ export function DashboardSidebar() {
   ];
 
   const links = user?.role === "contractor" ? contractorLinks : ownerLinks;
+  const profileInitials = user?.name
+    ?.split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? location.pathname === to : location.pathname.startsWith(to);
@@ -80,8 +87,19 @@ export function DashboardSidebar() {
 
       {user && (
         <div className="border-t border-border px-4 py-3">
-          <p className="truncate text-sm font-medium text-foreground">{user.companyName}</p>
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 border border-border">
+              <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+              <AvatarFallback>{profileInitials || "PB"}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{user.name || user.companyName}</p>
+              {user.profileTitle && (
+                <p className="truncate text-xs text-muted-foreground">{user.profileTitle}</p>
+              )}
+            </div>
+          </div>
+          <p className="mt-2 truncate text-xs text-muted-foreground">{user.email}</p>
         </div>
       )}
     </>
@@ -93,7 +111,7 @@ export function DashboardSidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed left-4 top-4 z-50 md:hidden"
+        className="fixed left-4 top-5 z-50 md:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

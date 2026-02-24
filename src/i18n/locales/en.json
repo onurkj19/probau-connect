@@ -150,7 +150,12 @@
     "email": "Email address",
     "password": "Password",
     "confirm_password": "Confirm password",
+    "full_name": "Full name",
     "company_name": "Company name",
+    "profile_title": "Professional title (optional)",
+    "profile_title_placeholder": "e.g. Bauleiter, Projektleiter, Geschäftsführer",
+    "profile_photo_url": "Profile photo URL (optional)",
+    "profile_photo_hint": "Paste an image URL to show your profile photo.",
     "role_select": "Select role",
     "role_owner": "Project Owner",
     "role_contractor": "Contractor",
@@ -216,6 +221,7 @@
     "update_payment_button": "Update payment method",
     "canceled_info": "Your subscription has been canceled. You can subscribe again at any time.",
     "limit_reached": "Offer limit reached for this billing cycle.",
-    "used_of_limit": "{{used}} of {{limit}} offers used"
+    "used_of_limit": "{{used}} of {{limit}} offers used",
+    "redirecting_to_checkout": "Redirecting to secure checkout..."
   }
 }

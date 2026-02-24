@@ -7,6 +7,8 @@ export interface Database {
           email: string;
           name: string;
           company_name: string;
+          profile_title: string | null;
+          avatar_url: string | null;
           role: "owner" | "contractor";
           stripe_customer_id: string | null;
           subscription_status: "active" | "canceled" | "past_due" | "none";
@@ -21,6 +23,8 @@ export interface Database {
           email: string;
           name: string;
           company_name: string;
+          profile_title?: string | null;
+          avatar_url?: string | null;
           role: "owner" | "contractor";
           stripe_customer_id?: string | null;
           subscription_status?: "active" | "canceled" | "past_due" | "none";

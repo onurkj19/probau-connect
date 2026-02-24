@@ -19,6 +19,15 @@ const Index = () => {
 
   const ownerPrimaryPath = user ? localePath("/dashboard/projects") : localePath("/register");
 
+  const getPlanTarget = (plan: "basic" | "pro" | "enterprise") => {
+    if (!user) return localePath("/register");
+    if (user.role === "contractor" && plan !== "enterprise") {
+      return localePath(`/dashboard/subscription?plan=${plan}`);
+    }
+    if (user.role === "contractor") return localePath("/dashboard/subscription");
+    return localePath("/dashboard/projects");
+  };
+
   const features = [
     { icon: FileText, title: t("features.free_posting.title"), desc: t("features.free_posting.description") },
     { icon: Users, title: t("features.qualified.title"), desc: t("features.qualified.description") },
@@ -223,7 +232,7 @@ const Index = () => {
                     variant={!isPopular && plan !== "enterprise" ? "outline" : "default"}
                     asChild
                   >
-                    <Link to={localePath("/pricing")}>
+                    <Link to={getPlanTarget(plan)}>
                       {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
                     </Link>
                   </Button>

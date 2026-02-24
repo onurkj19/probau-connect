@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { CreditCard, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { useAuth, type PlanType } from "@/lib/auth";
 import { createCheckoutSession, createPortalSession } from "@/lib/stripe-client";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 
@@ -12,19 +12,13 @@ const Subscription = () => {
   const { t } = useTranslation();
   const { user, getToken } = useAuth();
   const { locale } = useParams<{ locale: string }>();
+  const [searchParams] = useSearchParams();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const autoTriggered = useRef(false);
 
-  if (!user || user.role !== "contractor") return null;
-
-  const isActive = user.subscriptionStatus === "active";
-  const isPastDue = user.subscriptionStatus === "past_due";
-  const isCanceled = user.subscriptionStatus === "canceled";
-  const hasNoPlan = user.subscriptionStatus === "none";
-
-  const offerLimit = user.planType === "basic" ? 10 : null;
-  const offerUsage = user.offerCountThisMonth;
+  const requestedPlan = searchParams.get("plan");
 
   const handleSubscribe = async (plan: PlanType) => {
     setLoading(true);
@@ -60,6 +54,27 @@ const Subscription = () => {
     }
   };
 
+  useEffect(() => {
+    if (!user || user.role !== "contractor") return;
+    if (autoTriggered.current || loading) return;
+    if (user.subscriptionStatus !== "none" && user.subscriptionStatus !== "canceled") return;
+    if (requestedPlan !== "basic" && requestedPlan !== "pro") return;
+    autoTriggered.current = true;
+    void handleSubscribe(requestedPlan);
+  }, [requestedPlan, user, loading]);
+
+  if (!user || user.role !== "contractor") return null;
+
+  const isActive = user.subscriptionStatus === "active";
+  const isPastDue = user.subscriptionStatus === "past_due";
+  const isCanceled = user.subscriptionStatus === "canceled";
+  const hasNoPlan = user.subscriptionStatus === "none";
+  const isAutoCheckoutLoading =
+    loading && (requestedPlan === "basic" || requestedPlan === "pro") && (hasNoPlan || isCanceled);
+
+  const offerLimit = user.planType === "basic" ? 10 : null;
+  const offerUsage = user.offerCountThisMonth;
+
   const renewalDate = user.subscriptionCurrentPeriodEnd
     ? new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString(lang, {
         year: "numeric",
@@ -76,6 +91,12 @@ const Subscription = () => {
       {actionError && (
         <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
           {actionError}
+        </div>
+      )}
+      {isAutoCheckoutLoading && (
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+          <p>{t("subscription.redirecting_to_checkout")}</p>
         </div>
       )}
 

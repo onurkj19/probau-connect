@@ -150,7 +150,12 @@
     "email": "Indirizzo e-mail",
     "password": "Password",
     "confirm_password": "Conferma password",
+    "full_name": "Nome completo",
     "company_name": "Nome azienda",
+    "profile_title": "Titolo professionale (opzionale)",
+    "profile_title_placeholder": "es. Bauleiter, Projektleiter, Geschäftsführer",
+    "profile_photo_url": "URL foto profilo (opzionale)",
+    "profile_photo_hint": "Incolla un URL immagine per mostrare la foto profilo.",
     "role_select": "Seleziona ruolo",
     "role_owner": "Committente",
     "role_contractor": "Imprenditore",
@@ -216,6 +221,7 @@
     "update_payment_button": "Aggiorna pagamento",
     "canceled_info": "Il tuo abbonamento è stato annullato. Puoi abbonarti di nuovo in qualsiasi momento.",
     "limit_reached": "Limite offerte raggiunto per questo ciclo di fatturazione.",
-    "used_of_limit": "{{used}} di {{limit}} offerte utilizzate"
+    "used_of_limit": "{{used}} di {{limit}} offerte utilizzate",
+    "redirecting_to_checkout": "Reindirizzamento al checkout sicuro..."
   }
 }

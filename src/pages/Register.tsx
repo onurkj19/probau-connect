@@ -18,6 +18,8 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [profileTitle, setProfileTitle] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [role, setRole] = useState<UserRole>("owner");
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +27,15 @@ const Register = () => {
     e.preventDefault();
     setError(null);
     try {
-      await register({ email, password, name, companyName, role });
+      await register({
+        email,
+        password,
+        name,
+        companyName,
+        profileTitle,
+        avatarUrl,
+        role,
+      });
       navigate(`/${lang}/dashboard`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -46,12 +56,32 @@ const Register = () => {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t("auth.company_name")}</Label>
+              <Label htmlFor="name">{t("auth.full_name")}</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="company">{t("auth.company_name")}</Label>
               <Input id="company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-title">{t("auth.profile_title")}</Label>
+              <Input
+                id="profile-title"
+                value={profileTitle}
+                onChange={(e) => setProfileTitle(e.target.value)}
+                placeholder={t("auth.profile_title_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="avatar-url">{t("auth.profile_photo_url")}</Label>
+              <Input
+                id="avatar-url"
+                type="url"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://..."
+              />
+              <p className="text-xs text-muted-foreground">{t("auth.profile_photo_hint")}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")}</Label>

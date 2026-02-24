@@ -23,6 +23,7 @@ import DashboardSettings from "./pages/dashboard/Settings";
 import DashboardSubscription from "./pages/dashboard/Subscription";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import Unauthorized from "./pages/Unauthorized";
+import ScrollToTop from "@/components/ScrollToTop";
 import "./i18n";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<LocaleRedirect />} />
 

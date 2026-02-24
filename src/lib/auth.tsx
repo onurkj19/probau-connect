@@ -11,6 +11,8 @@ export interface User {
   email: string;
   name: string;
   companyName: string;
+  profileTitle: string;
+  avatarUrl: string;
   role: UserRole;
   stripeCustomerId: string | null;
   subscriptionStatus: SubscriptionStatus;
@@ -41,6 +43,8 @@ interface RegisterData {
   password: string;
   name: string;
   companyName: string;
+  profileTitle?: string;
+  avatarUrl?: string;
   role: UserRole;
 }
 
@@ -65,6 +69,8 @@ async function fetchProfile(userId: string): Promise<User | null> {
     email: data.email,
     name: data.name,
     companyName: data.company_name,
+    profileTitle: data.profile_title ?? "",
+    avatarUrl: data.avatar_url ?? "",
     role: data.role as UserRole,
     stripeCustomerId: data.stripe_customer_id,
     subscriptionStatus: data.subscription_status as SubscriptionStatus,
@@ -124,6 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           name: data.name,
           company_name: data.companyName,
+          profile_title: data.profileTitle ?? "",
+          avatar_url: data.avatarUrl ?? "",
           role: data.role,
         },
       },

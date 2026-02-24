@@ -150,7 +150,12 @@
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "confirm_password": "Confirmer le mot de passe",
+    "full_name": "Nom complet",
     "company_name": "Nom de l'entreprise",
+    "profile_title": "Titre professionnel (optionnel)",
+    "profile_title_placeholder": "ex. Bauleiter, Projektleiter, Geschäftsführer",
+    "profile_photo_url": "URL de photo de profil (optionnel)",
+    "profile_photo_hint": "Collez une URL d'image pour afficher votre photo de profil.",
     "role_select": "Sélectionner le rôle",
     "role_owner": "Maître d'ouvrage",
     "role_contractor": "Entrepreneur",
@@ -216,6 +221,7 @@
     "update_payment_button": "Mettre à jour le paiement",
     "canceled_info": "Votre abonnement a été annulé. Vous pouvez vous réabonner à tout moment.",
     "limit_reached": "Limite d'offres atteinte pour ce cycle de facturation.",
-    "used_of_limit": "{{used}} sur {{limit}} offres utilisées"
+    "used_of_limit": "{{used}} sur {{limit}} offres utilisées",
+    "redirecting_to_checkout": "Redirection vers le checkout sécurisé..."
   }
 }

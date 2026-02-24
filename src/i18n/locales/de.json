@@ -150,7 +150,12 @@
     "email": "E-Mail-Adresse",
     "password": "Passwort",
     "confirm_password": "Passwort bestätigen",
+    "full_name": "Vollständiger Name",
     "company_name": "Firmenname",
+    "profile_title": "Berufstitel (optional)",
+    "profile_title_placeholder": "z. B. Bauleiter, Projektleiter, Geschäftsführer",
+    "profile_photo_url": "Profilfoto-URL (optional)",
+    "profile_photo_hint": "Fügen Sie eine Bild-URL ein, um Ihr Profilfoto anzuzeigen.",
     "role_select": "Rolle auswählen",
     "role_owner": "Arbeitgeber",
     "role_contractor": "Unternehmer",
@@ -216,6 +221,7 @@
     "update_payment_button": "Zahlungsmethode aktualisieren",
     "canceled_info": "Ihr Abonnement wurde gekündigt. Sie können jederzeit ein neues Abonnement abschliessen.",
     "limit_reached": "Offerten-Limit für diesen Abrechnungszeitraum erreicht.",
-    "used_of_limit": "{{used}} von {{limit}} Offerten verwendet"
+    "used_of_limit": "{{used}} von {{limit}} Offerten verwendet",
+    "redirecting_to_checkout": "Weiterleitung zum sicheren Checkout..."
   }
 }
