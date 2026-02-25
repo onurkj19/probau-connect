@@ -1,7 +1,9 @@
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import { FolderOpen, FileText, Clock, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Button } from "@/components/ui/button";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
@@ -15,6 +17,52 @@ const DashboardOverview = () => {
   const isOwner = user?.role === "owner";
   const isContractor = user?.role === "contractor";
   const isActive = user?.subscriptionStatus === "active";
+  const [activeProjectsCount, setActiveProjectsCount] = useState(0);
+
+  const loadActiveProjectsCount = useCallback(async () => {
+    if (!user) return;
+    const baseQuery = supabase
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active");
+
+    const { count } = isOwner
+      ? await baseQuery.eq("owner_id", user.id)
+      : await baseQuery;
+
+    setActiveProjectsCount(count ?? 0);
+  }, [isOwner, user]);
+
+  useEffect(() => {
+    void loadActiveProjectsCount();
+  }, [loadActiveProjectsCount]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`overview-projects-live-${isOwner ? user.id : "all"}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "projects" },
+        (payload) => {
+          if (!isOwner) {
+            void loadActiveProjectsCount();
+            return;
+          }
+
+          const newOwnerId = (payload.new as { owner_id?: string } | null)?.owner_id;
+          const oldOwnerId = (payload.old as { owner_id?: string } | null)?.owner_id;
+          if (newOwnerId === user.id || oldOwnerId === user.id) {
+            void loadActiveProjectsCount();
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isOwner, loadActiveProjectsCount, user]);
 
   return (
     <div>
@@ -26,7 +74,7 @@ const DashboardOverview = () => {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatsCard
           title={t("dashboard.active_projects")}
-          value={0}
+          value={activeProjectsCount}
           icon={FolderOpen}
         />
         <StatsCard
