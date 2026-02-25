@@ -134,10 +134,17 @@
   "projects": {
     "subtitle": "Projets de construction actuels sur la plateforme",
     "days_left": "{{count}} jours restants",
+    "countdown": "Délai candidature : {{value}}",
+    "deadline_passed": "Délai expiré",
     "status_active": "Actif",
     "status_closed": "Fermé",
     "login_prompt": "Connectez-vous ou inscrivez-vous pour voir tous les projets et soumettre des offres.",
-    "view_details": "Voir les détails"
+    "view_details": "Voir les détails",
+    "verified": "Verifiziert",
+    "offers_count": "{{count}} Angebote",
+    "no_offers": "Noch keine Angebote",
+    "loading": "Chargement des projets...",
+    "no_projects": "Aucun projet disponible pour le moment."
   },
   "notFound": {
     "title": "Page introuvable",
@@ -190,12 +197,14 @@
     "project_category": "Catégorie",
     "project_service": "Service demandé",
     "project_service_placeholder": "Décrivez brièvement les travaux souhaités.",
+    "project_deadline": "Délai de candidature (date et heure)",
     "project_files": "Télécharger des fichiers",
     "project_files_hint": "Plans, photos, cahier des charges, PDF, etc.",
     "files_selected": "{{count}} fichier(s) sélectionné(s)",
     "publish_project": "Publier le projet",
     "clear_form": "Effacer le formulaire",
-    "project_saved_note": "Projet enregistré localement. Prochaine étape : intégrer l'API pour sauvegarder en base de données.",
+    "project_saved_note": "Projet publié avec succès.",
+    "project_publish_error": "Échec de publication du projet. Veuillez réessayer.",
     "category_fassade": "Façade",
     "category_gerust": "Échafaudage",
     "category_elektriker": "Électricien",
@@ -203,7 +212,9 @@
     "category_heizung": "Chauffage",
     "category_sanitar": "Sanitaire",
     "save_changes": "Enregistrer les modifications",
-    "settings_saved": "Modifications enregistrées localement."
+    "settings_saved": "Modifications du profil enregistrées avec succès.",
+    "loading_projects": "Chargement des projets...",
+    "no_projects": "Aucun projet trouvé."
   },
   "subscription": {
     "title": "Gérer l'abonnement",

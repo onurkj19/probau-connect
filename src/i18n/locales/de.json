@@ -134,10 +134,17 @@
   "projects": {
     "subtitle": "Aktuelle Bauprojekte auf der Plattform",
     "days_left": "{{count}} Tage übrig",
+    "countdown": "Bewerbungsfrist: {{value}}",
+    "deadline_passed": "Frist abgelaufen",
     "status_active": "Aktiv",
     "status_closed": "Geschlossen",
     "login_prompt": "Melden Sie sich an oder registrieren Sie sich, um alle Projekte zu sehen und Offerten einzureichen.",
-    "view_details": "Details ansehen"
+    "view_details": "Details ansehen",
+    "verified": "Verifiziert",
+    "offers_count": "{{count}} Angebote",
+    "no_offers": "Noch keine Angebote",
+    "loading": "Projekte werden geladen...",
+    "no_projects": "Noch keine Projekte verfügbar."
   },
   "notFound": {
     "title": "Seite nicht gefunden",
@@ -190,12 +197,14 @@
     "project_category": "Kategorie",
     "project_service": "Gewünschte Dienstleistung",
     "project_service_placeholder": "Beschreiben Sie kurz, welche Arbeiten ausgeführt werden sollen.",
+    "project_deadline": "Bewerbungsfrist (Datum und Uhrzeit)",
     "project_files": "Dateien hochladen",
     "project_files_hint": "Pläne, Bilder, Leistungsverzeichnis, PDF, etc.",
     "files_selected": "{{count}} Datei(en) ausgewählt",
     "publish_project": "Projekt veröffentlichen",
     "clear_form": "Formular leeren",
-    "project_saved_note": "Projekt lokal erfasst. Nächster Schritt: API-Integration zum Speichern in der Datenbank.",
+    "project_saved_note": "Projekt erfolgreich veröffentlicht.",
+    "project_publish_error": "Projekt konnte nicht veröffentlicht werden. Bitte erneut versuchen.",
     "category_fassade": "Fassade",
     "category_gerust": "Gerüst",
     "category_elektriker": "Elektriker",
@@ -203,7 +212,9 @@
     "category_heizung": "Heizung",
     "category_sanitar": "Sanitär",
     "save_changes": "Änderungen speichern",
-    "settings_saved": "Änderungen lokal gespeichert."
+    "settings_saved": "Profiländerungen erfolgreich gespeichert.",
+    "loading_projects": "Projekte werden geladen...",
+    "no_projects": "Noch keine Projekte gefunden."
   },
   "subscription": {
     "title": "Abonnement verwalten",

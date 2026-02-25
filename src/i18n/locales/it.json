@@ -134,10 +134,17 @@
   "projects": {
     "subtitle": "Progetti di costruzione attuali sulla piattaforma",
     "days_left": "{{count}} giorni rimanenti",
+    "countdown": "Scadenza candidatura: {{value}}",
+    "deadline_passed": "Scadenza superata",
     "status_active": "Attivo",
     "status_closed": "Chiuso",
     "login_prompt": "Accedi o registrati per vedere tutti i progetti e inviare offerte.",
-    "view_details": "Vedi dettagli"
+    "view_details": "Vedi dettagli",
+    "verified": "Verifiziert",
+    "offers_count": "{{count}} Angebote",
+    "no_offers": "Noch keine Angebote",
+    "loading": "Caricamento progetti...",
+    "no_projects": "Nessun progetto disponibile al momento."
   },
   "notFound": {
     "title": "Pagina non trovata",
@@ -190,12 +197,14 @@
     "project_category": "Categoria",
     "project_service": "Servizio richiesto",
     "project_service_placeholder": "Descrivi brevemente i lavori richiesti.",
+    "project_deadline": "Scadenza candidatura (data e ora)",
     "project_files": "Carica file",
     "project_files_hint": "Piani, foto, capitolato, PDF, ecc.",
     "files_selected": "{{count}} file selezionato/i",
     "publish_project": "Pubblica progetto",
     "clear_form": "Pulisci modulo",
-    "project_saved_note": "Progetto salvato localmente. Passo successivo: integrazione API per il salvataggio nel database.",
+    "project_saved_note": "Progetto pubblicato con successo.",
+    "project_publish_error": "Pubblicazione progetto non riuscita. Riprova.",
     "category_fassade": "Facciata",
     "category_gerust": "Ponteggio",
     "category_elektriker": "Elettricista",
@@ -203,7 +212,9 @@
     "category_heizung": "Riscaldamento",
     "category_sanitar": "Sanitario",
     "save_changes": "Salva modifiche",
-    "settings_saved": "Modifiche salvate localmente."
+    "settings_saved": "Modifiche profilo salvate con successo.",
+    "loading_projects": "Caricamento progetti...",
+    "no_projects": "Nessun progetto trovato."
   },
   "subscription": {
     "title": "Gestisci abbonamento",

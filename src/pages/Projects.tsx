@@ -1,19 +1,59 @@
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { supabase } from "@/lib/supabase";
+import { ProjectCard } from "@/components/dashboard/ProjectCard";
 
-const sampleProjects = [
-  { company: "Müller Bau AG", location: "Zürich", deadline: "2026-04-15", description: "Sanierung Mehrfamilienhaus" },
-  { company: "Genossenschaft Wohnen", location: "Bern", deadline: "2026-03-30", description: "Neubau Wohnüberbauung" },
-  { company: "Stadt Luzern", location: "Luzern", deadline: "2026-05-01", description: "Strassenbau und Kanalisation" },
-];
+interface PublicProject {
+  id: string;
+  title: string;
+  address: string;
+  category: string;
+  deadline: string;
+  owner_company_name: string | null;
+  owner_profile_title: string | null;
+  owner_avatar_url: string | null;
+}
 
 const Projects = () => {
   const { t } = useTranslation();
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
+  const [projects, setProjects] = useState<PublicProject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadProjects = useCallback(async () => {
+    const { data } = await supabase
+      .from("projects")
+      .select("id, title, address, category, deadline, owner_company_name, owner_profile_title, owner_avatar_url")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    setProjects((data ?? []) as PublicProject[]);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadProjects();
+  }, [loadProjects]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("projects-public-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "projects" },
+        () => {
+          void loadProjects();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [loadProjects]);
 
   return (
     <main className="bg-background py-20">
@@ -22,33 +62,32 @@ const Projects = () => {
         <p className="mt-2 text-muted-foreground">{t("projects.subtitle")}</p>
 
         <div className="mt-10 grid gap-4">
-          {sampleProjects.map((p, i) => {
-            const daysLeft = Math.max(0, Math.ceil((new Date(p.deadline).getTime() - Date.now()) / 86400000));
-            const isActive = daysLeft > 0;
-            return (
-              <div key={i} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5 shadow-card md:flex-row md:items-center md:justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Building2 className="h-4 w-4" />
-                    {p.company}
-                  </div>
-                  <h3 className="mt-1 font-display text-lg font-semibold text-foreground">{p.description}</h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{p.location}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{t("projects.days_left", { count: daysLeft })}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
-                    {isActive ? t("projects.status_active") : t("projects.status_closed")}
-                  </span>
+          {loading && <p className="text-sm text-muted-foreground">{t("projects.loading")}</p>}
+          {!loading && projects.length === 0 && (
+            <p className="text-sm text-muted-foreground">{t("projects.no_projects")}</p>
+          )}
+          {!loading &&
+            projects.map((p) => (
+              <ProjectCard
+                key={p.id}
+                company={p.owner_company_name || "ProBau.ch"}
+                description={p.title}
+                location={p.address}
+                deadline={p.deadline}
+                projectId={p.id}
+                projectType={p.category}
+                owner={{
+                  company_name: p.owner_company_name,
+                  profile_title: p.owner_profile_title,
+                  avatar_url: p.owner_avatar_url,
+                }}
+                actions={
                   <Button size="sm" variant="outline" asChild>
                     <Link to={`/${lang}/login`}>{t("nav.login")}</Link>
                   </Button>
-                </div>
-              </div>
-            );
-          })}
+                }
+              />
+            ))}
         </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
