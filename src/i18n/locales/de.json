@@ -19,6 +19,11 @@
     "cta_contractor": "Aufträge finden",
     "trusted": "Vertrauenswürdig & sicher"
   },
+  "home": {
+    "trending_title": "Trending now",
+    "trending_subtitle": "Top 5 der zuletzt veröffentlichten Projekte",
+    "trending_view_all": "Alle Projekte ansehen"
+  },
   "features": {
     "title": "Warum ProBau.ch?",
     "subtitle": "Die führende Plattform für Bauausschreibungen in der Schweiz",
@@ -133,6 +138,7 @@
   },
   "projects": {
     "subtitle": "Aktuelle Bauprojekte auf der Plattform",
+    "published_at": "Veröffentlicht: {{value}}",
     "days_left": "{{count}} Tage übrig",
     "countdown": "Bewerbungsfrist: {{value}}",
     "deadline_passed": "Frist abgelaufen",
@@ -143,6 +149,7 @@
     "verified": "Verifiziert",
     "offers_count": "{{count}} Angebote",
     "no_offers": "Noch keine Angebote",
+    "project_files": "Projektdateien",
     "loading": "Projekte werden geladen...",
     "no_projects": "Noch keine Projekte verfügbar."
   },
@@ -177,7 +184,10 @@
     "overview": "Übersicht",
     "my_projects": "Meine Projekte",
     "my_offers": "Meine Offerten",
+    "messages": "Nachrichten",
+    "saved_projects": "Gespeicherte Projekte",
     "settings": "Einstellungen",
+    "notifications": "Benachrichtigungen",
     "subscription": "Abonnement",
     "new_project": "Neues Projekt",
     "find_projects": "Projekte finden",
@@ -197,6 +207,15 @@
     "project_category": "Kategorie",
     "project_service": "Gewünschte Dienstleistung",
     "project_service_placeholder": "Beschreiben Sie kurz, welche Arbeiten ausgeführt werden sollen.",
+    "offer_price_chf": "Angebotspreis (CHF)",
+    "offer_message": "Angebotsdetails",
+    "offer_message_placeholder": "Beschreiben Sie Umfang, Zeitplan und technische Offerte.",
+    "offer_files": "Angebotsdateien",
+    "offer_files_hint": "Laden Sie Offerte-PDF, LV, Referenzen, Zertifikate, Pläne usw. hoch.",
+    "offer_form_invalid": "Bitte geben Sie einen gültigen Preis und Angebotsdetails ein.",
+    "offer_submit_success": "Offerte erfolgreich eingereicht. Live-Chat wurde gestartet.",
+    "offer_submit_error": "Offerte konnte nicht eingereicht werden.",
+    "open_chat": "Live-Chat öffnen",
     "project_deadline": "Bewerbungsfrist (Datum und Uhrzeit)",
     "project_files": "Dateien hochladen",
     "project_files_hint": "Pläne, Bilder, Leistungsverzeichnis, PDF, etc.",
@@ -214,7 +233,14 @@
     "save_changes": "Änderungen speichern",
     "settings_saved": "Profiländerungen erfolgreich gespeichert.",
     "loading_projects": "Projekte werden geladen...",
-    "no_projects": "Noch keine Projekte gefunden."
+    "no_projects": "Noch keine Projekte gefunden.",
+    "loading_saved_projects": "Gespeicherte Projekte werden geladen...",
+    "no_saved_projects": "Noch keine gespeicherten Projekte.",
+    "no_chats": "Noch keine Chats vorhanden.",
+    "type_message": "Nachricht eingeben...",
+    "send_message": "Senden",
+    "mark_all_read": "Alle als gelesen markieren",
+    "no_notifications": "Noch keine Benachrichtigungen."
   },
   "subscription": {
     "title": "Abonnement verwalten",

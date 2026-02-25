@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { LayoutDashboard, FolderOpen, FileText, Settings, CreditCard, LogOut, X, Menu } from "lucide-react";
+import { LayoutDashboard, FolderOpen, FileText, Settings, CreditCard, LogOut, X, Menu, Bell, Bookmark } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
@@ -21,13 +21,19 @@ export function DashboardSidebar() {
   const ownerLinks = [
     { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.my_projects") },
+    { to: `${basePath}/saved`, icon: Bookmark, label: t("dashboard.saved_projects") },
+    { to: `${basePath}/chats`, icon: FileText, label: t("dashboard.messages") },
+    { to: `${basePath}/notifications`, icon: Bell, label: t("dashboard.notifications") },
     { to: `${basePath}/settings`, icon: Settings, label: t("dashboard.settings") },
   ];
 
   const contractorLinks = [
     { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.find_projects") },
+    { to: `${basePath}/saved`, icon: Bookmark, label: t("dashboard.saved_projects") },
     { to: `${basePath}/offers`, icon: FileText, label: t("dashboard.my_offers") },
+    { to: `${basePath}/chats`, icon: FileText, label: t("dashboard.messages") },
+    { to: `${basePath}/notifications`, icon: Bell, label: t("dashboard.notifications") },
     { to: `${basePath}/subscription`, icon: CreditCard, label: t("dashboard.subscription") },
     { to: `${basePath}/settings`, icon: Settings, label: t("dashboard.settings") },
   ];

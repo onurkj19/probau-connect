@@ -12,6 +12,8 @@ interface PublicProject {
   address: string;
   category: string;
   deadline: string;
+  created_at: string;
+  attachments: string[] | null;
   owner_company_name: string | null;
   owner_profile_title: string | null;
   owner_avatar_url: string | null;
@@ -27,7 +29,7 @@ const Projects = () => {
   const loadProjects = useCallback(async () => {
     const { data } = await supabase
       .from("projects")
-      .select("id, title, address, category, deadline, owner_company_name, owner_profile_title, owner_avatar_url")
+      .select("id, title, address, category, deadline, created_at, attachments, owner_company_name, owner_profile_title, owner_avatar_url")
       .eq("status", "active")
       .order("created_at", { ascending: false });
     setProjects((data ?? []) as PublicProject[]);
@@ -74,6 +76,8 @@ const Projects = () => {
                 description={p.title}
                 location={p.address}
                 deadline={p.deadline}
+                publishedAt={p.created_at}
+                attachments={p.attachments}
                 projectId={p.id}
                 projectType={p.category}
                 owner={{

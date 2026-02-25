@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../_lib/auth.js";
 import { incrementOfferCount } from "../_lib/db.js";
 import { PLANS } from "../_lib/stripe.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -47,23 +48,94 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ---- All checks passed — process the offer ----
 
-    const { projectId, content } = req.body as {
+    const {
+      projectId,
+      ownerId,
+      priceChf,
+      content,
+      attachments,
+      projectTitle,
+      ownerCompanyName,
+      contractorCompanyName,
+    } = req.body as {
       projectId?: string;
+      ownerId?: string;
+      priceChf?: number;
       content?: string;
+      attachments?: string[];
+      projectTitle?: string;
+      ownerCompanyName?: string;
+      contractorCompanyName?: string;
     };
 
-    if (!projectId || !content) {
-      return res.status(400).json({ error: "projectId and content are required" });
+    if (!projectId || !ownerId || !content || typeof priceChf !== "number") {
+      return res.status(400).json({ error: "projectId, ownerId, content and priceChf are required" });
     }
 
     // Atomically increment offer count
     const newCount = await incrementOfferCount(user.id);
 
-    // TODO: Save the offer to the database
-    // await createOffer({ userId: user.id, projectId, content });
+    // Save offer row
+    const { data: offerRow, error: offerError } = await supabaseAdmin
+      .from("offers")
+      .insert({
+        project_id: projectId,
+        contractor_id: user.id,
+        owner_id: ownerId,
+        price_chf: priceChf,
+        message: content,
+        attachments: attachments ?? [],
+        status: "submitted",
+      })
+      .select("id")
+      .single();
+
+    if (offerError || !offerRow) throw offerError || new Error("Offer persistence failed");
+
+    // Create or load chat between these two parties for the project
+    const { data: existingChat } = await supabaseAdmin
+      .from("chats")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("owner_id", ownerId)
+      .eq("contractor_id", user.id)
+      .maybeSingle();
+
+    let chatId = existingChat?.id;
+    if (!chatId) {
+      const { data: createdChat, error: chatCreateError } = await supabaseAdmin
+        .from("chats")
+        .insert({
+          project_id: projectId,
+          offer_id: offerRow.id,
+          owner_id: ownerId,
+          contractor_id: user.id,
+          owner_company_name: ownerCompanyName ?? null,
+          contractor_company_name: contractorCompanyName ?? null,
+          project_title: projectTitle ?? null,
+        })
+        .select("id")
+        .single();
+      if (chatCreateError || !createdChat) throw chatCreateError || new Error("Chat creation failed");
+      chatId = createdChat.id;
+    }
+
+    // Initial message in chat
+    const summaryMessage = `Offer submitted: CHF ${priceChf.toFixed(2)}\n\n${content}`;
+    const { error: chatMsgError } = await supabaseAdmin
+      .from("chat_messages")
+      .insert({
+        chat_id: chatId,
+        sender_id: user.id,
+        message: summaryMessage,
+        attachments: attachments ?? [],
+      });
+    if (chatMsgError) throw chatMsgError;
 
     return res.status(200).json({
       success: true,
+      offerId: offerRow.id,
+      chatId,
       offerCountThisMonth: newCount,
       limit: plan.monthlyOfferLimit,
     });

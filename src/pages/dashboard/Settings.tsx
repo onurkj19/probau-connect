@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const DashboardSettings = () => {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
+  const [name, setName] = useState(user?.name || "");
   const [companyName, setCompanyName] = useState(user?.companyName || "");
   const [profileTitle, setProfileTitle] = useState(user?.profileTitle || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || "");
@@ -20,9 +21,10 @@ const DashboardSettings = () => {
 
   useEffect(() => {
     setCompanyName(user?.companyName || "");
+    setName(user?.name || "");
     setProfileTitle(user?.profileTitle || "");
     setAvatarUrl(user?.avatarUrl || "");
-  }, [user?.companyName, user?.profileTitle, user?.avatarUrl]);
+  }, [user?.name, user?.companyName, user?.profileTitle, user?.avatarUrl]);
 
   const handleAvatarUpload = async (file: File) => {
     if (!user) return;
@@ -55,6 +57,7 @@ const DashboardSettings = () => {
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
+          name: name.trim(),
           company_name: companyName.trim(),
           profile_title: profileTitle.trim() || null,
           avatar_url: avatarUrl.trim() || null,
@@ -111,6 +114,10 @@ const DashboardSettings = () => {
             onChange={(e) => setAvatarUrl(e.target.value)}
             placeholder="https://..."
           />
+        </div>
+        <div className="space-y-2">
+          <Label>{t("auth.full_name")}</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label>{t("auth.email")}</Label>

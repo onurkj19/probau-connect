@@ -198,7 +198,168 @@ CREATE POLICY "Owners delete project files"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- 9. Realtime support for project live updates
+-- 9. Offers table
+CREATE TABLE IF NOT EXISTS public.offers (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id    UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  contractor_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  owner_id      UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  price_chf     NUMERIC(12,2) NOT NULL,
+  message       TEXT NOT NULL,
+  attachments   JSONB NOT NULL DEFAULT '[]'::jsonb,
+  status        TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'accepted', 'rejected')),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS price_chf NUMERIC(12,2);
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS message TEXT;
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS attachments JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.offers ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'submitted';
+
+CREATE INDEX IF NOT EXISTS idx_offers_project_id ON public.offers(project_id);
+CREATE INDEX IF NOT EXISTS idx_offers_contractor_id ON public.offers(contractor_id);
+CREATE INDEX IF NOT EXISTS idx_offers_owner_id ON public.offers(owner_id);
+
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Contractors can insert own offers" ON public.offers;
+DROP POLICY IF EXISTS "Contractors can read own offers" ON public.offers;
+DROP POLICY IF EXISTS "Owners can read offers on own projects" ON public.offers;
+
+CREATE POLICY "Contractors can insert own offers"
+  ON public.offers FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = contractor_id);
+
+CREATE POLICY "Contractors can read own offers"
+  ON public.offers FOR SELECT
+  TO authenticated
+  USING (auth.uid() = contractor_id);
+
+CREATE POLICY "Owners can read offers on own projects"
+  ON public.offers FOR SELECT
+  TO authenticated
+  USING (auth.uid() = owner_id);
+
+-- 10. Offer files bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('offer-files', 'offer-files', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Offer files public read" ON storage.objects;
+DROP POLICY IF EXISTS "Contractors upload offer files" ON storage.objects;
+DROP POLICY IF EXISTS "Contractors update offer files" ON storage.objects;
+DROP POLICY IF EXISTS "Contractors delete offer files" ON storage.objects;
+
+CREATE POLICY "Offer files public read"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'offer-files');
+
+CREATE POLICY "Contractors upload offer files"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'offer-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Contractors update offer files"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (
+    bucket_id = 'offer-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  )
+  WITH CHECK (
+    bucket_id = 'offer-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Contractors delete offer files"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'offer-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- 11. Chat tables for live messaging between owner and contractor
+CREATE TABLE IF NOT EXISTS public.chats (
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id               UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  offer_id                 UUID REFERENCES public.offers(id) ON DELETE SET NULL,
+  owner_id                 UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  contractor_id            UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  owner_company_name       TEXT,
+  contractor_company_name  TEXT,
+  project_title            TEXT,
+  created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (project_id, owner_id, contractor_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id     UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+  sender_id   UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  message     TEXT NOT NULL,
+  attachments JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chats_owner_id ON public.chats(owner_id);
+CREATE INDEX IF NOT EXISTS idx_chats_contractor_id ON public.chats(contractor_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_chat_id ON public.chat_messages(chat_id);
+
+DROP TRIGGER IF EXISTS chats_updated_at ON public.chats;
+CREATE TRIGGER chats_updated_at
+  BEFORE UPDATE ON public.chats
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at();
+
+ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Participants can read chats" ON public.chats;
+DROP POLICY IF EXISTS "Participants can insert chats" ON public.chats;
+DROP POLICY IF EXISTS "Participants can read chat messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "Participants can insert chat messages" ON public.chat_messages;
+
+CREATE POLICY "Participants can read chats"
+  ON public.chats FOR SELECT
+  TO authenticated
+  USING (auth.uid() = owner_id OR auth.uid() = contractor_id);
+
+CREATE POLICY "Participants can insert chats"
+  ON public.chats FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = owner_id OR auth.uid() = contractor_id);
+
+CREATE POLICY "Participants can read chat messages"
+  ON public.chat_messages FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.chats c
+      WHERE c.id = chat_id
+        AND (c.owner_id = auth.uid() OR c.contractor_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Participants can insert chat messages"
+  ON public.chat_messages FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    auth.uid() = sender_id
+    AND EXISTS (
+      SELECT 1 FROM public.chats c
+      WHERE c.id = chat_id
+        AND (c.owner_id = auth.uid() OR c.contractor_id = auth.uid())
+    )
+  );
+
+-- 12. Realtime support for live project and chat updates
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -212,6 +373,48 @@ BEGIN
   END IF;
 END $$;
 
+-- 15. Chat files bucket (attachments in live chat)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('chat-files', 'chat-files', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Chat files public read" ON storage.objects;
+DROP POLICY IF EXISTS "Users upload chat files" ON storage.objects;
+DROP POLICY IF EXISTS "Users update chat files" ON storage.objects;
+DROP POLICY IF EXISTS "Users delete chat files" ON storage.objects;
+
+CREATE POLICY "Chat files public read"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'chat-files');
+
+CREATE POLICY "Users upload chat files"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'chat-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Users update chat files"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (
+    bucket_id = 'chat-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  )
+  WITH CHECK (
+    bucket_id = 'chat-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Users delete chat files"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'chat-files'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -222,5 +425,192 @@ BEGIN
       AND tablename = 'offers'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.offers;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'chats'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.chats;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'chat_messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages;
+  END IF;
+END $$;
+
+-- 13. Notifications table
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL CHECK (type IN ('project', 'message')),
+  title      TEXT NOT NULL,
+  body       TEXT,
+  meta       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  is_read    BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(user_id, is_read);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "System can insert notifications" ON public.notifications;
+
+CREATE POLICY "Users can read own notifications"
+  ON public.notifications FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own notifications"
+  ON public.notifications FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Used for client-side MVP inserts; can be tightened later behind server APIs
+CREATE POLICY "System can insert notifications"
+  ON public.notifications FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- 14. Notification triggers
+CREATE OR REPLACE FUNCTION public.notify_pro_contractors_on_project()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.notifications (user_id, type, title, body, meta)
+  SELECT
+    p.id,
+    'project',
+    'New project published',
+    NEW.title,
+    jsonb_build_object('project_id', NEW.id)
+  FROM public.profiles p
+  WHERE p.role = 'contractor'
+    AND p.subscription_status = 'active'
+    AND p.plan_type = 'pro'
+    AND p.id <> NEW.owner_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.notify_chat_recipient_on_message()
+RETURNS TRIGGER AS $$
+DECLARE
+  recipient_id UUID;
+  project_title_text TEXT;
+BEGIN
+  SELECT
+    CASE
+      WHEN c.owner_id = NEW.sender_id THEN c.contractor_id
+      ELSE c.owner_id
+    END,
+    c.project_title
+  INTO recipient_id, project_title_text
+  FROM public.chats c
+  WHERE c.id = NEW.chat_id;
+
+  IF recipient_id IS NOT NULL AND recipient_id <> NEW.sender_id THEN
+    INSERT INTO public.notifications (user_id, type, title, body, meta)
+    VALUES (
+      recipient_id,
+      'message',
+      'New message',
+      COALESCE(project_title_text, 'Conversation'),
+      jsonb_build_object('chat_id', NEW.chat_id, 'message_id', NEW.id)
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_project_created_notify ON public.projects;
+CREATE TRIGGER on_project_created_notify
+  AFTER INSERT ON public.projects
+  FOR EACH ROW
+  EXECUTE FUNCTION public.notify_pro_contractors_on_project();
+
+DROP TRIGGER IF EXISTS on_chat_message_notify ON public.chat_messages;
+CREATE TRIGGER on_chat_message_notify
+  AFTER INSERT ON public.chat_messages
+  FOR EACH ROW
+  EXECUTE FUNCTION public.notify_chat_recipient_on_message();
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+  END IF;
+END $$;
+
+-- 16. Bookmarks (saved projects)
+CREATE TABLE IF NOT EXISTS public.bookmarks (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, project_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON public.bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_project_id ON public.bookmarks(project_id);
+
+ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own bookmarks" ON public.bookmarks;
+DROP POLICY IF EXISTS "Users can insert own bookmarks" ON public.bookmarks;
+DROP POLICY IF EXISTS "Users can delete own bookmarks" ON public.bookmarks;
+
+CREATE POLICY "Users can read own bookmarks"
+  ON public.bookmarks FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own bookmarks"
+  ON public.bookmarks FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own bookmarks"
+  ON public.bookmarks FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'bookmarks'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.bookmarks;
   END IF;
 END $$;

@@ -19,6 +19,9 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/Overview";
 import DashboardProjects from "./pages/dashboard/Projects";
 import DashboardOffers from "./pages/dashboard/Offers";
+import DashboardChats from "./pages/dashboard/Chats";
+import DashboardNotifications from "./pages/dashboard/Notifications";
+import DashboardSavedProjects from "./pages/dashboard/SavedProjects";
 import DashboardSettings from "./pages/dashboard/Settings";
 import DashboardSubscription from "./pages/dashboard/Subscription";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -57,7 +60,10 @@ const App = () => (
               <Route path="dashboard" element={<RoleGuard><DashboardLayout /></RoleGuard>}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="projects" element={<DashboardProjects />} />
-                <Route path="offers" element={<RoleGuard allowedRoles={["contractor"]}><DashboardOffers /></RoleGuard>} />
+                <Route path="saved" element={<DashboardSavedProjects />} />
+                <Route path="offers" element={<DashboardOffers />} />
+                <Route path="chats" element={<DashboardChats />} />
+                <Route path="notifications" element={<DashboardNotifications />} />
                 <Route path="subscription" element={<RoleGuard allowedRoles={["contractor"]}><DashboardSubscription /></RoleGuard>} />
                 <Route path="settings" element={<DashboardSettings />} />
               </Route>

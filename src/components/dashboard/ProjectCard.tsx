@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Building2, Clock, FileText, MapPin } from "lucide-react";
+import { Bookmark, Building2, CalendarClock, Clock, FileText, MapPin, Paperclip } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
+import { formatRelativeTime } from "@/lib/time";
 
 interface ProjectCardProps {
   company: string;
@@ -14,6 +15,8 @@ interface ProjectCardProps {
   actions?: React.ReactNode;
   projectId?: string;
   projectType?: string | null;
+  publishedAt?: string | null;
+  attachments?: string[] | null;
   ownerId?: string;
   owner?: {
     company_name?: string | null;
@@ -22,6 +25,8 @@ interface ProjectCardProps {
   } | null;
   offerCount?: number | null;
   showVerifiedBadge?: boolean;
+  bookmarked?: boolean;
+  onToggleBookmark?: () => void;
 }
 
 type OwnerSnapshot = {
@@ -38,18 +43,22 @@ export function ProjectCard({
   actions,
   projectId,
   projectType,
+  publishedAt,
+  attachments,
   ownerId,
   owner,
   offerCount,
   showVerifiedBadge = true,
+  bookmarked,
+  onToggleBookmark,
 }: ProjectCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [nowTs, setNowTs] = useState(() => Date.now());
   const deadlineTs = new Date(deadline).getTime();
   const msRemaining = Math.max(0, deadlineTs - nowTs);
   const daysLeft = Math.max(0, Math.ceil(msRemaining / 86400000));
   const isActive = msRemaining > 0;
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarkedLocal, setIsBookmarkedLocal] = useState(false);
   const [ownerSnapshot, setOwnerSnapshot] = useState<OwnerSnapshot | null>(null);
   const [offerCountState, setOfferCountState] = useState<number | null>(offerCount ?? null);
 
@@ -119,6 +128,8 @@ export function ProjectCard({
     return t("projects.offers_count", { count: offerCountState });
   }, [offerCountState, t]);
   const companyInitial = displayCompany?.charAt(0).toUpperCase() || "P";
+  const fileLinks = attachments?.filter((file) => Boolean(file)) ?? [];
+  const isBookmarked = bookmarked ?? isBookmarkedLocal;
   const countdownLabel = useMemo(() => {
     if (!isActive) return t("projects.deadline_passed");
     const totalSeconds = Math.floor(msRemaining / 1000);
@@ -127,12 +138,21 @@ export function ProjectCard({
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     return `${days}d ${hours}h ${minutes}m`;
   }, [isActive, msRemaining, t]);
+  const publishedLabel = publishedAt
+    ? formatRelativeTime(publishedAt, i18n.language)
+    : null;
 
   return (
     <div className="relative rounded-lg border border-border bg-card p-5 shadow-none">
       <button
         type="button"
-        onClick={() => setIsBookmarked((prev) => !prev)}
+        onClick={() => {
+          if (onToggleBookmark) {
+            onToggleBookmark();
+            return;
+          }
+          setIsBookmarkedLocal((prev) => !prev);
+        }}
         className="absolute right-3 top-3 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         aria-label="Toggle bookmark"
       >
@@ -169,6 +189,12 @@ export function ProjectCard({
           </Badge>
         )}
         <h3 className="font-display text-lg font-semibold text-foreground">{description}</h3>
+        {publishedLabel && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+            <CalendarClock className="h-3.5 w-3.5" />
+            {t("projects.published_at", { value: publishedLabel })}
+          </p>
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -185,6 +211,29 @@ export function ProjectCard({
           {offerLabel}
         </span>
       </div>
+
+      {fileLinks.length > 0 && (
+        <div className="mt-3 rounded-md border border-border/70 bg-muted/20 p-2">
+          <p className="mb-1 text-xs font-medium text-foreground">{t("projects.project_files")}</p>
+          <div className="flex flex-wrap gap-2">
+            {fileLinks.map((url) => {
+              const fileName = decodeURIComponent(url.split("/").pop() || "file");
+              return (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-primary hover:underline"
+                >
+                  <Paperclip className="h-3 w-3" />
+                  {fileName}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 flex items-center gap-3">
         <StatusBadge

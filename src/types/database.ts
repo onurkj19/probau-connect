@@ -6,15 +6,109 @@ export interface Database {
           id: string;
           project_id: string;
           contractor_id: string;
+          owner_id: string;
+          price_chf: number;
+          message: string;
+          attachments: string[] | null;
+          status: "submitted" | "accepted" | "rejected";
           created_at: string;
         };
         Insert: {
           id?: string;
           project_id: string;
           contractor_id: string;
+          owner_id: string;
+          price_chf: number;
+          message: string;
+          attachments?: string[] | null;
+          status?: "submitted" | "accepted" | "rejected";
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["offers"]["Insert"]>;
+      };
+      chats: {
+        Row: {
+          id: string;
+          project_id: string;
+          offer_id: string | null;
+          owner_id: string;
+          contractor_id: string;
+          owner_company_name: string | null;
+          contractor_company_name: string | null;
+          project_title: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          offer_id?: string | null;
+          owner_id: string;
+          contractor_id: string;
+          owner_company_name?: string | null;
+          contractor_company_name?: string | null;
+          project_title?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chats"]["Insert"]>;
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          chat_id: string;
+          sender_id: string;
+          message: string;
+          attachments: string[] | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          chat_id: string;
+          sender_id: string;
+          message: string;
+          attachments?: string[] | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chat_messages"]["Insert"]>;
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: "project" | "message";
+          title: string;
+          body: string | null;
+          meta: Record<string, unknown> | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: "project" | "message";
+          title: string;
+          body?: string | null;
+          meta?: Record<string, unknown> | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["notifications"]["Insert"]>;
+      };
+      bookmarks: {
+        Row: {
+          id: string;
+          user_id: string;
+          project_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          project_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["bookmarks"]["Insert"]>;
       };
       projects: {
         Row: {

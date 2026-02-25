@@ -19,6 +19,11 @@
     "cta_contractor": "Trouver des projets",
     "trusted": "Fiable & Sécurisé"
   },
+  "home": {
+    "trending_title": "Trending now",
+    "trending_subtitle": "Top 5 des projets publiés récemment",
+    "trending_view_all": "Voir tous les projets"
+  },
   "features": {
     "title": "Pourquoi ProBau.ch ?",
     "subtitle": "La plateforme leader pour les appels d'offres de construction en Suisse",
@@ -133,6 +138,7 @@
   },
   "projects": {
     "subtitle": "Projets de construction actuels sur la plateforme",
+    "published_at": "Publié : {{value}}",
     "days_left": "{{count}} jours restants",
     "countdown": "Délai candidature : {{value}}",
     "deadline_passed": "Délai expiré",
@@ -143,6 +149,7 @@
     "verified": "Verifiziert",
     "offers_count": "{{count}} Angebote",
     "no_offers": "Noch keine Angebote",
+    "project_files": "Fichiers du projet",
     "loading": "Chargement des projets...",
     "no_projects": "Aucun projet disponible pour le moment."
   },
@@ -177,7 +184,10 @@
     "overview": "Vue d'ensemble",
     "my_projects": "Mes projets",
     "my_offers": "Mes offres",
+    "messages": "Messages",
+    "saved_projects": "Projets enregistrés",
     "settings": "Paramètres",
+    "notifications": "Notifications",
     "subscription": "Abonnement",
     "new_project": "Nouveau projet",
     "find_projects": "Trouver des projets",
@@ -197,6 +207,15 @@
     "project_category": "Catégorie",
     "project_service": "Service demandé",
     "project_service_placeholder": "Décrivez brièvement les travaux souhaités.",
+    "offer_price_chf": "Prix de l'offre (CHF)",
+    "offer_message": "Détails de l'offre",
+    "offer_message_placeholder": "Décrivez la portée, le délai et la proposition technique.",
+    "offer_files": "Pièces jointes de l'offre",
+    "offer_files_hint": "Téléchargez devis PDF, métrés, références, certificats, plans, etc.",
+    "offer_form_invalid": "Veuillez saisir un prix valide et les détails de l'offre.",
+    "offer_submit_success": "Offre envoyée avec succès. Le chat en direct a démarré.",
+    "offer_submit_error": "Échec de l'envoi de l'offre.",
+    "open_chat": "Ouvrir le chat en direct",
     "project_deadline": "Délai de candidature (date et heure)",
     "project_files": "Télécharger des fichiers",
     "project_files_hint": "Plans, photos, cahier des charges, PDF, etc.",
@@ -214,7 +233,14 @@
     "save_changes": "Enregistrer les modifications",
     "settings_saved": "Modifications du profil enregistrées avec succès.",
     "loading_projects": "Chargement des projets...",
-    "no_projects": "Aucun projet trouvé."
+    "no_projects": "Aucun projet trouvé.",
+    "loading_saved_projects": "Chargement des projets enregistrés...",
+    "no_saved_projects": "Aucun projet enregistré pour le moment.",
+    "no_chats": "Aucun chat pour le moment.",
+    "type_message": "Tapez votre message...",
+    "send_message": "Envoyer",
+    "mark_all_read": "Tout marquer comme lu",
+    "no_notifications": "Aucune notification pour le moment."
   },
   "subscription": {
     "title": "Gérer l'abonnement",

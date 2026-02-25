@@ -19,6 +19,11 @@
     "cta_contractor": "Find Projects",
     "trusted": "Trusted & Secure"
   },
+  "home": {
+    "trending_title": "Trending now",
+    "trending_subtitle": "Top 5 latest published projects",
+    "trending_view_all": "View all projects"
+  },
   "features": {
     "title": "Why ProBau.ch?",
     "subtitle": "The leading platform for construction tenders in Switzerland",
@@ -133,6 +138,7 @@
   },
   "projects": {
     "subtitle": "Current construction projects on the platform",
+    "published_at": "Published: {{value}}",
     "days_left": "{{count}} days left",
     "countdown": "Tender deadline: {{value}}",
     "deadline_passed": "Deadline passed",
@@ -143,6 +149,7 @@
     "verified": "Verifiziert",
     "offers_count": "{{count}} Angebote",
     "no_offers": "Noch keine Angebote",
+    "project_files": "Project files",
     "loading": "Loading projects...",
     "no_projects": "No projects available yet."
   },
@@ -177,7 +184,10 @@
     "overview": "Overview",
     "my_projects": "My Projects",
     "my_offers": "My Offers",
+    "messages": "Messages",
+    "saved_projects": "Saved Projects",
     "settings": "Settings",
+    "notifications": "Notifications",
     "subscription": "Subscription",
     "new_project": "New Project",
     "find_projects": "Find Projects",
@@ -197,6 +207,15 @@
     "project_category": "Category",
     "project_service": "Required service",
     "project_service_placeholder": "Briefly describe what kind of work is needed.",
+    "offer_price_chf": "Offer price (CHF)",
+    "offer_message": "Offer details",
+    "offer_message_placeholder": "Describe your scope, timeline, and technical proposal.",
+    "offer_files": "Offer attachments",
+    "offer_files_hint": "Upload quote PDF, BOQ, references, certificates, drawings, etc.",
+    "offer_form_invalid": "Please provide a valid price and offer details.",
+    "offer_submit_success": "Offer submitted successfully. Live chat has started.",
+    "offer_submit_error": "Failed to submit offer.",
+    "open_chat": "Open live chat",
     "project_deadline": "Application deadline (date and time)",
     "project_files": "Upload files",
     "project_files_hint": "Plans, photos, scope document, PDF, etc.",
@@ -214,7 +233,14 @@
     "save_changes": "Save changes",
     "settings_saved": "Profile changes saved successfully.",
     "loading_projects": "Loading projects...",
-    "no_projects": "No projects found yet."
+    "no_projects": "No projects found yet.",
+    "loading_saved_projects": "Loading saved projects...",
+    "no_saved_projects": "No saved projects yet.",
+    "no_chats": "No chats yet.",
+    "type_message": "Type your message...",
+    "send_message": "Send",
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "No notifications yet."
   },
   "subscription": {
     "title": "Manage Subscription",

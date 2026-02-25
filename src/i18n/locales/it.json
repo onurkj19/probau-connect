@@ -19,6 +19,11 @@
     "cta_contractor": "Trova progetti",
     "trusted": "Affidabile & Sicuro"
   },
+  "home": {
+    "trending_title": "Trending now",
+    "trending_subtitle": "Top 5 progetti pubblicati di recente",
+    "trending_view_all": "Vedi tutti i progetti"
+  },
   "features": {
     "title": "Perché ProBau.ch?",
     "subtitle": "La piattaforma leader per le gare d'appalto in Svizzera",
@@ -133,6 +138,7 @@
   },
   "projects": {
     "subtitle": "Progetti di costruzione attuali sulla piattaforma",
+    "published_at": "Pubblicato: {{value}}",
     "days_left": "{{count}} giorni rimanenti",
     "countdown": "Scadenza candidatura: {{value}}",
     "deadline_passed": "Scadenza superata",
@@ -143,6 +149,7 @@
     "verified": "Verifiziert",
     "offers_count": "{{count}} Angebote",
     "no_offers": "Noch keine Angebote",
+    "project_files": "File progetto",
     "loading": "Caricamento progetti...",
     "no_projects": "Nessun progetto disponibile al momento."
   },
@@ -177,7 +184,10 @@
     "overview": "Panoramica",
     "my_projects": "I miei progetti",
     "my_offers": "Le mie offerte",
+    "messages": "Messaggi",
+    "saved_projects": "Progetti salvati",
     "settings": "Impostazioni",
+    "notifications": "Notifiche",
     "subscription": "Abbonamento",
     "new_project": "Nuovo progetto",
     "find_projects": "Trova progetti",
@@ -197,6 +207,15 @@
     "project_category": "Categoria",
     "project_service": "Servizio richiesto",
     "project_service_placeholder": "Descrivi brevemente i lavori richiesti.",
+    "offer_price_chf": "Prezzo offerta (CHF)",
+    "offer_message": "Dettagli offerta",
+    "offer_message_placeholder": "Descrivi scope, tempistiche e proposta tecnica.",
+    "offer_files": "Allegati offerta",
+    "offer_files_hint": "Carica preventivo PDF, computo, referenze, certificati, disegni, ecc.",
+    "offer_form_invalid": "Inserisci un prezzo valido e i dettagli dell'offerta.",
+    "offer_submit_success": "Offerta inviata con successo. Chat live avviata.",
+    "offer_submit_error": "Invio offerta non riuscito.",
+    "open_chat": "Apri chat live",
     "project_deadline": "Scadenza candidatura (data e ora)",
     "project_files": "Carica file",
     "project_files_hint": "Piani, foto, capitolato, PDF, ecc.",
@@ -214,7 +233,14 @@
     "save_changes": "Salva modifiche",
     "settings_saved": "Modifiche profilo salvate con successo.",
     "loading_projects": "Caricamento progetti...",
-    "no_projects": "Nessun progetto trovato."
+    "no_projects": "Nessun progetto trovato.",
+    "loading_saved_projects": "Caricamento progetti salvati...",
+    "no_saved_projects": "Nessun progetto salvato.",
+    "no_chats": "Nessuna chat disponibile.",
+    "type_message": "Scrivi un messaggio...",
+    "send_message": "Invia",
+    "mark_all_read": "Segna tutto come letto",
+    "no_notifications": "Nessuna notifica al momento."
   },
   "subscription": {
     "title": "Gestisci abbonamento",

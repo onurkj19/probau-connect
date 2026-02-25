@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock, Users, MapPin } from "lucide-react";
@@ -5,11 +6,23 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLocalePath } from "@/lib/i18n-routing";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { formatRelativeTime } from "@/lib/time";
+
+interface TrendingProject {
+  id: string;
+  title: string;
+  address: string;
+  category: string;
+  created_at: string;
+}
 
 const Index = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const localePath = useLocalePath();
   const { user } = useAuth();
+  const [trendingProjects, setTrendingProjects] = useState<TrendingProject[]>([]);
+  const [loadingTrending, setLoadingTrending] = useState(true);
 
   const contractorPrimaryPath = user
     ? user.role === "contractor"
@@ -47,6 +60,27 @@ const Index = () => {
     { value: "26", label: t("stats.cantons") },
     { value: "98%", label: t("stats.satisfaction") },
   ];
+
+  useEffect(() => {
+    let canceled = false;
+    const loadTrending = async () => {
+      const { data } = await supabase
+        .from("projects")
+        .select("id, title, address, category, created_at")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (!canceled) {
+        setTrendingProjects((data ?? []) as TrendingProject[]);
+        setLoadingTrending(false);
+      }
+    };
+
+    void loadTrending();
+    return () => {
+      canceled = true;
+    };
+  }, []);
 
   return (
     <main>
@@ -137,6 +171,46 @@ const Index = () => {
                 <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trending now */}
+      <section className="border-t border-border bg-muted/30 py-16">
+        <div className="container">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground">{t("home.trending_title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("home.trending_subtitle")}</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link to={localePath("/projects")}>{t("home.trending_view_all")}</Link>
+            </Button>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {loadingTrending && (
+              <p className="text-sm text-muted-foreground">{t("projects.loading")}</p>
+            )}
+            {!loadingTrending && trendingProjects.length === 0 && (
+              <p className="text-sm text-muted-foreground">{t("projects.no_projects")}</p>
+            )}
+            {!loadingTrending &&
+              trendingProjects.map((project) => (
+                <div key={project.id} className="rounded-lg border border-border bg-card p-4 shadow-card">
+                  <p className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    {project.category}
+                  </p>
+                  <h3 className="mt-2 line-clamp-1 font-display text-lg font-semibold text-foreground">
+                    {project.title}
+                  </h3>
+                  <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{project.address}</p>
+                  <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    {formatRelativeTime(project.created_at, i18n.language)}
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </section>
