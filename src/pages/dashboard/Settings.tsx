@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DashboardSettings = () => {
   const { t } = useTranslation();
@@ -17,6 +27,8 @@ const DashboardSettings = () => {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [removingAvatar, setRemovingAvatar] = useState(false);
+  const [confirmDeleteAvatar, setConfirmDeleteAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,16 +66,32 @@ const DashboardSettings = () => {
     setError(null);
     setSaved(false);
     try {
+      const trimmedName = name.trim();
+      const trimmedCompanyName = companyName.trim();
+      const trimmedProfileTitle = profileTitle.trim() || null;
+      const trimmedAvatarUrl = avatarUrl.trim() || null;
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
-          name: name.trim(),
-          company_name: companyName.trim(),
-          profile_title: profileTitle.trim() || null,
-          avatar_url: avatarUrl.trim() || null,
+          name: trimmedName,
+          company_name: trimmedCompanyName,
+          profile_title: trimmedProfileTitle,
+          avatar_url: trimmedAvatarUrl,
         })
         .eq("id", user.id);
       if (updateError) throw updateError;
+
+      // Keep project owner snapshot fields in sync so cards update live everywhere.
+      const { error: snapshotError } = await supabase
+        .from("projects")
+        .update({
+          owner_company_name: trimmedCompanyName,
+          owner_profile_title: trimmedProfileTitle,
+          owner_avatar_url: trimmedAvatarUrl,
+        })
+        .eq("owner_id", user.id);
+      if (snapshotError) throw snapshotError;
 
       await refreshUser();
       setSaved(true);
@@ -72,6 +100,44 @@ const DashboardSettings = () => {
       setError(err instanceof Error ? err.message : "Saving profile failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user || !avatarUrl) return;
+    setRemovingAvatar(true);
+    setError(null);
+    setSaved(false);
+
+    try {
+      const marker = "/storage/v1/object/public/avatars/";
+      const markerIndex = avatarUrl.indexOf(marker);
+      if (markerIndex !== -1) {
+        const publicPath = decodeURIComponent(avatarUrl.slice(markerIndex + marker.length));
+        await supabase.storage.from("avatars").remove([publicPath]);
+      }
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id);
+      if (updateError) throw updateError;
+
+      const { error: snapshotError } = await supabase
+        .from("projects")
+        .update({ owner_avatar_url: null })
+        .eq("owner_id", user.id);
+      if (snapshotError) throw snapshotError;
+
+      setAvatarUrl("");
+      await refreshUser();
+      setSaved(true);
+      setConfirmDeleteAvatar(false);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Removing profile photo failed");
+    } finally {
+      setRemovingAvatar(false);
     }
   };
 
@@ -108,12 +174,18 @@ const DashboardSettings = () => {
               />
               {uploading ? "Uploading..." : "Upload photo"}
             </label>
+            {avatarUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setConfirmDeleteAvatar(true)}
+                disabled={uploading || removingAvatar}
+              >
+                {t("dashboard.remove_photo")}
+              </Button>
+            )}
           </div>
-          <Input
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://..."
-          />
         </div>
         <div className="space-y-2">
           <Label>{t("auth.full_name")}</Label>
@@ -156,6 +228,27 @@ const DashboardSettings = () => {
           </p>
         )}
       </form>
+
+      <AlertDialog open={confirmDeleteAvatar} onOpenChange={setConfirmDeleteAvatar}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("dashboard.remove_photo_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("dashboard.remove_photo_confirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removingAvatar}>{t("dashboard.remove_photo_cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={removingAvatar}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                void handleRemoveAvatar();
+              }}
+            >
+              {removingAvatar ? "..." : t("dashboard.remove_photo_confirm_button")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

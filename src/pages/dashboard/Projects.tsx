@@ -8,7 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, Lock, UploadCloud } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle, Lock, Pencil, Trash2, UploadCloud } from "lucide-react";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 
 interface DbProject {
@@ -54,8 +64,10 @@ const DashboardProjects = () => {
   const [service, setService] = useState("");
   const [deadlineAt, setDeadlineAt] = useState(getDefaultDeadlineValue());
   const [files, setFiles] = useState<File[]>([]);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [existingAttachmentUrls, setExistingAttachmentUrls] = useState<string[]>([]);
   const [projects, setProjects] = useState<DbProject[]>([]);
-  const [submitted, setSubmitted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -68,6 +80,8 @@ const DashboardProjects = () => {
   const [createdChatId, setCreatedChatId] = useState<string | null>(null);
   const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
   const [bookmarkedProjectIds, setBookmarkedProjectIds] = useState<string[]>([]);
+  const [projectToDelete, setProjectToDelete] = useState<DbProject | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
 
   const categoryOptions = [
     { value: "fassade", label: t("dashboard.category_fassade") },
@@ -85,9 +99,15 @@ const DashboardProjects = () => {
   const loadProjects = useCallback(async () => {
     if (!user) return;
     setLoadingProjects(true);
+
+    // Hard-delete expired tenders in DB and then refresh active listings.
+    await supabase.rpc("cleanup_expired_projects");
+
+    const nowIso = new Date().toISOString();
     const baseQuery = supabase
       .from("projects")
       .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+      .gt("deadline", nowIso)
       .order("created_at", { ascending: false });
 
     const { data, error } = isOwner
@@ -196,9 +216,9 @@ const DashboardProjects = () => {
 
     setSubmitting(true);
     setActionError(null);
-    setSubmitted(false);
+    setSuccessMessage(null);
     try {
-      const attachmentUrls: string[] = [];
+      const attachmentUrls: string[] = [...existingAttachmentUrls];
       for (const file of files) {
         const safeName = file.name.replace(/\s+/g, "-");
         const storagePath = `${user.id}/${Date.now()}-${safeName}`;
@@ -210,40 +230,117 @@ const DashboardProjects = () => {
         attachmentUrls.push(data.publicUrl);
       }
 
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
-          owner_id: user.id,
-          title: title.trim(),
-          address: address.trim(),
-          category,
-          project_type: category,
-          service: service.trim(),
-          deadline: new Date(deadlineAt).toISOString(),
-          status: "active",
-          attachments: attachmentUrls,
-          owner_company_name: user.companyName,
-          owner_profile_title: user.profileTitle || null,
-          owner_avatar_url: user.avatarUrl || null,
-        })
-        .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
-        .single();
+      const payload = {
+        owner_id: user.id,
+        title: title.trim(),
+        address: address.trim(),
+        category,
+        project_type: category,
+        service: service.trim(),
+        deadline: new Date(deadlineAt).toISOString(),
+        status: "active" as const,
+        attachments: attachmentUrls,
+        owner_company_name: user.companyName,
+        owner_profile_title: user.profileTitle || null,
+        owner_avatar_url: user.avatarUrl || null,
+      };
+
+      const query = editingProjectId
+        ? supabase
+            .from("projects")
+            .update(payload)
+            .eq("id", editingProjectId)
+            .eq("owner_id", user.id)
+            .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+            .single()
+        : supabase
+            .from("projects")
+            .insert(payload)
+            .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+            .single();
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      setProjects((prev) => [data as DbProject, ...prev]);
+      if (editingProjectId) {
+        setProjects((prev) => prev.map((project) => (project.id === editingProjectId ? (data as DbProject) : project)));
+      } else {
+        setProjects((prev) => [data as DbProject, ...prev]);
+      }
       setTitle("");
       setAddress("");
       setCategory("fassade");
       setService("");
       setDeadlineAt(getDefaultDeadlineValue());
       setFiles([]);
-      setSubmitted(true);
+      setExistingAttachmentUrls([]);
+      setEditingProjectId(null);
+      setSuccessMessage(editingProjectId ? t("dashboard.project_updated_note") : t("dashboard.project_saved_note"));
     } catch (err) {
       setActionError(err instanceof Error ? err.message : t("dashboard.project_publish_error"));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const resetOwnerForm = () => {
+    setTitle("");
+    setAddress("");
+    setCategory("fassade");
+    setService("");
+    setDeadlineAt(getDefaultDeadlineValue());
+    setFiles([]);
+    setExistingAttachmentUrls([]);
+    setEditingProjectId(null);
+    setSuccessMessage(null);
+    setActionError(null);
+  };
+
+  const handleEditProject = (project: DbProject) => {
+    setEditingProjectId(project.id);
+    setTitle(project.title);
+    setAddress(project.address);
+    setCategory(project.category);
+    setService(project.service);
+    setDeadlineAt(toDateTimeLocalValue(new Date(project.deadline)));
+    setExistingAttachmentUrls(project.attachments ?? []);
+    setFiles([]);
+    setActionError(null);
+    setSuccessMessage(null);
+    document.getElementById("owner-project-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleDeleteProject = async (project: DbProject) => {
+    if (!user) return;
+    setDeletingProject(true);
+
+    const { data: deletedRow, error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", project.id)
+      .eq("owner_id", user.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      setActionError(error.message);
+      setDeletingProject(false);
+      return;
+    }
+    if (!deletedRow) {
+      setActionError(t("dashboard.project_delete_error"));
+      setDeletingProject(false);
+      return;
+    }
+
+    setProjects((prev) => prev.filter((item) => item.id !== project.id));
+    if (editingProjectId === project.id) {
+      resetOwnerForm();
+    }
+    setProjectToDelete(null);
+    setDeletingProject(false);
+    void loadProjects();
   };
 
   const handleOfferSubmit = async (e: React.FormEvent) => {
@@ -357,6 +454,9 @@ const DashboardProjects = () => {
           <div className="mb-5">
             <h2 className="font-display text-xl font-semibold text-foreground">{t("dashboard.create_project_title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.create_project_subtitle")}</p>
+            {editingProjectId && (
+              <p className="mt-2 text-xs font-medium text-primary">{t("dashboard.editing_project_mode")}</p>
+            )}
           </div>
 
           <form onSubmit={handleOwnerSubmit} className="grid gap-4">
@@ -447,30 +547,25 @@ const DashboardProjects = () => {
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button type="submit" disabled={submitting}>
-                {submitting ? "..." : t("dashboard.publish_project")}
+                {submitting
+                  ? "..."
+                  : editingProjectId
+                    ? t("dashboard.update_project")
+                    : t("dashboard.publish_project")}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setTitle("");
-                  setAddress("");
-                  setCategory("fassade");
-                  setService("");
-                  setDeadlineAt(getDefaultDeadlineValue());
-                  setFiles([]);
-                  setSubmitted(false);
-                  setActionError(null);
-                }}
+                onClick={resetOwnerForm}
               >
                 {t("dashboard.clear_form")}
               </Button>
             </div>
           </form>
 
-          {submitted && (
+          {successMessage && (
             <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              {t("dashboard.project_saved_note")}
+              {successMessage}
             </div>
           )}
           {actionError && (
@@ -629,6 +724,7 @@ const DashboardProjects = () => {
                 publishedAt={p.created_at}
                 attachments={p.attachments}
                 projectId={p.id}
+                ownerId={p.owner_id}
                 projectType={categoryLabelMap[p.category] || p.category}
                 owner={{
                   company_name: p.owner_company_name,
@@ -660,12 +756,67 @@ const DashboardProjects = () => {
                     >
                       {t("dashboard.submit_offer")}
                     </Button>
+                  ) : isOwner ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleEditProject(p);
+                        }}
+                      >
+                        <Pencil className="mr-1 h-4 w-4" />
+                        {t("dashboard.edit_project")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setProjectToDelete(p);
+                        }}
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" />
+                        {t("dashboard.delete_project")}
+                      </Button>
+                    </div>
                   ) : undefined
                 }
               />
             </div>
           ))}
       </div>
+
+      <AlertDialog
+        open={Boolean(projectToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deletingProject) {
+            setProjectToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("dashboard.delete_project_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("dashboard.delete_project_confirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingProject}>
+              {t("dashboard.delete_project_cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingProject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (projectToDelete) {
+                  void handleDeleteProject(projectToDelete);
+                }
+              }}
+            >
+              {deletingProject ? "..." : t("dashboard.delete_project_confirm_button")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

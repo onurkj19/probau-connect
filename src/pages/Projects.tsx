@@ -8,6 +8,7 @@ import { ProjectCard } from "@/components/dashboard/ProjectCard";
 
 interface PublicProject {
   id: string;
+  owner_id: string;
   title: string;
   address: string;
   category: string;
@@ -27,10 +28,13 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
 
   const loadProjects = useCallback(async () => {
+    await supabase.rpc("cleanup_expired_projects");
+    const nowIso = new Date().toISOString();
     const { data } = await supabase
       .from("projects")
-      .select("id, title, address, category, deadline, created_at, attachments, owner_company_name, owner_profile_title, owner_avatar_url")
+      .select("id, owner_id, title, address, category, deadline, created_at, attachments, owner_company_name, owner_profile_title, owner_avatar_url")
       .eq("status", "active")
+      .gt("deadline", nowIso)
       .order("created_at", { ascending: false });
     setProjects((data ?? []) as PublicProject[]);
     setLoading(false);
@@ -79,6 +83,7 @@ const Projects = () => {
                 publishedAt={p.created_at}
                 attachments={p.attachments}
                 projectId={p.id}
+                ownerId={p.owner_id}
                 projectType={p.category}
                 owner={{
                   company_name: p.owner_company_name,

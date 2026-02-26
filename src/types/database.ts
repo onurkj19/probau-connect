@@ -72,6 +72,44 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["chat_messages"]["Insert"]>;
       };
+      chat_user_settings: {
+        Row: {
+          id: string;
+          chat_id: string;
+          user_id: string;
+          is_muted: boolean;
+          is_favorite: boolean;
+          is_hidden: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          chat_id: string;
+          user_id: string;
+          is_muted?: boolean;
+          is_favorite?: boolean;
+          is_hidden?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chat_user_settings"]["Insert"]>;
+      };
+      blocked_users: {
+        Row: {
+          id: string;
+          blocker_id: string;
+          blocked_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          blocker_id: string;
+          blocked_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["blocked_users"]["Insert"]>;
+      };
       notifications: {
         Row: {
           id: string;

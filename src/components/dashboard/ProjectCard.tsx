@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Building2, CalendarClock, Clock, FileText, MapPin, Paperclip } from "lucide-react";
+import { Bookmark, Building2, CalendarClock, Clock, Download, ExternalLink, FileText, MapPin, Paperclip } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,6 +33,24 @@ type OwnerSnapshot = {
   company_name: string | null;
   profile_title: string | null;
   avatar_url: string | null;
+};
+
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
+const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v"];
+const AUDIO_EXTENSIONS = ["mp3", "wav", "ogg", "m4a"];
+
+const getFileNameFromUrl = (url: string) => {
+  try {
+    return decodeURIComponent(url.split("/").pop() || "file");
+  } catch {
+    return url.split("/").pop() || "file";
+  }
+};
+
+const getFileExtension = (url: string) => {
+  const fileName = getFileNameFromUrl(url);
+  const ext = fileName.split(".").pop();
+  return ext ? ext.toLowerCase() : "";
 };
 
 export function ProjectCard({
@@ -118,9 +136,9 @@ export function ProjectCard({
     };
   }, [projectId, offerCount]);
 
-  const displayCompany = owner?.company_name || ownerSnapshot?.company_name || company;
-  const displayProfileTitle = owner?.profile_title || ownerSnapshot?.profile_title || null;
-  const displayAvatarUrl = owner?.avatar_url || ownerSnapshot?.avatar_url || null;
+  const displayCompany = ownerSnapshot?.company_name || owner?.company_name || company;
+  const displayProfileTitle = ownerSnapshot?.profile_title || owner?.profile_title || null;
+  const displayAvatarUrl = ownerSnapshot?.avatar_url || owner?.avatar_url || null;
   const offerLabel = useMemo(() => {
     if (offerCountState === null || offerCountState === undefined || offerCountState <= 0) {
       return t("projects.no_offers");
@@ -141,6 +159,95 @@ export function ProjectCard({
   const publishedLabel = publishedAt
     ? formatRelativeTime(publishedAt, i18n.language)
     : null;
+
+  const renderProjectAttachment = (url: string) => {
+    const ext = getFileExtension(url);
+    const fileName = getFileNameFromUrl(url);
+    const isImage = IMAGE_EXTENSIONS.includes(ext);
+    const isPdf = ext === "pdf";
+    const isVideo = VIDEO_EXTENSIONS.includes(ext);
+    const isAudio = AUDIO_EXTENSIONS.includes(ext);
+
+    if (isImage) {
+      return (
+        <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
+          <a href={url} target="_blank" rel="noreferrer">
+            <img src={url} alt={fileName} className="max-h-52 w-full rounded-md object-cover" />
+          </a>
+          <div className="flex items-center gap-3 text-xs">
+            <a href={url} target="_blank" rel="noreferrer" className="text-primary underline">
+              <ExternalLink className="mr-1 inline h-3 w-3" />
+              Open
+            </a>
+            <a href={url} download className="text-primary underline">
+              <Download className="mr-1 inline h-3 w-3" />
+              Download
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    if (isPdf) {
+      return (
+        <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
+          <object data={url} type="application/pdf" className="h-52 w-full rounded-md bg-background" />
+          <div className="flex items-center gap-3 text-xs">
+            <a href={url} target="_blank" rel="noreferrer" className="text-primary underline">
+              <ExternalLink className="mr-1 inline h-3 w-3" />
+              Open PDF
+            </a>
+            <a href={url} download className="text-primary underline">
+              <Download className="mr-1 inline h-3 w-3" />
+              Download
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    if (isVideo) {
+      return (
+        <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
+          <video controls className="max-h-52 w-full rounded-md">
+            <source src={url} />
+          </video>
+          <a href={url} download className="text-xs text-primary underline">
+            <Download className="mr-1 inline h-3 w-3" />
+            Download
+          </a>
+        </div>
+      );
+    }
+
+    if (isAudio) {
+      return (
+        <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
+          <audio controls className="w-full">
+            <source src={url} />
+          </audio>
+          <a href={url} download className="text-xs text-primary underline">
+            <Download className="mr-1 inline h-3 w-3" />
+            Download
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <div key={url} className="flex items-center justify-between rounded-md border border-border bg-background px-2 py-1 text-xs">
+        <span className="truncate">{fileName}</span>
+        <div className="ml-2 shrink-0 space-x-3">
+          <a href={url} target="_blank" rel="noreferrer" className="text-primary underline">
+            Open
+          </a>
+          <a href={url} download className="text-primary underline">
+            Download
+          </a>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="relative rounded-lg border border-border bg-card p-5 shadow-none">
@@ -215,22 +322,12 @@ export function ProjectCard({
       {fileLinks.length > 0 && (
         <div className="mt-3 rounded-md border border-border/70 bg-muted/20 p-2">
           <p className="mb-1 text-xs font-medium text-foreground">{t("projects.project_files")}</p>
-          <div className="flex flex-wrap gap-2">
-            {fileLinks.map((url) => {
-              const fileName = decodeURIComponent(url.split("/").pop() || "file");
-              return (
-                <a
-                  key={url}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-primary hover:underline"
-                >
-                  <Paperclip className="h-3 w-3" />
-                  {fileName}
-                </a>
-              );
-            })}
+          <div className="space-y-2">
+            {fileLinks.map((url) => (
+              <div key={url}>
+                {renderProjectAttachment(url)}
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -104,6 +104,7 @@ const DashboardSavedProjects = () => {
               publishedAt={project.created_at}
               attachments={project.attachments}
               projectId={project.id}
+              ownerId={project.owner_id}
               projectType={categoryLabelMap[project.category as keyof typeof categoryLabelMap] || project.category}
               owner={{
                 company_name: project.owner_company_name,

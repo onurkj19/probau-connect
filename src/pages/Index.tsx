@@ -64,10 +64,13 @@ const Index = () => {
   useEffect(() => {
     let canceled = false;
     const loadTrending = async () => {
+      await supabase.rpc("cleanup_expired_projects");
+      const nowIso = new Date().toISOString();
       const { data } = await supabase
         .from("projects")
         .select("id, title, address, category, created_at")
         .eq("status", "active")
+        .gt("deadline", nowIso)
         .order("created_at", { ascending: false })
         .limit(5);
       if (!canceled) {

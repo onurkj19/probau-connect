@@ -21,10 +21,13 @@ const DashboardOverview = () => {
 
   const loadActiveProjectsCount = useCallback(async () => {
     if (!user) return;
+    await supabase.rpc("cleanup_expired_projects");
+    const nowIso = new Date().toISOString();
     const baseQuery = supabase
       .from("projects")
       .select("id", { count: "exact", head: true })
-      .eq("status", "active");
+      .eq("status", "active")
+      .gt("deadline", nowIso);
 
     const { count } = isOwner
       ? await baseQuery.eq("owner_id", user.id)

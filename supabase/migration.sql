@@ -129,6 +129,7 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Owners can insert own projects" ON public.projects;
 DROP POLICY IF EXISTS "Owners can update own projects" ON public.projects;
+DROP POLICY IF EXISTS "Owners can delete own projects" ON public.projects;
 DROP POLICY IF EXISTS "Owners can read own projects" ON public.projects;
 DROP POLICY IF EXISTS "Authenticated users can read active projects" ON public.projects;
 DROP POLICY IF EXISTS "Anonymous users can read active projects" ON public.projects;
@@ -142,6 +143,11 @@ CREATE POLICY "Owners can update own projects"
   USING (auth.uid() = owner_id)
   WITH CHECK (auth.uid() = owner_id);
 
+CREATE POLICY "Owners can delete own projects"
+  ON public.projects FOR DELETE
+  TO authenticated
+  USING (auth.uid() = owner_id);
+
 CREATE POLICY "Owners can read own projects"
   ON public.projects FOR SELECT
   USING (auth.uid() = owner_id);
@@ -149,12 +155,29 @@ CREATE POLICY "Owners can read own projects"
 CREATE POLICY "Authenticated users can read active projects"
   ON public.projects FOR SELECT
   TO authenticated
-  USING (status = 'active');
+  USING (status = 'active' AND deadline > now());
 
 CREATE POLICY "Anonymous users can read active projects"
   ON public.projects FOR SELECT
   TO anon
-  USING (status = 'active');
+  USING (status = 'active' AND deadline > now());
+
+-- Cleanup helper: hard-delete expired tenders.
+CREATE OR REPLACE FUNCTION public.cleanup_expired_projects()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM public.projects
+  WHERE deadline <= now();
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public.cleanup_expired_projects() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.cleanup_expired_projects() TO authenticated, anon;
 
 -- 8. Files bucket for project attachments
 INSERT INTO storage.buckets (id, name, public)
@@ -359,6 +382,121 @@ CREATE POLICY "Participants can insert chat messages"
     )
   );
 
+-- 11b. Per-user chat preferences (mute/favorite/hide)
+CREATE TABLE IF NOT EXISTS public.chat_user_settings (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id      UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  is_muted     BOOLEAN NOT NULL DEFAULT false,
+  is_favorite  BOOLEAN NOT NULL DEFAULT false,
+  is_hidden    BOOLEAN NOT NULL DEFAULT false,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (chat_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_user_settings_user_id ON public.chat_user_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_user_settings_chat_id ON public.chat_user_settings(chat_id);
+
+DROP TRIGGER IF EXISTS chat_user_settings_updated_at ON public.chat_user_settings;
+CREATE TRIGGER chat_user_settings_updated_at
+  BEFORE UPDATE ON public.chat_user_settings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at();
+
+ALTER TABLE public.chat_user_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own chat settings" ON public.chat_user_settings;
+DROP POLICY IF EXISTS "Users can insert own chat settings" ON public.chat_user_settings;
+DROP POLICY IF EXISTS "Users can update own chat settings" ON public.chat_user_settings;
+DROP POLICY IF EXISTS "Users can delete own chat settings" ON public.chat_user_settings;
+
+CREATE POLICY "Users can read own chat settings"
+  ON public.chat_user_settings FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own chat settings"
+  ON public.chat_user_settings FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    auth.uid() = user_id
+    AND EXISTS (
+      SELECT 1 FROM public.chats c
+      WHERE c.id = chat_id
+        AND (c.owner_id = auth.uid() OR c.contractor_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Users can update own chat settings"
+  ON public.chat_user_settings FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own chat settings"
+  ON public.chat_user_settings FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+-- 11c. Blocked users map
+CREATE TABLE IF NOT EXISTS public.blocked_users (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  blocker_id  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  blocked_id  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (blocker_id, blocked_id),
+  CHECK (blocker_id <> blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker_id ON public.blocked_users(blocker_id);
+CREATE INDEX IF NOT EXISTS idx_blocked_users_blocked_id ON public.blocked_users(blocked_id);
+
+ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read related blocks" ON public.blocked_users;
+DROP POLICY IF EXISTS "Users can create own blocks" ON public.blocked_users;
+DROP POLICY IF EXISTS "Users can remove own blocks" ON public.blocked_users;
+
+CREATE POLICY "Users can read related blocks"
+  ON public.blocked_users FOR SELECT
+  TO authenticated
+  USING (auth.uid() = blocker_id OR auth.uid() = blocked_id);
+
+CREATE POLICY "Users can create own blocks"
+  ON public.blocked_users FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = blocker_id AND blocker_id <> blocked_id);
+
+CREATE POLICY "Users can remove own blocks"
+  ON public.blocked_users FOR DELETE
+  TO authenticated
+  USING (auth.uid() = blocker_id);
+
+-- Override insert policy to prevent sending messages while either side is blocked
+DROP POLICY IF EXISTS "Participants can insert chat messages" ON public.chat_messages;
+CREATE POLICY "Participants can insert chat messages"
+  ON public.chat_messages FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    auth.uid() = sender_id
+    AND EXISTS (
+      SELECT 1 FROM public.chats c
+      WHERE c.id = chat_id
+        AND (c.owner_id = auth.uid() OR c.contractor_id = auth.uid())
+        AND NOT EXISTS (
+          SELECT 1
+          FROM public.blocked_users b
+          WHERE
+            (b.blocker_id = auth.uid()
+             AND b.blocked_id = CASE WHEN c.owner_id = auth.uid() THEN c.contractor_id ELSE c.owner_id END)
+            OR
+            (b.blocked_id = auth.uid()
+             AND b.blocker_id = CASE WHEN c.owner_id = auth.uid() THEN c.contractor_id ELSE c.owner_id END)
+        )
+    )
+  );
+
 -- 12. Realtime support for live project and chat updates
 DO $$
 BEGIN
@@ -370,6 +508,32 @@ BEGIN
       AND tablename = 'projects'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.projects;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'chat_user_settings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_user_settings;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'blocked_users'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.blocked_users;
   END IF;
 END $$;
 
