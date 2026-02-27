@@ -48,13 +48,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const firstItem = activeSub.items.data[0];
         const maybePriceId = firstItem?.price?.id;
         const mappedPlan = maybePriceId ? getPlanByPriceId(maybePriceId) : undefined;
+        const maybeCurrentPeriodEnd = (
+          activeSub as unknown as { current_period_end?: number }
+        ).current_period_end;
+        const periodEndIso = typeof maybeCurrentPeriodEnd === "number"
+          ? new Date(maybeCurrentPeriodEnd * 1000).toISOString()
+          : null;
 
         await supabaseAdmin
           .from("profiles")
           .update({
             subscription_status: activeSub.status === "trialing" ? "active" : (activeSub.status as "active" | "past_due" | "canceled"),
             plan_type: mappedPlan?.type ?? null,
-            subscription_current_period_end: new Date(activeSub.current_period_end * 1000).toISOString(),
+            subscription_current_period_end: periodEndIso,
           })
           .eq("id", userId);
       }
