@@ -5,7 +5,7 @@ export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
 
 export interface UserSubscription {
   id: string;
-  role: "owner" | "contractor";
+  role: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
   email: string;
   stripeCustomerId: string | null;
   subscriptionStatus: SubscriptionStatus;

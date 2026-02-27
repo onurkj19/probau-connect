@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { supabase } from "./supabase";
 import type { Session } from "@supabase/supabase-js";
 
-export type UserRole = "owner" | "contractor";
+export type UserRole = "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
+export type AdminRole = "super_admin" | "admin" | "moderator";
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "none";
 export type PlanType = "basic" | "pro";
 
@@ -14,6 +15,11 @@ export interface User {
   profileTitle: string;
   avatarUrl: string;
   role: UserRole;
+  isVerified: boolean;
+  isBanned: boolean;
+  trustScore: number;
+  lastLoginAt: string | null;
+  deletedAt: string | null;
   stripeCustomerId: string | null;
   subscriptionStatus: SubscriptionStatus;
   planType: PlanType | null;
@@ -45,7 +51,7 @@ interface RegisterData {
   companyName: string;
   profileTitle?: string;
   avatarUrl?: string;
-  role: UserRole;
+  role: "project_owner" | "contractor";
 }
 
 const OFFER_LIMITS: Record<PlanType, number | null> = {
@@ -54,6 +60,25 @@ const OFFER_LIMITS: Record<PlanType, number | null> = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function getJwtIssuedAt(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const parsed = JSON.parse(atob(payload));
+    return typeof parsed.iat === "number" ? parsed.iat : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isAdminRole(role: UserRole | null | undefined): role is AdminRole {
+  return role === "super_admin" || role === "admin" || role === "moderator";
+}
+
+export function isProjectOwnerRole(role: UserRole | null | undefined): boolean {
+  return role === "project_owner";
+}
 
 async function fetchProfile(userId: string): Promise<User | null> {
   const { data, error } = await supabase
@@ -64,6 +89,8 @@ async function fetchProfile(userId: string): Promise<User | null> {
 
   if (error || !data) return null;
 
+  const normalizedRole = data.role === "owner" ? "project_owner" : data.role;
+
   return {
     id: data.id,
     email: data.email,
@@ -71,7 +98,12 @@ async function fetchProfile(userId: string): Promise<User | null> {
     companyName: data.company_name,
     profileTitle: data.profile_title ?? "",
     avatarUrl: data.avatar_url ?? "",
-    role: data.role as UserRole,
+    role: normalizedRole as UserRole,
+    isVerified: Boolean(data.is_verified),
+    isBanned: Boolean(data.is_banned),
+    trustScore: Number(data.trust_score ?? 0),
+    lastLoginAt: data.last_login_at ?? null,
+    deletedAt: data.deleted_at ?? null,
     stripeCustomerId: data.stripe_customer_id,
     subscriptionStatus: data.subscription_status as SubscriptionStatus,
     planType: data.plan_type as PlanType | null,
@@ -93,6 +125,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const { data: forceLogout } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "session_force_logout_at")
+      .maybeSingle();
+    const forceLogoutAt = (forceLogout?.value as { timestamp?: string } | null)?.timestamp;
+    if (forceLogoutAt) {
+      const issuedAt = getJwtIssuedAt(session.access_token);
+      const invalidAfter = Math.floor(new Date(forceLogoutAt).getTime() / 1000);
+      if (issuedAt !== null && issuedAt < invalidAfter) {
+        await supabase.auth.signOut();
+        setState({ user: null, session: null, isLoading: false });
+        return;
+      }
+    }
+
     const profile = await fetchProfile(session.user.id);
     setState({ user: profile, session, isLoading: false });
   }, []);
@@ -104,7 +152,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === "SIGNED_IN" && session?.user?.id) {
+          void supabase
+            .from("profiles")
+            .update({ last_login_at: new Date().toISOString() })
+            .eq("id", session.user.id);
+        }
         loadUser(session);
       },
     );
@@ -161,13 +215,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const user = state.user;
+  const isBanned = Boolean(user?.isBanned);
   const isContractor = user?.role === "contractor";
   const hasActiveSubscription = user?.subscriptionStatus === "active";
-  const canSubmitOffer = isContractor && hasActiveSubscription;
+  const canSubmitOffer = isContractor && hasActiveSubscription && !isBanned;
 
   const offerLimit = user?.planType ? OFFER_LIMITS[user.planType] : null;
   const offerLimitReached =
-    canSubmitOffer && offerLimit !== null && user.offerCountThisMonth >= offerLimit;
+    canSubmitOffer && offerLimit !== null && Boolean(user) && user.offerCountThisMonth >= offerLimit;
 
   return (
     <AuthContext.Provider

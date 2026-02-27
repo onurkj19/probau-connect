@@ -110,6 +110,27 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["blocked_users"]["Insert"]>;
       };
+      feature_flags: {
+        Row: {
+          id: string;
+          name: string;
+          enabled: boolean;
+          description: string | null;
+          updated_by: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          enabled?: boolean;
+          description?: string | null;
+          updated_by?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["feature_flags"]["Insert"]>;
+      };
       notifications: {
         Row: {
           id: string;
@@ -148,6 +169,31 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["bookmarks"]["Insert"]>;
       };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          target_type: "project" | "user" | "message";
+          target_id: string;
+          reason: string;
+          status: "open" | "resolved";
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          target_type: "project" | "user" | "message";
+          target_id: string;
+          reason: string;
+          status?: "open" | "resolved";
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["reports"]["Insert"]>;
+      };
       projects: {
         Row: {
           id: string;
@@ -185,6 +231,48 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
       };
+      security_events: {
+        Row: {
+          id: string;
+          event_type: string;
+          actor_id: string | null;
+          target_user_id: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          details: Record<string, unknown>;
+          severity: "info" | "warning" | "critical";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_type: string;
+          actor_id?: string | null;
+          target_user_id?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          details?: Record<string, unknown>;
+          severity?: "info" | "warning" | "critical";
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["security_events"]["Insert"]>;
+      };
+      settings: {
+        Row: {
+          key: string;
+          value: Record<string, unknown>;
+          updated_by: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          key: string;
+          value?: Record<string, unknown>;
+          updated_by?: string | null;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["settings"]["Insert"]>;
+      };
       profiles: {
         Row: {
           id: string;
@@ -193,7 +281,12 @@ export interface Database {
           company_name: string;
           profile_title: string | null;
           avatar_url: string | null;
-          role: "owner" | "contractor";
+          role: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
+          is_verified: boolean;
+          is_banned: boolean;
+          trust_score: number;
+          last_login_at: string | null;
+          deleted_at: string | null;
           stripe_customer_id: string | null;
           subscription_status: "active" | "canceled" | "past_due" | "none";
           plan_type: "basic" | "pro" | null;
@@ -209,7 +302,12 @@ export interface Database {
           company_name: string;
           profile_title?: string | null;
           avatar_url?: string | null;
-          role: "owner" | "contractor";
+          role?: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
+          is_verified?: boolean;
+          is_banned?: boolean;
+          trust_score?: number;
+          last_login_at?: string | null;
+          deleted_at?: string | null;
           stripe_customer_id?: string | null;
           subscription_status?: "active" | "canceled" | "past_due" | "none";
           plan_type?: "basic" | "pro" | null;

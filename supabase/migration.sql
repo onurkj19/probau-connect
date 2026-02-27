@@ -11,8 +11,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   company_name                    TEXT NOT NULL DEFAULT '',
   profile_title                   TEXT,
   avatar_url                      TEXT,
-  role                            TEXT NOT NULL DEFAULT 'owner'
-                                    CHECK (role IN ('owner', 'contractor')),
+  role                            TEXT NOT NULL DEFAULT 'project_owner'
+                                    CHECK (role IN ('super_admin', 'admin', 'moderator', 'contractor', 'project_owner')),
+  is_verified                     BOOLEAN NOT NULL DEFAULT false,
+  is_banned                       BOOLEAN NOT NULL DEFAULT false,
+  trust_score                     INTEGER NOT NULL DEFAULT 0,
+  last_login_at                   TIMESTAMPTZ,
+  deleted_at                      TIMESTAMPTZ,
   stripe_customer_id              TEXT UNIQUE,
   subscription_status             TEXT NOT NULL DEFAULT 'none'
                                     CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'none')),
@@ -25,6 +30,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_title TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_banned BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trust_score INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check CHECK (
+  role IN ('super_admin', 'admin', 'moderator', 'contractor', 'project_owner')
+);
 
 -- 2. Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -54,7 +69,10 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'company_name', ''),
     NULLIF(COALESCE(NEW.raw_user_meta_data->>'profile_title', ''), ''),
     NULLIF(COALESCE(NEW.raw_user_meta_data->>'avatar_url', ''), ''),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'owner')
+    CASE
+      WHEN COALESCE(NEW.raw_user_meta_data->>'role', 'project_owner') = 'owner' THEN 'project_owner'
+      ELSE COALESCE(NEW.raw_user_meta_data->>'role', 'project_owner')
+    END
   );
   RETURN NEW;
 END;
@@ -511,6 +529,56 @@ BEGIN
   END IF;
 END $$;
 
+-- 22. Security events hardening (append-only + indexes + retention helper)
+ALTER TABLE public.security_events ALTER COLUMN details SET DEFAULT '{}'::jsonb;
+
+CREATE INDEX IF NOT EXISTS idx_security_events_severity_created
+  ON public.security_events(severity, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_actor_created
+  ON public.security_events(actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_ip_created
+  ON public.security_events(ip_address, created_at DESC);
+
+-- Strict append-only enforcement on updates/deletes.
+CREATE OR REPLACE FUNCTION public.prevent_security_events_mutation()
+RETURNS trigger AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  END IF;
+  RAISE EXCEPTION 'security_events is append-only';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_security_events_no_update ON public.security_events;
+CREATE TRIGGER trg_security_events_no_update
+  BEFORE UPDATE ON public.security_events
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_security_events_mutation();
+
+DROP TRIGGER IF EXISTS trg_security_events_no_delete ON public.security_events;
+CREATE TRIGGER trg_security_events_no_delete
+  BEFORE DELETE ON public.security_events
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_security_events_mutation();
+
+-- Retention helper (call from scheduled job/cron).
+CREATE OR REPLACE FUNCTION public.cleanup_security_events_older_than(days_old integer DEFAULT 180)
+RETURNS integer AS $$
+DECLARE
+  deleted_count integer;
+BEGIN
+  DELETE FROM public.security_events
+  WHERE created_at < now() - make_interval(days => days_old);
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public.cleanup_security_events_older_than(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.cleanup_security_events_older_than(integer) TO service_role;
+
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -776,5 +844,141 @@ BEGIN
       AND tablename = 'bookmarks'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.bookmarks;
+  END IF;
+END $$;
+
+-- 17. Reports table
+CREATE TABLE IF NOT EXISTS public.reports (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL CHECK (target_type IN ('project', 'user', 'message')),
+  target_id   UUID NOT NULL,
+  reason      TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved')),
+  resolved_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_status ON public.reports(status);
+CREATE INDEX IF NOT EXISTS idx_reports_target ON public.reports(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_reports_reporter ON public.reports(reporter_id);
+
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own reports" ON public.reports;
+DROP POLICY IF EXISTS "Users can create own reports" ON public.reports;
+
+CREATE POLICY "Users can read own reports"
+  ON public.reports FOR SELECT
+  TO authenticated
+  USING (auth.uid() = reporter_id);
+
+CREATE POLICY "Users can create own reports"
+  ON public.reports FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = reporter_id);
+
+-- 18. Feature flags
+CREATE TABLE IF NOT EXISTS public.feature_flags (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL UNIQUE,
+  enabled     BOOLEAN NOT NULL DEFAULT false,
+  description TEXT,
+  updated_by  UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+DROP TRIGGER IF EXISTS feature_flags_updated_at ON public.feature_flags;
+CREATE TRIGGER feature_flags_updated_at
+  BEFORE UPDATE ON public.feature_flags
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at();
+
+ALTER TABLE public.feature_flags ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read feature flags" ON public.feature_flags;
+CREATE POLICY "Authenticated users can read feature flags"
+  ON public.feature_flags FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+-- 19. System settings
+CREATE TABLE IF NOT EXISTS public.settings (
+  key        TEXT PRIMARY KEY,
+  value      JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+DROP TRIGGER IF EXISTS settings_updated_at ON public.settings;
+CREATE TRIGGER settings_updated_at
+  BEFORE UPDATE ON public.settings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at();
+
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read settings" ON public.settings;
+CREATE POLICY "Authenticated users can read settings"
+  ON public.settings FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+-- 20. Security and audit events
+CREATE TABLE IF NOT EXISTS public.security_events (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type       TEXT NOT NULL,
+  actor_id         UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  target_user_id   UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  ip_address       TEXT,
+  user_agent       TEXT,
+  details          JSONB NOT NULL DEFAULT '{}'::jsonb,
+  severity         TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical')),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_events_type_created ON public.security_events(event_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_target_user ON public.security_events(target_user_id);
+
+ALTER TABLE public.security_events ENABLE ROW LEVEL SECURITY;
+
+-- write through server-only service role, not directly by users
+DROP POLICY IF EXISTS "No direct read on security_events" ON public.security_events;
+CREATE POLICY "No direct read on security_events"
+  ON public.security_events FOR SELECT
+  TO authenticated
+  USING (false);
+
+-- 21. Default feature flags and settings seeds
+INSERT INTO public.feature_flags (name, enabled, description)
+VALUES
+  ('chat_enabled', true, 'Enable/disable chat features'),
+  ('free_offers_enabled', false, 'Allow free offer submissions'),
+  ('beta_ui', false, 'Enable beta interface'),
+  ('country_rollout', true, 'Enable staged country rollout')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO public.settings (key, value)
+VALUES
+  ('subscription_pricing_display', '{"basic":79,"pro":149,"currency":"CHF"}'::jsonb),
+  ('offer_limits_per_plan', '{"basic":10,"pro":null}'::jsonb),
+  ('homepage_content', '{"heroTitle":"ProBau.ch","heroSubtitle":"Swiss marketplace"}'::jsonb),
+  ('footer_content', '{"company":"ProBau.ch","email":"info@probau.ch"}'::jsonb),
+  ('maintenance_banner', '{"enabled":false,"message":""}'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'feature_flags'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.feature_flags;
   END IF;
 END $$;

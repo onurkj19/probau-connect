@@ -210,7 +210,7 @@ const DashboardSettings = () => {
         <div className="space-y-2">
           <Label>{t("auth.role_select")}</Label>
           <Input
-            defaultValue={user?.role === "owner" ? t("auth.role_owner") : t("auth.role_contractor")}
+            defaultValue={user?.role === "project_owner" ? t("auth.role_owner") : t("auth.role_contractor")}
             disabled
           />
         </div>

@@ -20,7 +20,7 @@ const Register = () => {
   const [companyName, setCompanyName] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [role, setRole] = useState<UserRole>("owner");
+  const [role, setRole] = useState<UserRole>("project_owner");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,9 +96,9 @@ const Register = () => {
               <div className="flex gap-3">
                 <Button
                   type="button"
-                  variant={role === "owner" ? "default" : "outline"}
+                  variant={role === "project_owner" ? "default" : "outline"}
                   className="flex-1"
-                  onClick={() => setRole("owner")}
+                  onClick={() => setRole("project_owner")}
                 >
                   {t("auth.role_owner")}
                 </Button>

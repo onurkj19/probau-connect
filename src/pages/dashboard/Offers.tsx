@@ -605,7 +605,7 @@ const DashboardOffers = () => {
               const partner = profilesById[partnerId];
               const label =
                 partner?.company_name ||
-                (user?.role === "owner" ? chat.contractor_company_name : chat.owner_company_name);
+                (user?.role === "project_owner" ? chat.contractor_company_name : chat.owner_company_name);
               const subtitle = partner?.profile_title || chat.project_title || "-";
               const partnerInitial = (partner?.name || label || "P").charAt(0).toUpperCase();
               const chatSettings = chatSettingsById[chat.id];
@@ -673,7 +673,7 @@ const DashboardOffers = () => {
                   <div>
                     <p className="text-sm font-semibold text-foreground">
                       {counterpartyProfile?.company_name ||
-                        (user?.role === "owner"
+                        (user?.role === "project_owner"
                           ? selectedChat.contractor_company_name
                           : selectedChat.owner_company_name)}
                     </p>

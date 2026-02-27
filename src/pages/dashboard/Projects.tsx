@@ -55,7 +55,7 @@ const DashboardProjects = () => {
   const { locale } = useParams<{ locale: string }>();
   const [searchParams] = useSearchParams();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
-  const isOwner = user?.role === "owner";
+  const isOwner = user?.role === "project_owner";
   const isContractor = user?.role === "contractor";
   const hasNoSubscription = isContractor && user?.subscriptionStatus !== "active";
   const [title, setTitle] = useState("");
