@@ -7,6 +7,8 @@ export interface UserSubscription {
   id: string;
   role: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
   email: string;
+  isBanned: boolean;
+  deletedAt: string | null;
   stripeCustomerId: string | null;
   subscriptionStatus: SubscriptionStatus;
   planType: PlanType | null;
@@ -19,6 +21,8 @@ function mapRow(row: any): UserSubscription {
     id: row.id,
     role: row.role,
     email: row.email,
+    isBanned: Boolean(row.is_banned),
+    deletedAt: row.deleted_at ?? null,
     stripeCustomerId: row.stripe_customer_id,
     subscriptionStatus: row.subscription_status,
     planType: row.plan_type,

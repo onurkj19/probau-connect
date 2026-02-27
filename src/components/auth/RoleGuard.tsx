@@ -25,6 +25,10 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     return <Navigate to={`/${lang}/login`} replace />;
   }
 
+  if (user.isBanned || user.deletedAt) {
+    return <Navigate to={`/${lang}/banned`} replace />;
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={`/${lang}/unauthorized`} replace />;
   }

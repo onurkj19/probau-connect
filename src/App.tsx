@@ -15,6 +15,7 @@ import Terms from "./pages/Terms";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import Banned from "./pages/Banned";
 import { AuthProvider } from "@/lib/auth";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 const DashboardOverview = lazy(() => import("./pages/dashboard/Overview"));
@@ -76,6 +77,7 @@ const App = () => (
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="unauthorized" element={<Unauthorized />} />
+                <Route path="banned" element={<Banned />} />
               </Route>
 
               {/* Dashboard (protected) */}

@@ -21,5 +21,11 @@ export async function authenticateRequest(
   if (error || !user) return null;
 
   // Get the full profile with subscription data
-  return getUserById(user.id);
+  const profile = await getUserById(user.id);
+  if (!profile) return null;
+
+  // Banned/deleted accounts cannot use protected API actions
+  if (profile.isBanned || profile.deletedAt) return null;
+
+  return profile;
 }

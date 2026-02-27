@@ -49,6 +49,16 @@ async function fetchUserMetaByIds(ids: string[]) {
   return new Map((data ?? []).map((u) => [u.id, { name: u.name, email: u.email }]));
 }
 
+async function setAuthBanStatus(userIds: string[], isBanned: boolean) {
+  if (userIds.length === 0) return;
+  const banDuration = isBanned ? "876000h" : "none";
+  await Promise.all(
+    userIds.map(async (id) => {
+      await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: banDuration });
+    }),
+  );
+}
+
 async function handleOverview(req: VercelRequest, res: VercelResponse) {
   const actor = await requireAdmin(req, res);
   if (!actor) return;
@@ -160,8 +170,13 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
   if (action === "change_role" && actor.role === "moderator") return res.status(403).json({ error: "Moderators cannot change roles" });
   if (action === "set_subscription" && actor.role === "moderator") return res.status(403).json({ error: "Moderators cannot change subscriptions" });
 
-  if (action === "ban") await supabaseAdmin.from("profiles").update({ is_banned: true }).in("id", validTargetIds);
-  else if (action === "unban") await supabaseAdmin.from("profiles").update({ is_banned: false }).in("id", validTargetIds);
+  if (action === "ban") {
+    await supabaseAdmin.from("profiles").update({ is_banned: true }).in("id", validTargetIds);
+    await setAuthBanStatus(validTargetIds, true);
+  } else if (action === "unban") {
+    await supabaseAdmin.from("profiles").update({ is_banned: false }).in("id", validTargetIds);
+    await setAuthBanStatus(validTargetIds, false);
+  }
   else if (action === "verify") await supabaseAdmin.from("profiles").update({ is_verified: true }).in("id", validTargetIds);
   else if (action === "unverify") await supabaseAdmin.from("profiles").update({ is_verified: false }).in("id", validTargetIds);
   else if (action === "change_role") {
@@ -171,6 +186,7 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
     await supabaseAdmin.from("profiles").update({ plan_type: planType ?? null, subscription_status: subscriptionStatus ?? "none" }).in("id", validTargetIds);
   } else if (action === "soft_delete") {
     await supabaseAdmin.from("profiles").update({ deleted_at: new Date().toISOString(), is_banned: true }).in("id", validTargetIds);
+    await setAuthBanStatus(validTargetIds, true);
   } else if (action === "impersonate") {
     if (validTargetIds.length !== 1) return res.status(400).json({ error: "Impersonation requires a single user target" });
     const token = crypto.randomUUID();
