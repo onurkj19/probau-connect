@@ -389,25 +389,29 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
   if (!actor) return;
   const [discountConfig, activeCodesRes, inactiveCodesRes] = await Promise.all([
     getSubscriptionDiscountConfig(),
-    stripe.promotionCodes.list({ limit: 100, active: true }),
-    stripe.promotionCodes.list({ limit: 100, active: false }),
+    stripe.promotionCodes.list({ limit: 100, active: true, expand: ["data.coupon", "data.promotion.coupon"] }),
+    stripe.promotionCodes.list({ limit: 100, active: false, expand: ["data.coupon", "data.promotion.coupon"] }),
   ]);
   const mergedCodes = [...activeCodesRes.data, ...inactiveCodesRes.data];
+  const resolveCoupon = (promo: Stripe.PromotionCode): Stripe.Coupon | null => {
+    const legacy = promo.coupon && typeof promo.coupon !== "string" ? promo.coupon as Stripe.Coupon : null;
+    const promoCoupon = promo.promotion?.coupon && typeof promo.promotion.coupon !== "string"
+      ? promo.promotion.coupon as Stripe.Coupon
+      : null;
+    return legacy ?? promoCoupon;
+  };
   return res.status(200).json({
     discountConfig,
     promoCodes: mergedCodes
       .map((promo) => {
-        const legacyCoupon = promo.coupon && typeof promo.coupon !== "string" ? promo.coupon as Stripe.Coupon : null;
-        const promotionCoupon = promo.promotion?.coupon && typeof promo.promotion.coupon !== "string"
-          ? promo.promotion.coupon as Stripe.Coupon
-          : null;
-        const coupon = legacyCoupon ?? promotionCoupon;
-        if (!promo.code || !coupon || coupon.percent_off === null) return null;
+        const coupon = resolveCoupon(promo);
+        if (!promo.code) return null;
         return {
           id: promo.id,
+          couponId: coupon?.id ?? null,
           code: promo.code,
           active: promo.active,
-          percentOff: Number(coupon.percent_off ?? 0),
+          percentOff: Number(coupon?.percent_off ?? 0),
           maxRedemptions: promo.max_redemptions ?? null,
           timesRedeemed: promo.times_redeemed ?? 0,
           expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
@@ -416,6 +420,7 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
       })
       .filter((row): row is {
         id: string;
+        couponId: string | null;
         code: string;
         active: boolean;
         percentOff: number;
@@ -431,13 +436,14 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
 async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelResponse) {
   const actor = await requireAdmin(req, res, ["super_admin"]);
   if (!actor) return;
-  const { action, percentOff, code, maxRedemptions, expiresAt, promotionCodeId } = (req.body ?? {}) as {
-    action?: "set_default_discount" | "create_promo_code" | "deactivate_promo_code";
+  const { action, percentOff, code, maxRedemptions, expiresAt, promotionCodeId, couponId } = (req.body ?? {}) as {
+    action?: "set_default_discount" | "create_promo_code" | "deactivate_promo_code" | "delete_promo_code";
     percentOff?: number;
     code?: string;
     maxRedemptions?: number | null;
     expiresAt?: string | null;
     promotionCodeId?: string;
+    couponId?: string | null;
   };
   if (!action) return res.status(400).json({ error: "Missing action" });
 
@@ -539,6 +545,18 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
     const cleanId = sanitizeText(promotionCodeId, 120);
     if (!cleanId) return res.status(400).json({ error: "Missing promotionCodeId" });
     await stripe.promotionCodes.update(cleanId, { active: false });
+  } else if (action === "delete_promo_code") {
+    const cleanId = sanitizeText(promotionCodeId, 120);
+    const cleanCouponId = sanitizeText(couponId, 120);
+    if (!cleanId) return res.status(400).json({ error: "Missing promotionCodeId" });
+    await stripe.promotionCodes.update(cleanId, { active: false });
+    if (cleanCouponId) {
+      try {
+        await stripe.coupons.del(cleanCouponId);
+      } catch (error) {
+        return res.status(400).json({ error: `Promotion ended, but coupon deletion failed: ${getErrorMessage(error)}` });
+      }
+    }
   } else {
     return res.status(400).json({ error: "Unsupported action" });
   }
@@ -552,6 +570,7 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
       percentOff: typeof percentOff === "number" ? Number(percentOff.toFixed(2)) : null,
       code: sanitizeText(code, 32).toUpperCase() || null,
       promotionCodeId: sanitizeText(promotionCodeId, 120) || null,
+      couponId: sanitizeText(couponId, 120) || null,
     },
     severity: "warning",
   });

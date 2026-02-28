@@ -13,6 +13,7 @@ interface DiscountConfig {
 
 interface PromoCodeRow {
   id: string;
+  couponId: string | null;
   code: string;
   active: boolean;
   percentOff: number;
@@ -148,6 +149,26 @@ const AdminSubscriptionPromos = () => {
     }
   };
 
+  const deletePromo = async (id: string, couponId: string | null) => {
+    setActivePromoId(id);
+    setError(null);
+    try {
+      await adminFetch("/api/admin/subscription-promos-action", getToken, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "delete_promo_code",
+          promotionCodeId: id,
+          couponId,
+        }),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete promo code");
+    } finally {
+      setActivePromoId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -263,14 +284,25 @@ const AdminSubscriptionPromos = () => {
                   <td className="px-3 py-2">{row.expiresAt ? new Date(row.expiresAt).toLocaleString() : "-"}</td>
                   <td className="px-3 py-2">{new Date(row.createdAt).toLocaleString()}</td>
                   <td className="px-3 py-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!isSuperAdmin || !row.active || activePromoId === row.id}
-                      onClick={() => void deactivatePromo(row.id)}
-                    >
-                      Deactivate
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!isSuperAdmin || !row.active || activePromoId === row.id}
+                        onClick={() => void deactivatePromo(row.id)}
+                      >
+                        End
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        disabled={!isSuperAdmin || activePromoId === row.id}
+                        onClick={() => void deletePromo(row.id, row.couponId)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
