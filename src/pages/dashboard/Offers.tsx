@@ -10,13 +10,11 @@ import {
   MessageCircle,
   MoreVertical,
   Paperclip,
-  Phone,
   Search,
   Send,
   ShieldBan,
   Star,
   Trash2,
-  Video,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -66,6 +64,13 @@ interface OfferNegotiationItem {
   message: string;
   status: "submitted" | "accepted" | "rejected";
   created_at: string;
+}
+
+interface CounterProposalPending {
+  id: string;
+  sender_id: string;
+  amount: number | null;
+  message: string;
 }
 
 interface ChatMessageItem {
@@ -789,6 +794,41 @@ const DashboardOffers = () => {
     );
   };
 
+  const getOfferSystemMessageTone = (message: string) => {
+    const normalized = message.toLowerCase();
+    if (normalized.startsWith("counter proposal accepted")) {
+      return {
+        isSystem: true,
+        className: "border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-600/40 dark:bg-emerald-500/15 dark:text-emerald-200",
+      };
+    }
+    if (normalized.startsWith("counter proposal rejected")) {
+      return {
+        isSystem: true,
+        className: "border border-red-300 bg-red-50 text-red-800 dark:border-red-600/40 dark:bg-red-500/15 dark:text-red-200",
+      };
+    }
+    if (normalized.startsWith("offer accepted")) {
+      return {
+        isSystem: true,
+        className: "border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-600/40 dark:bg-emerald-500/15 dark:text-emerald-200",
+      };
+    }
+    if (normalized.startsWith("offer rejected")) {
+      return {
+        isSystem: true,
+        className: "border border-red-300 bg-red-50 text-red-800 dark:border-red-600/40 dark:bg-red-500/15 dark:text-red-200",
+      };
+    }
+    if (normalized.startsWith("counter proposal")) {
+      return {
+        isSystem: true,
+        className: "border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-600/40 dark:bg-amber-500/15 dark:text-amber-200",
+      };
+    }
+    return { isSystem: false, className: "" };
+  };
+
   const sendSystemChatMessage = useCallback(async (text: string) => {
     if (!user || !selectedChatId) return;
     const { error } = await supabase.from("chat_messages").insert({
@@ -799,6 +839,28 @@ const DashboardOffers = () => {
     });
     if (error) throw error;
   }, [selectedChatId, user]);
+
+  const latestPendingCounterProposal = useMemo<CounterProposalPending | null>(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const row = messages[i];
+      const text = row.message?.trim() ?? "";
+      const normalized = text.toLowerCase();
+      if (normalized.startsWith("counter proposal accepted") || normalized.startsWith("counter proposal rejected")) {
+        return null;
+      }
+      if (normalized.startsWith("counter proposal:")) {
+        const amountMatch = text.match(/CHF\s+([0-9]+(?:\.[0-9]+)?)/i);
+        const amount = amountMatch ? Number(amountMatch[1]) : null;
+        return {
+          id: row.id,
+          sender_id: row.sender_id,
+          amount: Number.isFinite(amount ?? NaN) ? amount : null,
+          message: text,
+        };
+      }
+    }
+    return null;
+  }, [messages]);
 
   const handleOfferDecision = async (action: "accept" | "reject") => {
     if (!latestOffer || !selectedChatId) return;
@@ -875,6 +937,30 @@ const DashboardOffers = () => {
       await loadChats();
     } catch (err) {
       setComposerError(err instanceof Error ? err.message : "Failed to send proposal");
+    } finally {
+      setNegotiating(false);
+    }
+  };
+
+  const handleCounterProposalDecision = async (decision: "accept" | "reject") => {
+    if (!latestPendingCounterProposal || !user) return;
+    if (latestPendingCounterProposal.sender_id === user.id) return;
+    setNegotiating(true);
+    setComposerError(null);
+    try {
+      const amountLabel =
+        latestPendingCounterProposal.amount !== null
+          ? `CHF ${latestPendingCounterProposal.amount.toFixed(2)}`
+          : "proposal amount";
+      await sendSystemChatMessage(
+        decision === "accept"
+          ? `Counter proposal accepted: ${amountLabel}`
+          : `Counter proposal rejected: ${amountLabel}`,
+      );
+      await loadMessages(selectedChatId);
+      await loadChats();
+    } catch (err) {
+      setComposerError(err instanceof Error ? err.message : "Failed to process counter proposal");
     } finally {
       setNegotiating(false);
     }
@@ -1044,12 +1130,6 @@ const DashboardOffers = () => {
                   <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                     {t("subscription.active_status")}
                   </Badge>
-                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
-                    <Video className="h-4 w-4" />
-                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
@@ -1098,9 +1178,14 @@ const DashboardOffers = () => {
                       </span>
                     </div>
                   ) : (
-                  <div key={entry.id} className={cn("flex", entry.message.sender_id === user?.id ? "justify-end" : "justify-start")}>
+                  <div key={entry.id} className={cn("flex", entry.message.sender_id === user?.id ? "justify-start" : "justify-end")}>
                     <div className="max-w-[88%]">
-                      <div className="mb-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <div
+                        className={cn(
+                          "mb-1 flex items-center gap-2 text-[11px] text-muted-foreground",
+                          entry.message.sender_id === user?.id ? "justify-start" : "justify-end",
+                        )}
+                      >
                         <Avatar className="h-5 w-5 border border-border">
                           <AvatarImage
                             src={
@@ -1128,9 +1213,12 @@ const DashboardOffers = () => {
                       <div
                         className={cn(
                           "rounded-2xl px-3 py-2 text-sm shadow-sm",
-                          entry.message.sender_id === user?.id
-                            ? "rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-bl-md border border-border bg-card text-foreground",
+                          getOfferSystemMessageTone(entry.message.message).isSystem
+                            ? "rounded-md"
+                            : entry.message.sender_id === user?.id
+                              ? "rounded-br-md bg-primary text-primary-foreground"
+                              : "rounded-bl-md border border-border bg-card text-foreground",
+                          getOfferSystemMessageTone(entry.message.message).className,
                         )}
                       >
                         <p className="whitespace-pre-wrap break-words">{entry.message.message}</p>
@@ -1142,7 +1230,12 @@ const DashboardOffers = () => {
                           </div>
                         )}
                       </div>
-                      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+                      <p
+                        className={cn(
+                          "mt-1 text-[11px] text-muted-foreground",
+                          entry.message.sender_id === user?.id ? "text-left" : "text-right",
+                        )}
+                      >
                         {new Date(entry.message.created_at).toLocaleString(lang, {
                           day: "2-digit",
                           month: "2-digit",
@@ -1164,6 +1257,100 @@ const DashboardOffers = () => {
                       : t("dashboard.chat_blocked_notice")}
                   </p>
                 )}
+                <div className="rounded-lg border border-border bg-muted/20 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Offer negotiation</p>
+                  {!latestOffer ? (
+                    <p className="mt-1 text-xs text-muted-foreground">No submitted offer in this chat yet.</p>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-medium text-foreground">Latest: CHF {Number(latestOffer.price_chf).toFixed(2)}</span>
+                      <Badge variant="outline" className="h-5 px-2 text-[10px] uppercase">
+                        {latestOffer.status}
+                      </Badge>
+                      {user?.role === "project_owner" && latestOffer.status === "submitted" && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="h-7 px-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                            disabled={negotiating}
+                            onClick={() => void handleOfferDecision("accept")}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 px-2"
+                            disabled={negotiating}
+                            onClick={() => void handleOfferDecision("reject")}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {latestPendingCounterProposal && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">
+                        Pending counter proposal:{" "}
+                        <span className="font-medium text-foreground">
+                          {latestPendingCounterProposal.amount !== null
+                            ? `CHF ${latestPendingCounterProposal.amount.toFixed(2)}`
+                            : "amount not parsed"}
+                        </span>
+                      </span>
+                      {latestPendingCounterProposal.sender_id !== user?.id && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="h-7 px-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                            disabled={negotiating}
+                            onClick={() => void handleCounterProposalDecision("accept")}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 px-2"
+                            disabled={negotiating}
+                            onClick={() => void handleCounterProposalDecision("reject")}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <div className="mt-2 grid gap-2 md:grid-cols-[160px_1fr_auto]">
+                    <Input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      placeholder="CHF amount"
+                      value={proposalAmount}
+                      onChange={(e) => setProposalAmount(e.target.value)}
+                      disabled={negotiating}
+                    />
+                    <Input
+                      placeholder="Proposal note (optional)"
+                      value={proposalMessage}
+                      onChange={(e) => setProposalMessage(e.target.value)}
+                      disabled={negotiating}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                    variant="secondary"
+                    className="border border-border bg-muted text-foreground hover:bg-muted/80"
+                      disabled={negotiating || !proposalAmount.trim() || (user?.role === "contractor" && !isActive)}
+                      onClick={() => void handleSendProposal()}
+                    >
+                      Offer proposal
+                    </Button>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <Input
                     value={newMessage}
@@ -1275,58 +1462,6 @@ const DashboardOffers = () => {
                 </Button>
               </div>
 
-              <div className="rounded-lg border border-border bg-background p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Offer negotiation</p>
-                {!latestOffer ? (
-                  <p className="mt-2 text-xs text-muted-foreground">No offer submitted yet.</p>
-                ) : (
-                  <div className="mt-2 space-y-2 text-xs">
-                    <p className="font-medium text-foreground">Latest offer: CHF {Number(latestOffer.price_chf).toFixed(2)}</p>
-                    <p className="text-muted-foreground">Status: {latestOffer.status}</p>
-                    <p className="line-clamp-3 text-muted-foreground">{latestOffer.message}</p>
-                    {user?.role === "project_owner" && latestOffer.status === "submitted" && (
-                      <div className="flex gap-2">
-                        <Button size="sm" className="h-8" disabled={negotiating} onClick={() => void handleOfferDecision("accept")}>
-                          Accept
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-8" disabled={negotiating} onClick={() => void handleOfferDecision("reject")}>
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="mt-3 space-y-2">
-                  <Input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    placeholder="Proposal amount (CHF)"
-                    value={proposalAmount}
-                    onChange={(e) => setProposalAmount(e.target.value)}
-                    disabled={negotiating}
-                  />
-                  <Input
-                    placeholder="Optional note for proposal"
-                    value={proposalMessage}
-                    onChange={(e) => setProposalMessage(e.target.value)}
-                    disabled={negotiating}
-                  />
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={negotiating || !proposalAmount.trim() || (user?.role === "contractor" && !isActive)}
-                    onClick={() => void handleSendProposal()}
-                  >
-                    {user?.role === "contractor" ? "Send as official offer" : "Send counter proposal"}
-                  </Button>
-                  {user?.role === "contractor" && !isActive && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Active subscription is required to submit an official offer.
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
           )}
         </div>
