@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { trackEvent } from "@/lib/analytics";
+import {
+  applyPercentDiscount,
+  BASE_PLAN_PRICES,
+  fetchDefaultSubscriptionDiscountPercent,
+  formatChf,
+} from "@/lib/subscription-pricing";
 
 const Subscription = () => {
   const { t } = useTranslation();
@@ -19,6 +25,7 @@ const Subscription = () => {
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
+  const [defaultDiscountPercent, setDefaultDiscountPercent] = useState(0);
   const autoTriggered = useRef(false);
 
   const requestedPlan = searchParams.get("plan");
@@ -70,6 +77,9 @@ const Subscription = () => {
     autoTriggered.current = true;
     void handleSubscribe(requestedPlan, "");
   }, [requestedPlan, user, loading]);
+  useEffect(() => {
+    void fetchDefaultSubscriptionDiscountPercent().then(setDefaultDiscountPercent).catch(() => setDefaultDiscountPercent(0));
+  }, []);
 
   if (!user || user.role !== "contractor") return null;
 
@@ -82,6 +92,14 @@ const Subscription = () => {
 
   const offerLimit = user.planType === "basic" ? 10 : null;
   const offerUsage = user.offerCountThisMonth;
+  const basicDiscountedPrice =
+    defaultDiscountPercent > 0
+      ? applyPercentDiscount(BASE_PLAN_PRICES.basic, defaultDiscountPercent)
+      : null;
+  const proDiscountedPrice =
+    defaultDiscountPercent > 0
+      ? applyPercentDiscount(BASE_PLAN_PRICES.pro, defaultDiscountPercent)
+      : null;
 
   const renewalDate = user.subscriptionCurrentPeriodEnd
     ? new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString(lang, {
@@ -191,9 +209,25 @@ const Subscription = () => {
                 {t("pricing.basic.name")}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">{t("pricing.basic.description")}</p>
-              <p className="mt-4 font-display text-3xl font-bold text-foreground">
-                CHF 79<span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-              </p>
+              {basicDiscountedPrice !== null ? (
+                <div className="mt-4 space-y-1">
+                  <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                  <div className="flex items-end gap-2">
+                    <span className="text-base font-medium text-muted-foreground line-through">
+                      CHF {formatChf(BASE_PLAN_PRICES.basic)}
+                    </span>
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      CHF {formatChf(basicDiscountedPrice)}
+                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 font-display text-3xl font-bold text-foreground">
+                  CHF {BASE_PLAN_PRICES.basic}
+                  <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                </p>
+              )}
               <ul className="mt-4 space-y-2">
                 {(t("pricing.basic.features", { returnObjects: true }) as string[]).map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-foreground">
@@ -216,9 +250,25 @@ const Subscription = () => {
                 {t("pricing.pro.name")}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">{t("pricing.pro.description")}</p>
-              <p className="mt-4 font-display text-3xl font-bold text-foreground">
-                CHF 149<span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-              </p>
+              {proDiscountedPrice !== null ? (
+                <div className="mt-4 space-y-1">
+                  <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                  <div className="flex items-end gap-2">
+                    <span className="text-base font-medium text-muted-foreground line-through">
+                      CHF {formatChf(BASE_PLAN_PRICES.pro)}
+                    </span>
+                    <p className="font-display text-3xl font-bold text-foreground">
+                      CHF {formatChf(proDiscountedPrice)}
+                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 font-display text-3xl font-bold text-foreground">
+                  CHF {BASE_PLAN_PRICES.pro}
+                  <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                </p>
+              )}
               <ul className="mt-4 space-y-2">
                 {(t("pricing.pro.features", { returnObjects: true }) as string[]).map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-foreground">

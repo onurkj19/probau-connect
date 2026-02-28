@@ -6,12 +6,23 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { trackEvent } from "@/lib/analytics";
+import { useEffect, useState } from "react";
+import {
+  applyPercentDiscount,
+  BASE_PLAN_PRICES,
+  fetchDefaultSubscriptionDiscountPercent,
+  formatChf,
+} from "@/lib/subscription-pricing";
 
 const Pricing = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
+  const [defaultDiscountPercent, setDefaultDiscountPercent] = useState(0);
+  useEffect(() => {
+    void fetchDefaultSubscriptionDiscountPercent().then(setDefaultDiscountPercent).catch(() => setDefaultDiscountPercent(0));
+  }, []);
 
   const plans = ["basic", "pro", "enterprise"] as const;
 
@@ -27,6 +38,12 @@ const Pricing = () => {
         <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3">
           {plans.map((plan, i) => {
             const isPopular = plan === "pro";
+            const isSubscriptionPlan = plan === "basic" || plan === "pro";
+            const basePrice = isSubscriptionPlan ? BASE_PLAN_PRICES[plan] : null;
+            const discountedPrice =
+              basePrice !== null && defaultDiscountPercent > 0
+                ? applyPercentDiscount(basePrice, defaultDiscountPercent)
+                : null;
             return (
               <motion.div
                 key={plan}
@@ -46,10 +63,25 @@ const Pricing = () => {
                 <p className="mt-1 text-sm text-muted-foreground">{t(`pricing.${plan}.description`)}</p>
                 <div className="mt-4">
                   {plan !== "enterprise" ? (
-                    <span className="font-display text-3xl font-bold text-foreground">
-                      CHF {t(`pricing.${plan}.price`)}
-                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-                    </span>
+                    discountedPrice !== null ? (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                        <div className="flex items-end gap-2">
+                          <span className="text-base font-medium text-muted-foreground line-through">
+                            CHF {formatChf(basePrice)}
+                          </span>
+                          <span className="font-display text-3xl font-bold text-foreground">
+                            CHF {formatChf(discountedPrice)}
+                            <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="font-display text-3xl font-bold text-foreground">
+                        CHF {basePrice}
+                        <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                      </span>
+                    )
                   ) : (
                     <span className="font-display text-xl font-bold text-foreground">{t(`pricing.${plan}.price`)}</span>
                   )}
