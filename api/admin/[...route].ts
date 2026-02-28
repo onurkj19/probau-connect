@@ -14,6 +14,14 @@ interface SubscriptionDiscountConfig {
   updatedAt: string | null;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return "Unexpected error";
+}
+
 async function getSubscriptionDiscountConfig(): Promise<SubscriptionDiscountConfig> {
   const { data: row } = await supabaseAdmin
     .from("settings")
@@ -397,15 +405,20 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
         updated_by: actor.id,
       });
     } else {
-      const coupon = await stripe.coupons.create({
-        percent_off: roundedPercent,
-        duration: "forever",
-        name: `Default subscription discount ${roundedPercent}%`,
-        metadata: {
-          source: "admin_default_subscription_discount",
-          actorId: actor.id,
-        },
-      });
+      let coupon: Stripe.Coupon;
+      try {
+        coupon = await stripe.coupons.create({
+          percent_off: roundedPercent,
+          duration: "forever",
+          name: `Default subscription discount ${roundedPercent}%`,
+          metadata: {
+            source: "admin_default_subscription_discount",
+            actorId: actor.id,
+          },
+        });
+      } catch (error) {
+        return res.status(400).json({ error: `Failed to create default discount coupon: ${getErrorMessage(error)}` });
+      }
       await supabaseAdmin.from("settings").upsert({
         key: SUBSCRIPTION_DISCOUNT_SETTING_KEY,
         value: {
@@ -439,26 +452,38 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
       }
       expiresAtTimestamp = Math.floor(parsed.getTime() / 1000);
     }
-    const coupon = await stripe.coupons.create({
-      percent_off: roundedPercent,
-      duration: "forever",
-      name: `Promo ${cleanCode} (${roundedPercent}%)`,
-      metadata: {
-        source: "admin_subscription_promo_code",
-        actorId: actor.id,
+    const [existingActive, existingInactive] = await Promise.all([
+      stripe.promotionCodes.list({ code: cleanCode, active: true, limit: 1 }),
+      stripe.promotionCodes.list({ code: cleanCode, active: false, limit: 1 }),
+    ]);
+    if ((existingActive.data?.length ?? 0) > 0 || (existingInactive.data?.length ?? 0) > 0) {
+      return res.status(409).json({ error: "Promo code already exists. Please use a different code." });
+    }
+    let coupon: Stripe.Coupon;
+    try {
+      coupon = await stripe.coupons.create({
+        percent_off: roundedPercent,
+        duration: "forever",
+        name: `Promo ${cleanCode} (${roundedPercent}%)`,
+        metadata: {
+          source: "admin_subscription_promo_code",
+          actorId: actor.id,
+          code: cleanCode,
+        },
+      });
+      await stripe.promotionCodes.create({
+        coupon: coupon.id,
         code: cleanCode,
-      },
-    });
-    await stripe.promotionCodes.create({
-      coupon: coupon.id,
-      code: cleanCode,
-      max_redemptions: cleanMaxRedemptions ?? undefined,
-      expires_at: expiresAtTimestamp,
-      metadata: {
-        source: "admin_subscription_promo_code",
-        actorId: actor.id,
-      },
-    });
+        max_redemptions: cleanMaxRedemptions ?? undefined,
+        expires_at: expiresAtTimestamp,
+        metadata: {
+          source: "admin_subscription_promo_code",
+          actorId: actor.id,
+        },
+      });
+    } catch (error) {
+      return res.status(400).json({ error: `Failed to create promo code: ${getErrorMessage(error)}` });
+    }
   } else if (action === "deactivate_promo_code") {
     const cleanId = sanitizeText(promotionCodeId, 120);
     if (!cleanId) return res.status(400).json({ error: "Missing promotionCodeId" });
