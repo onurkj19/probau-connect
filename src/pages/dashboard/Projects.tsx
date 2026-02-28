@@ -26,6 +26,7 @@ interface DbProject {
   title: string;
   address: string;
   category: string;
+  custom_category: string | null;
   service: string;
   attachments: string[] | null;
   deadline: string;
@@ -61,6 +62,7 @@ const DashboardProjects = () => {
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
   const [category, setCategory] = useState("fassade");
+  const [customCategory, setCustomCategory] = useState("");
   const [service, setService] = useState("");
   const [deadlineAt, setDeadlineAt] = useState(getDefaultDeadlineValue());
   const [files, setFiles] = useState<File[]>([]);
@@ -90,7 +92,9 @@ const DashboardProjects = () => {
     { value: "reinigung", label: t("dashboard.category_reinigung") },
     { value: "heizung", label: t("dashboard.category_heizung") },
     { value: "sanitar", label: t("dashboard.category_sanitar") },
+    { value: "other", label: "Other" },
   ];
+  const isCustomCategory = category === "other";
   const categoryLabelMap = useMemo(
     () => Object.fromEntries(categoryOptions.map((option) => [option.value, option.label])),
     [categoryOptions],
@@ -106,7 +110,7 @@ const DashboardProjects = () => {
     const nowIso = new Date().toISOString();
     const baseQuery = supabase
       .from("projects")
-      .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+      .select("id, title, address, category, custom_category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
       .gt("deadline", nowIso)
       .order("created_at", { ascending: false });
 
@@ -213,6 +217,10 @@ const DashboardProjects = () => {
   const handleOwnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !title || !address || !service || !deadlineAt) return;
+    if (isCustomCategory && !customCategory.trim()) {
+      setActionError("Please enter a custom category.");
+      return;
+    }
 
     setSubmitting(true);
     setActionError(null);
@@ -235,7 +243,8 @@ const DashboardProjects = () => {
         title: title.trim(),
         address: address.trim(),
         category,
-        project_type: category,
+        custom_category: isCustomCategory ? customCategory.trim() : null,
+        project_type: isCustomCategory ? customCategory.trim() : category,
         service: service.trim(),
         deadline: new Date(deadlineAt).toISOString(),
         status: "active" as const,
@@ -251,12 +260,12 @@ const DashboardProjects = () => {
             .update(payload)
             .eq("id", editingProjectId)
             .eq("owner_id", user.id)
-            .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+            .select("id, title, address, category, custom_category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
             .single()
         : supabase
             .from("projects")
             .insert(payload)
-            .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+            .select("id, title, address, category, custom_category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
             .single();
 
       const { data, error } = await query;
@@ -271,6 +280,7 @@ const DashboardProjects = () => {
       setTitle("");
       setAddress("");
       setCategory("fassade");
+      setCustomCategory("");
       setService("");
       setDeadlineAt(getDefaultDeadlineValue());
       setFiles([]);
@@ -288,6 +298,7 @@ const DashboardProjects = () => {
     setTitle("");
     setAddress("");
     setCategory("fassade");
+    setCustomCategory("");
     setService("");
     setDeadlineAt(getDefaultDeadlineValue());
     setFiles([]);
@@ -301,7 +312,13 @@ const DashboardProjects = () => {
     setEditingProjectId(project.id);
     setTitle(project.title);
     setAddress(project.address);
-    setCategory(project.category);
+    if (categoryOptions.some((option) => option.value === project.category)) {
+      setCategory(project.category);
+      setCustomCategory(project.custom_category || "");
+    } else {
+      setCategory("other");
+      setCustomCategory(project.custom_category || project.category || "");
+    }
     setService(project.service);
     setDeadlineAt(toDateTimeLocalValue(new Date(project.deadline)));
     setExistingAttachmentUrls(project.attachments ?? []);
@@ -497,6 +514,18 @@ const DashboardProjects = () => {
                 ))}
               </select>
             </div>
+            {isCustomCategory && (
+              <div className="grid gap-2">
+                <Label htmlFor="project-custom-category">Custom category</Label>
+                <Input
+                  id="project-custom-category"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="e.g. Solar panels, Roofing, Smart home"
+                  required
+                />
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="project-service">{t("dashboard.project_service")}</Label>
@@ -725,7 +754,7 @@ const DashboardProjects = () => {
                 attachments={p.attachments}
                 projectId={p.id}
                 ownerId={p.owner_id}
-                projectType={categoryLabelMap[p.category] || p.category}
+                projectType={p.custom_category || categoryLabelMap[p.category] || p.category}
                 owner={{
                   company_name: p.owner_company_name,
                   profile_title: p.owner_profile_title,

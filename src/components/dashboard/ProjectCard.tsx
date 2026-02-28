@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/time";
+import { VerificationBadge } from "@/components/common/VerificationBadge";
 
 interface ProjectCardProps {
   company: string;
@@ -33,6 +34,7 @@ type OwnerSnapshot = {
   company_name: string | null;
   profile_title: string | null;
   avatar_url: string | null;
+  is_verified: boolean | null;
 };
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
@@ -96,7 +98,7 @@ export function ProjectCard({
     const loadOwner = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("company_name, profile_title, avatar_url")
+        .select("company_name, profile_title, avatar_url, is_verified")
         .eq("id", ownerId)
         .maybeSingle();
 
@@ -105,6 +107,7 @@ export function ProjectCard({
           company_name: data.company_name,
           profile_title: data.profile_title,
           avatar_url: data.avatar_url,
+          is_verified: data.is_verified ?? false,
         });
       }
     };
@@ -139,6 +142,7 @@ export function ProjectCard({
   const displayCompany = ownerSnapshot?.company_name || owner?.company_name || company;
   const displayProfileTitle = ownerSnapshot?.profile_title || owner?.profile_title || null;
   const displayAvatarUrl = ownerSnapshot?.avatar_url || owner?.avatar_url || null;
+  const isOwnerVerified = Boolean(ownerSnapshot?.is_verified);
   const offerLabel = useMemo(() => {
     if (offerCountState === null || offerCountState === undefined || offerCountState <= 0) {
       return t("projects.no_offers");
@@ -275,12 +279,7 @@ export function ProjectCard({
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-medium text-foreground">{displayCompany}</p>
             {showVerifiedBadge && (
-              <Badge
-                variant="outline"
-                className="border-emerald-200 bg-emerald-50 text-[11px] text-emerald-700"
-              >
-                {t("projects.verified")}
-              </Badge>
+              <VerificationBadge verified={isOwnerVerified} />
             )}
           </div>
           {displayProfileTitle && (

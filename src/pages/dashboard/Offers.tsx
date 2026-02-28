@@ -10,10 +10,13 @@ import {
   MessageCircle,
   MoreVertical,
   Paperclip,
+  Phone,
+  Search,
   Send,
   ShieldBan,
   Star,
   Trash2,
+  Video,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +27,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { VerificationBadge } from "@/components/common/VerificationBadge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +70,8 @@ interface ProfileLite {
   company_name: string;
   avatar_url: string | null;
   profile_title: string | null;
+  is_verified?: boolean;
+  last_login_at?: string | null;
 }
 
 interface ChatSetting {
@@ -80,9 +86,36 @@ interface BlockedUserRow {
   blocked_id: string;
 }
 
+interface NotificationLite {
+  id: string;
+  meta: { chat_id?: string } | null;
+  type: "project" | "message";
+  is_read: boolean;
+}
+
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v"];
 const AUDIO_EXTENSIONS = ["mp3", "wav", "ogg", "m4a"];
+
+const formatChatTime = (value: string, locale: string) => {
+  const date = new Date(value);
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  if (sameDay) {
+    return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  }
+  return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
+};
+
+const formatMessageDayLabel = (value: string, locale: string) => {
+  const date = new Date(value);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === now.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString(locale, { day: "2-digit", month: "long", year: "numeric" });
+};
 
 const getFileNameFromUrl = (url: string) => {
   try {
@@ -111,9 +144,13 @@ const DashboardOffers = () => {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(searchParams.get("chat"));
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [chatSearch, setChatSearch] = useState("");
   const [chatFiles, setChatFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [composerError, setComposerError] = useState<string | null>(null);
+  const [unreadByChatId, setUnreadByChatId] = useState<Record<string, number>>({});
+  const [typingByChatId, setTypingByChatId] = useState<Record<string, boolean>>({});
+  const [onlineByChatId, setOnlineByChatId] = useState<Record<string, boolean>>({});
   const [profilesById, setProfilesById] = useState<Record<string, ProfileLite>>({});
   const [chatSettingsById, setChatSettingsById] = useState<Record<string, ChatSetting>>({});
   const [blockedByMeIds, setBlockedByMeIds] = useState<string[]>([]);
@@ -123,6 +160,7 @@ const DashboardOffers = () => {
   const [processingChatAction, setProcessingChatAction] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatFileInputRef = useRef<HTMLInputElement | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const loadBlocks = useCallback(async () => {
     if (!user) return;
@@ -134,6 +172,43 @@ const DashboardOffers = () => {
     const rows = (data ?? []) as BlockedUserRow[];
     setBlockedByMeIds(rows.filter((row) => row.blocker_id === user.id).map((row) => row.blocked_id));
     setBlockedMeIds(rows.filter((row) => row.blocked_id === user.id).map((row) => row.blocker_id));
+  }, [user]);
+
+  const loadUnreadByChat = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, type, meta, is_read")
+      .eq("user_id", user.id)
+      .eq("type", "message")
+      .eq("is_read", false);
+    const rows = (data ?? []) as NotificationLite[];
+    const counts = rows.reduce<Record<string, number>>((acc, row) => {
+      const chatId = row.meta?.chat_id;
+      if (!chatId) return acc;
+      acc[chatId] = (acc[chatId] ?? 0) + 1;
+      return acc;
+    }, {});
+    setUnreadByChatId(counts);
+  }, [user]);
+
+  const markChatNotificationsRead = useCallback(async (chatId: string) => {
+    if (!user || !chatId) return;
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, meta, type, is_read")
+      .eq("user_id", user.id)
+      .eq("type", "message")
+      .eq("is_read", false);
+    const idsToMark = ((data ?? []) as NotificationLite[])
+      .filter((row) => row.meta?.chat_id === chatId)
+      .map((row) => row.id);
+    if (idsToMark.length === 0) return;
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .in("id", idsToMark);
+    setUnreadByChatId((prev) => ({ ...prev, [chatId]: 0 }));
   }, [user]);
 
   const loadChats = useCallback(async () => {
@@ -188,11 +263,17 @@ const DashboardOffers = () => {
     if (!user) return;
     void loadChats();
     void loadBlocks();
-  }, [loadBlocks, loadChats, user]);
+    void loadUnreadByChat();
+  }, [loadBlocks, loadChats, loadUnreadByChat, user]);
 
   useEffect(() => {
     void loadMessages(selectedChatId);
   }, [loadMessages, selectedChatId]);
+
+  useEffect(() => {
+    if (!selectedChatId) return;
+    void markChatNotificationsRead(selectedChatId);
+  }, [markChatNotificationsRead, selectedChatId]);
 
   useEffect(() => {
     if (!user) return;
@@ -227,12 +308,78 @@ const DashboardOffers = () => {
           void loadBlocks();
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          void loadUnreadByChat();
+        },
+      )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [loadBlocks, loadChats, loadMessages, selectedChatId, user]);
+  }, [loadBlocks, loadChats, loadMessages, loadUnreadByChat, selectedChatId, user]);
+
+  useEffect(() => {
+    if (!user || !selectedChatId) return;
+    if (presenceChannelRef.current) {
+      void supabase.removeChannel(presenceChannelRef.current);
+      presenceChannelRef.current = null;
+    }
+
+    const channel = supabase.channel(`chat-presence-${selectedChatId}`, {
+      config: { presence: { key: user.id } },
+    });
+    presenceChannelRef.current = channel;
+
+    const syncPresence = () => {
+      const state = channel.presenceState<Record<string, unknown>>();
+      const participants = Object.values(state).flat();
+      const hasOnlineCounterparty = participants.some((presence) => {
+        const userId = String((presence as { user_id?: string }).user_id ?? "");
+        return Boolean(userId) && userId !== user.id;
+      });
+      const hasTypingCounterparty = participants.some((presence) => {
+        const userId = String((presence as { user_id?: string }).user_id ?? "");
+        const isTyping = Boolean((presence as { typing?: boolean }).typing);
+        return Boolean(userId) && userId !== user.id && isTyping;
+      });
+      setOnlineByChatId((prev) => ({ ...prev, [selectedChatId]: hasOnlineCounterparty }));
+      setTypingByChatId((prev) => ({ ...prev, [selectedChatId]: hasTypingCounterparty }));
+    };
+
+    channel
+      .on("presence", { event: "sync" }, syncPresence)
+      .on("presence", { event: "join" }, syncPresence)
+      .on("presence", { event: "leave" }, syncPresence)
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({
+            user_id: user.id,
+            typing: Boolean(newMessage.trim()),
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      setTypingByChatId((prev) => ({ ...prev, [selectedChatId]: false }));
+      setOnlineByChatId((prev) => ({ ...prev, [selectedChatId]: false }));
+      void supabase.removeChannel(channel);
+      if (presenceChannelRef.current === channel) presenceChannelRef.current = null;
+    };
+  }, [newMessage, selectedChatId, user]);
+
+  useEffect(() => {
+    if (!selectedChatId || !presenceChannelRef.current || !user) return;
+    void presenceChannelRef.current.track({
+      user_id: user.id,
+      typing: Boolean(newMessage.trim()),
+      online_at: new Date().toISOString(),
+    });
+  }, [newMessage, selectedChatId, user]);
 
   useEffect(() => {
     const chatIdFromUrl = searchParams.get("chat");
@@ -254,7 +401,7 @@ const DashboardOffers = () => {
 
     void supabase
       .from("profiles")
-      .select("id, name, company_name, avatar_url, profile_title")
+      .select("id, name, company_name, avatar_url, profile_title, is_verified, last_login_at")
       .in("id", ids)
       .then(({ data }) => {
         const map: Record<string, ProfileLite> = {};
@@ -265,6 +412,8 @@ const DashboardOffers = () => {
             company_name: profile.company_name,
             avatar_url: profile.avatar_url,
             profile_title: profile.profile_title,
+            is_verified: Boolean(profile.is_verified),
+            last_login_at: profile.last_login_at ?? null,
           };
         });
         setProfilesById(map);
@@ -291,6 +440,24 @@ const DashboardOffers = () => {
     });
     return copy;
   }, [chatSettingsById, chats]);
+  const filteredChats = useMemo(() => {
+    const q = chatSearch.trim().toLowerCase();
+    if (!q) return sortedChats;
+    return sortedChats.filter((chat) => {
+      const partnerId = user?.id === chat.owner_id ? chat.contractor_id : chat.owner_id;
+      const partner = profilesById[partnerId];
+      const label =
+        partner?.company_name ||
+        (user?.role === "project_owner" ? chat.contractor_company_name : chat.owner_company_name) ||
+        "";
+      const subtitle = partner?.profile_title || chat.project_title || "";
+      return (
+        label.toLowerCase().includes(q) ||
+        subtitle.toLowerCase().includes(q) ||
+        partner?.name?.toLowerCase().includes(q)
+      );
+    });
+  }, [chatSearch, sortedChats, user?.id, user?.role, profilesById]);
   const counterpartyId = selectedChat
     ? selectedChat.owner_id === user?.id
       ? selectedChat.contractor_id
@@ -313,6 +480,28 @@ const DashboardOffers = () => {
   const isBlockedByOther = counterpartyId ? blockedMeIds.includes(counterpartyId) : false;
   const selectedChatSettings = selectedChatId ? chatSettingsById[selectedChatId] : undefined;
   const canSendMessage = Boolean(selectedChatId) && !isBlockedByMe && !isBlockedByOther;
+  const isCounterpartyTyping = selectedChatId ? Boolean(typingByChatId[selectedChatId]) : false;
+  const isCounterpartyOnline = selectedChatId ? Boolean(onlineByChatId[selectedChatId]) : false;
+  const groupedMessages = useMemo(() => {
+    const grouped: Array<
+      | { type: "day"; id: string; label: string }
+      | { type: "message"; id: string; message: ChatMessageItem }
+    > = [];
+    let currentDay = "";
+    messages.forEach((message) => {
+      const dayKey = new Date(message.created_at).toDateString();
+      if (dayKey !== currentDay) {
+        currentDay = dayKey;
+        grouped.push({
+          type: "day",
+          id: `day-${dayKey}`,
+          label: formatMessageDayLabel(message.created_at, lang),
+        });
+      }
+      grouped.push({ type: "message", id: message.id, message });
+    });
+    return grouped;
+  }, [lang, messages]);
 
   const upsertChatSetting = async (
     chatId: string,
@@ -593,14 +782,28 @@ const DashboardOffers = () => {
         </div>
       )}
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-[280px_1fr]">
-        <div className="rounded-lg border border-border bg-card p-3">
-          <p className="mb-2 text-sm font-medium text-foreground">{t("dashboard.messages")}</p>
-          <div className="space-y-2">
-            {chats.length === 0 && (
-              <p className="text-xs text-muted-foreground">{t("dashboard.no_chats")}</p>
+      <div className="mt-8 grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)_260px]">
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">{t("dashboard.messages")}</p>
+            <Badge variant="secondary">{chats.length}</Badge>
+          </div>
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={chatSearch}
+              onChange={(e) => setChatSearch(e.target.value)}
+              className="pl-9"
+              placeholder="Search chats..."
+            />
+          </div>
+          <div className="max-h-[580px] space-y-2 overflow-y-auto pr-1">
+            {filteredChats.length === 0 && (
+              <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                {t("dashboard.no_chats")}
+              </p>
             )}
-            {sortedChats.map((chat) => {
+            {filteredChats.map((chat) => {
               const partnerId = user?.id === chat.owner_id ? chat.contractor_id : chat.owner_id;
               const partner = profilesById[partnerId];
               const label =
@@ -616,30 +819,46 @@ const DashboardOffers = () => {
                   onClick={() => {
                     setSelectedChatId(chat.id);
                     setSearchParams({ chat: chat.id });
+                    void markChatNotificationsRead(chat.id);
                   }}
                   className={cn(
-                    "w-full rounded-md border px-3 py-2 text-left text-sm transition-colors",
+                    "w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors",
                     chat.id === selectedChatId
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-muted/40",
+                      : "border-border bg-background hover:bg-muted/40",
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8 border border-border">
+                  <div className="flex items-start gap-2">
+                    <Avatar className="mt-0.5 h-9 w-9 border border-border">
                       <AvatarImage src={partner?.avatar_url || undefined} alt={label || "Chat"} />
                       <AvatarFallback>{partnerInitial}</AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">
-                        {label || "Chat"}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="flex items-center gap-1 truncate font-medium text-foreground">
+                          {label || "Chat"}
+                          {onlineByChatId[chat.id] && (
+                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          )}
+                        </p>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {formatChatTime(chat.updated_at, lang)}
+                        </span>
+                      </div>
+                      <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+                      <div className="mt-1 flex items-center gap-1">
                         {chatSettings?.is_favorite && (
-                          <Star className="ml-1 inline h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                         )}
                         {chatSettings?.is_muted && (
-                          <BellOff className="ml-1 inline h-3.5 w-3.5 text-muted-foreground" />
+                          <BellOff className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+                        {(unreadByChatId[chat.id] ?? 0) > 0 && (
+                          <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                            {unreadByChatId[chat.id]}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -648,16 +867,16 @@ const DashboardOffers = () => {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           {!selectedChat && (
-            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
+            <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
               <MessageCircle className="h-10 w-10 text-muted-foreground/50" />
               <p className="mt-3 text-sm text-muted-foreground">{t("dashboard.no_chats")}</p>
             </div>
           )}
           {selectedChat && (
             <>
-              <div className="mb-3 flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+              <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-9 w-9 border border-border">
                     <AvatarImage
@@ -671,21 +890,37 @@ const DashboardOffers = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {counterpartyProfile?.company_name ||
-                        (user?.role === "project_owner"
-                          ? selectedChat.contractor_company_name
-                          : selectedChat.owner_company_name)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        {counterpartyProfile?.company_name ||
+                          (user?.role === "project_owner"
+                            ? selectedChat.contractor_company_name
+                            : selectedChat.owner_company_name)}
+                      </p>
+                      <VerificationBadge verified={Boolean(counterpartyProfile?.is_verified)} />
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {counterpartyProfile?.profile_title || selectedChat.project_title || "-"}
+                      {isCounterpartyTyping
+                        ? "typing..."
+                        : isCounterpartyOnline
+                          ? "online"
+                          : `last seen ${formatChatTime(
+                            counterpartyProfile?.last_login_at || selectedChat.updated_at,
+                            lang,
+                          )}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                  <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                     {t("subscription.active_status")}
                   </Badge>
+                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
+                    <Video className="h-4 w-4" />
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
@@ -725,22 +960,29 @@ const DashboardOffers = () => {
                   </DropdownMenu>
                 </div>
               </div>
-              <div className="max-h-[380px] space-y-3 overflow-y-auto rounded-md border border-border bg-muted/20 p-3">
-                {messages.map((message) => (
-                  <div key={message.id} className={cn("flex", message.sender_id === user?.id ? "justify-end" : "justify-start")}>
+              <div className="h-[460px] space-y-3 overflow-y-auto bg-gradient-to-b from-muted/20 to-background p-4">
+                {groupedMessages.map((entry) => (
+                  entry.type === "day" ? (
+                    <div key={entry.id} className="py-1 text-center">
+                      <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                        {entry.label}
+                      </span>
+                    </div>
+                  ) : (
+                  <div key={entry.id} className={cn("flex", entry.message.sender_id === user?.id ? "justify-end" : "justify-start")}>
                     <div className="max-w-[88%]">
                       <div className="mb-1 flex items-center gap-2 text-[11px] text-muted-foreground">
                         <Avatar className="h-5 w-5 border border-border">
                           <AvatarImage
                             src={
-                              message.sender_id === user?.id
+                              entry.message.sender_id === user?.id
                                 ? currentProfile?.avatar_url || undefined
                                 : counterpartyProfile?.avatar_url || undefined
                             }
                           />
                           <AvatarFallback>
                             {(
-                              (message.sender_id === user?.id
+                              (entry.message.sender_id === user?.id
                                 ? currentProfile?.name || currentProfile?.company_name
                                 : counterpartyProfile?.name || counterpartyProfile?.company_name) || "U"
                             )
@@ -749,7 +991,7 @@ const DashboardOffers = () => {
                           </AvatarFallback>
                         </Avatar>
                         <span>
-                          {message.sender_id === user?.id
+                          {entry.message.sender_id === user?.id
                             ? t("nav.dashboard")
                             : counterpartyProfile?.company_name || "Partner"}
                         </span>
@@ -757,22 +999,22 @@ const DashboardOffers = () => {
                       <div
                         className={cn(
                           "rounded-2xl px-3 py-2 text-sm shadow-sm",
-                          message.sender_id === user?.id
+                          entry.message.sender_id === user?.id
                             ? "rounded-br-md bg-primary text-primary-foreground"
                             : "rounded-bl-md border border-border bg-card text-foreground",
                         )}
                       >
-                        <p className="whitespace-pre-wrap break-words">{message.message}</p>
-                        {message.attachments && message.attachments.length > 0 && (
+                        <p className="whitespace-pre-wrap break-words">{entry.message.message}</p>
+                        {entry.message.attachments && entry.message.attachments.length > 0 && (
                           <div className="mt-2 space-y-1">
-                            {message.attachments.map((url) =>
-                              renderAttachment(url, message.sender_id === user?.id),
+                            {entry.message.attachments.map((url) =>
+                              renderAttachment(url, entry.message.sender_id === user?.id),
                             )}
                           </div>
                         )}
                       </div>
                       <p className="mt-1 text-right text-[11px] text-muted-foreground">
-                        {new Date(message.created_at).toLocaleString(lang, {
+                        {new Date(entry.message.created_at).toLocaleString(lang, {
                           day: "2-digit",
                           month: "2-digit",
                           hour: "2-digit",
@@ -781,10 +1023,11 @@ const DashboardOffers = () => {
                       </p>
                     </div>
                   </div>
+                  )
                 ))}
                 <div ref={endOfMessagesRef} />
               </div>
-              <form className="mt-3 space-y-2" onSubmit={handleSendMessage}>
+              <form className="space-y-2 border-t border-border bg-background p-3" onSubmit={handleSendMessage}>
                 {(isBlockedByMe || isBlockedByOther) && (
                   <p className="text-xs font-medium text-destructive">
                     {isBlockedByOther
@@ -801,12 +1044,12 @@ const DashboardOffers = () => {
                   />
                   <Button
                     type="button"
+                    size="icon"
                     variant="outline"
                     onClick={() => chatFileInputRef.current?.click()}
                     disabled={!canSendMessage}
                   >
-                    <Paperclip className="mr-1 h-4 w-4" />
-                    {t("dashboard.chat_attach")}
+                    <Paperclip className="h-4 w-4" />
                   </Button>
                   <input
                     ref={chatFileInputRef}
@@ -816,21 +1059,93 @@ const DashboardOffers = () => {
                     onChange={(e) => setChatFiles(Array.from(e.target.files || []))}
                     disabled={!canSendMessage}
                   />
-                  <Button type="submit" disabled={!canSendMessage || sending || (!newMessage.trim() && chatFiles.length === 0)}>
-                    <Send className="mr-1 h-4 w-4" />
-                    {t("dashboard.send_message")}
+                  <Button type="submit" size="icon" disabled={!canSendMessage || sending || (!newMessage.trim() && chatFiles.length === 0)}>
+                    <Send className="h-4 w-4" />
                   </Button>
                 </div>
                 {chatFiles.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("dashboard.files_selected", { count: chatFiles.length })}
-                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {chatFiles.map((file) => (
+                      <span key={file.name} className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        {file.name}
+                      </span>
+                    ))}
+                  </div>
                 )}
                 {composerError && (
                   <p className="text-xs text-destructive">{composerError}</p>
                 )}
               </form>
             </>
+          )}
+        </div>
+
+        <div className="hidden rounded-xl border border-border bg-card p-3 shadow-sm xl:block">
+          <p className="mb-3 text-sm font-semibold text-foreground">Chat details</p>
+          {!selectedChat && (
+            <p className="text-xs text-muted-foreground">Select a conversation to see details.</p>
+          )}
+          {selectedChat && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-10 w-10 border border-border">
+                    <AvatarImage src={counterpartyProfile?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {(counterpartyProfile?.name || counterpartyProfile?.company_name || "C").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {counterpartyProfile?.company_name || "Partner"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {counterpartyProfile?.profile_title || selectedChat.project_title || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground">Project</p>
+                <p className="mt-1">{selectedChat.project_title || "-"}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Button size="sm" variant="outline" className="w-full justify-start" onClick={() => void handleToggleFavorite()}>
+                  <Star className={cn("mr-2 h-4 w-4", selectedChatSettings?.is_favorite && "fill-yellow-400 text-yellow-400")} />
+                  {selectedChatSettings?.is_favorite ? t("dashboard.chat_unfavorite") : t("dashboard.chat_favorite")}
+                </Button>
+                <Button size="sm" variant="outline" className="w-full justify-start" onClick={() => void handleToggleMute()}>
+                  <BellOff className="mr-2 h-4 w-4" />
+                  {selectedChatSettings?.is_muted ? t("dashboard.chat_unmute") : t("dashboard.chat_mute")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    if (isBlockedByMe) {
+                      void handleToggleBlock();
+                      return;
+                    }
+                    setConfirmBlockOpen(true);
+                  }}
+                >
+                  <ShieldBan className="mr-2 h-4 w-4" />
+                  {isBlockedByMe ? t("dashboard.chat_unblock") : t("dashboard.chat_block")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full justify-start text-destructive hover:text-destructive"
+                  onClick={() => setConfirmDeleteChatOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("dashboard.chat_delete_for_me")}
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>

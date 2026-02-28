@@ -7,6 +7,7 @@ import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { VerificationBadge } from "@/components/common/VerificationBadge";
 
 export function DashboardSidebar() {
   const { t } = useTranslation();
@@ -99,7 +100,10 @@ export function DashboardSidebar() {
               <AvatarFallback>{profileInitials || "PB"}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{user.name || user.companyName}</p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-medium text-foreground">{user.name || user.companyName}</p>
+                <VerificationBadge verified={Boolean(user.isVerified)} />
+              </div>
               {user.profileTitle && (
                 <p className="truncate text-xs text-muted-foreground">{user.profileTitle}</p>
               )}

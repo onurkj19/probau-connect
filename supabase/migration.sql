@@ -686,6 +686,14 @@ BEGIN
   END IF;
 END $$;
 
+-- Profile enrichment fields for detailed dashboard profiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS address_line TEXT;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS custom_category TEXT;
+
 -- 13. Notifications table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

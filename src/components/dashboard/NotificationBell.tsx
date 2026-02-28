@@ -90,8 +90,8 @@ export function NotificationBell() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border border-border bg-card p-2 shadow-lg">
-          <div className="mb-1 flex items-center justify-between px-1">
+        <div className="absolute right-0 z-50 mt-2 w-96 rounded-xl border border-border bg-card p-0 shadow-lg">
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <p className="text-sm font-semibold text-foreground">Notifications</p>
             <Link
               to={`/${lang}/dashboard/notifications`}
@@ -101,9 +101,9 @@ export function NotificationBell() {
               Open all
             </Link>
           </div>
-          <div className="space-y-1">
+          <div className="max-h-96 divide-y divide-border overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="px-2 py-3 text-xs text-muted-foreground">No notifications yet.</p>
+              <p className="px-3 py-4 text-xs text-muted-foreground">No notifications yet.</p>
             )}
             {notifications.map((notification) => (
               <Link
@@ -113,13 +113,15 @@ export function NotificationBell() {
                   void handleNotificationClick(notification);
                   setOpen(false);
                 }}
-                className={`block rounded-md px-2 py-2 text-xs ${
-                  notification.is_read ? "bg-muted/40" : "bg-primary/5"
+                className={`block px-3 py-2 text-xs transition-colors hover:bg-muted/40 ${
+                  notification.is_read ? "bg-card" : "bg-primary/5"
                 }`}
               >
-                <p className="font-semibold text-foreground">{notification.title}</p>
+                <p className={`truncate text-foreground ${notification.is_read ? "font-medium" : "font-semibold"}`}>
+                  {notification.title}
+                </p>
                 {notification.body && (
-                  <p className="mt-0.5 text-muted-foreground">{notification.body}</p>
+                  <p className="mt-0.5 truncate text-muted-foreground">{notification.body}</p>
                 )}
               </Link>
             ))}

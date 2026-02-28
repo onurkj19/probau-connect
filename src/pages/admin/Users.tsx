@@ -113,6 +113,12 @@ const AdminUsers = () => {
 
   const totalRows = useMemo(() => rows.length, [rows.length]);
   const selectedCount = selectedIds.length;
+  const statusPillClass = (isPositive: boolean) =>
+    `inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+      isPositive
+        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+        : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+    }`;
 
   return (
     <div className="space-y-4">
@@ -125,7 +131,7 @@ const AdminUsers = () => {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, email, company"
+          placeholder="Search by ID, email, name, company"
         />
         <select
           value={roleFilter}
@@ -221,6 +227,7 @@ const AdminUsers = () => {
                   />
                 </th>
                 <th className="px-3 py-2 font-medium">Name</th>
+                <th className="px-3 py-2 font-medium">User ID</th>
                 <th className="px-3 py-2 font-medium">Email</th>
                 <th className="px-3 py-2 font-medium">Role</th>
                 <th className="px-3 py-2 font-medium">Plan</th>
@@ -234,10 +241,14 @@ const AdminUsers = () => {
             </thead>
             <tbody>
               {!loading && rows.map((row) => (
+                (() => {
+                  const isSuperAdmin = row.role === "super_admin";
+                  return (
                 <tr key={row.id} className="border-t border-border align-top">
                   <td className="px-3 py-2">
                     <input
                       type="checkbox"
+                      disabled={isSuperAdmin}
                       checked={selectedIds.includes(row.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
@@ -249,6 +260,9 @@ const AdminUsers = () => {
                     />
                   </td>
                   <td className="px-3 py-2">{row.name || "-"}</td>
+                  <td className="px-3 py-2">
+                    <span className="font-mono text-xs text-muted-foreground">{row.id}</span>
+                  </td>
                   <td className="px-3 py-2">{row.email}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
@@ -256,6 +270,7 @@ const AdminUsers = () => {
                         value={roleDraft[row.id] ?? row.role}
                         onChange={(e) => setRoleDraft((prev) => ({ ...prev, [row.id]: e.target.value as UserRole }))}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        disabled={isSuperAdmin}
                       >
                         {roleOptions.map((role) => (
                           <option key={role} value={role}>
@@ -266,18 +281,26 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={activeActionId === row.id}
+                        disabled={activeActionId === row.id || isSuperAdmin}
                         onClick={() => {
                           void runAction({ action: "change_role", userId: row.id, role: roleDraft[row.id] ?? row.role });
                         }}
                       >
-                        Apply
+                        {isSuperAdmin ? "Locked" : "Apply"}
                       </Button>
                     </div>
                   </td>
                   <td className="px-3 py-2">{row.planType ? `${row.planType} (${row.subscriptionStatus})` : row.subscriptionStatus}</td>
-                  <td className="px-3 py-2">{row.isVerified ? "Yes" : "No"}</td>
-                  <td className="px-3 py-2">{row.isBanned ? "Yes" : "No"}</td>
+                  <td className="px-3 py-2">
+                    <span className={statusPillClass(row.isVerified)}>
+                      {row.isVerified ? "Yes" : "No"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={statusPillClass(!row.isBanned)}>
+                      {row.isBanned ? "Yes" : "No"}
+                    </span>
+                  </td>
                   <td className="px-3 py-2">{row.projectsCount}</td>
                   <td className="px-3 py-2">{row.offersCount}</td>
                   <td className="px-3 py-2">{row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : "-"}</td>
@@ -286,15 +309,15 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={activeActionId === row.id}
+                        disabled={activeActionId === row.id || isSuperAdmin}
                         onClick={() => void runAction({ action: row.isVerified ? "unverify" : "verify", userId: row.id })}
                       >
                         {row.isVerified ? "Unverify" : "Verify"}
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        disabled={activeActionId === row.id}
+                        variant={row.isBanned ? "default" : "destructive"}
+                        disabled={activeActionId === row.id || isSuperAdmin}
                         onClick={() => void runAction({ action: row.isBanned ? "unban" : "ban", userId: row.id })}
                       >
                         {row.isBanned ? "Unban" : "Ban"}
@@ -302,7 +325,7 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={activeActionId === row.id}
+                        disabled={activeActionId === row.id || isSuperAdmin}
                         onClick={() =>
                           void runAction({
                             action: "set_subscription",
@@ -318,7 +341,7 @@ const AdminUsers = () => {
                         size="sm"
                         variant="outline"
                         className="text-destructive hover:text-destructive"
-                        disabled={activeActionId === row.id || Boolean(row.deletedAt)}
+                        disabled={activeActionId === row.id || Boolean(row.deletedAt) || isSuperAdmin}
                         onClick={() => void runAction({ action: "soft_delete", userId: row.id })}
                       >
                         Soft delete
@@ -326,7 +349,7 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={activeActionId === row.id}
+                        disabled={activeActionId === row.id || isSuperAdmin}
                         onClick={() => void runAction({ action: "impersonate", userId: row.id })}
                       >
                         Impersonate
@@ -334,6 +357,8 @@ const AdminUsers = () => {
                     </div>
                   </td>
                 </tr>
+                  );
+                })()
               ))}
             </tbody>
           </table>

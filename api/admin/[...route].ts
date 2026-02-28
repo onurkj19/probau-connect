@@ -110,7 +110,10 @@ async function handleUsersList(req: VercelRequest, res: VercelResponse) {
     .select("id, name, email, role, plan_type, subscription_status, is_verified, is_banned, last_login_at, deleted_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
-  if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`);
+  if (search) {
+    if (isUuid(search)) query = query.eq("id", search);
+    else query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`);
+  }
   if (role) query = query.eq("role", role);
   if (status === "banned") query = query.eq("is_banned", true);
   else if (status === "active") query = query.eq("is_banned", false).is("deleted_at", null);
@@ -169,6 +172,26 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
   if (!action || validTargetIds.length === 0) return res.status(400).json({ error: "Missing action or valid user targets" });
   if (action === "change_role" && actor.role === "moderator") return res.status(403).json({ error: "Moderators cannot change roles" });
   if (action === "set_subscription" && actor.role === "moderator") return res.status(403).json({ error: "Moderators cannot change subscriptions" });
+  const protectedActions = new Set([
+    "ban",
+    "unban",
+    "verify",
+    "unverify",
+    "change_role",
+    "set_subscription",
+    "soft_delete",
+    "impersonate",
+  ]);
+  if (protectedActions.has(action)) {
+    const { data: targetRoles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, role")
+      .in("id", validTargetIds);
+    const hasSuperAdminTarget = (targetRoles ?? []).some((row) => row.role === "super_admin");
+    if (hasSuperAdminTarget) {
+      return res.status(403).json({ error: "Super admin accounts are untouchable" });
+    }
+  }
 
   if (action === "ban") {
     await supabaseAdmin.from("profiles").update({ is_banned: true }).in("id", validTargetIds);
@@ -368,11 +391,11 @@ async function handleProjectsList(req: VercelRequest, res: VercelResponse) {
   const search = String(req.query.search ?? "").trim();
   let query = supabaseAdmin
     .from("projects")
-    .select("id, owner_id, title, category, service, deadline, status, created_at", { count: "exact" })
+    .select("id, owner_id, title, category, custom_category, service, deadline, status, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
   if (status) query = query.eq("status", status);
-  if (search) query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%,service.ilike.%${search}%`);
+  if (search) query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%,custom_category.ilike.%${search}%,service.ilike.%${search}%`);
   const { data, count } = await query;
   const rows = data ?? [];
   const ownerIds = [...new Set(rows.map((row) => row.owner_id))];

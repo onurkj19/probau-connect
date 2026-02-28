@@ -10,6 +10,7 @@ interface ProjectRow {
   owner_id: string;
   title: string;
   category: string;
+  custom_category: string | null;
   service: string;
   deadline: string;
   status: "active" | "closed";
@@ -80,7 +81,7 @@ const AdminProjects = () => {
         <p className="mt-1 text-sm text-muted-foreground">Moderate active and closed projects.</p>
       </div>
       <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-5">
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title/category/service" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title/category/custom/service" />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -96,8 +97,8 @@ const AdminProjects = () => {
           onClick={() =>
             downloadCsv(
               "admin-projects.csv",
-              ["id", "title", "owner_name", "owner_email", "category", "service", "status", "deadline", "created_at"],
-              rows.map((row) => [row.id, row.title, row.ownerName, row.ownerEmail, row.category, row.service, row.status, row.deadline, row.created_at]),
+              ["id", "title", "owner_name", "owner_email", "category", "custom_category", "service", "status", "deadline", "created_at"],
+              rows.map((row) => [row.id, row.title, row.ownerName, row.ownerEmail, row.category, row.custom_category ?? "", row.service, row.status, row.deadline, row.created_at]),
             )
           }
         >
@@ -174,7 +175,7 @@ const AdminProjects = () => {
                     <p>{row.ownerName || "-"}</p>
                     <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
                   </td>
-                  <td className="px-3 py-2">{row.category}</td>
+                  <td className="px-3 py-2">{row.custom_category || row.category}</td>
                   <td className="px-3 py-2">{row.status}</td>
                   <td className="px-3 py-2">{new Date(row.deadline).toLocaleString()}</td>
                   <td className="px-3 py-2">

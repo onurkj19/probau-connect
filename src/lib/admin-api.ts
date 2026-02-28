@@ -1,3 +1,15 @@
+function createIdempotencyKey(): string {
+  const maybeCrypto = globalThis.crypto as Crypto | undefined;
+  if (maybeCrypto?.randomUUID) return maybeCrypto.randomUUID();
+  if (maybeCrypto?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    maybeCrypto.getRandomValues(bytes);
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    return `idem-${Date.now()}-${hex}`;
+  }
+  return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+}
+
 export async function adminFetch<T>(
   path: string,
   getToken: () => Promise<string | null>,
@@ -29,7 +41,7 @@ export async function adminFetch<T>(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
       ...(init?.method && init.method.toUpperCase() !== "GET"
-        ? { "X-Idempotency-Key": crypto.randomUUID() }
+        ? { "X-Idempotency-Key": createIdempotencyKey() }
         : {}),
       ...(init?.headers ?? {}),
     },

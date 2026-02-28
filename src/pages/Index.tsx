@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock, Users, MapPin } from "lucide-react";
+import { Building2, FileText, Shield, Languages, ArrowRight, CheckCircle, Clock, Users, MapPin, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLocalePath } from "@/lib/i18n-routing";
@@ -14,6 +14,7 @@ interface TrendingProject {
   title: string;
   address: string;
   category: string;
+  custom_category: string | null;
   created_at: string;
 }
 
@@ -68,7 +69,7 @@ const Index = () => {
       const nowIso = new Date().toISOString();
       const { data } = await supabase
         .from("projects")
-        .select("id, title, address, category, created_at")
+        .select("id, title, address, category, custom_category, created_at")
         .eq("status", "active")
         .gt("deadline", nowIso)
         .order("created_at", { ascending: false })
@@ -192,27 +193,85 @@ const Index = () => {
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {loadingTrending && (
-              <p className="text-sm text-muted-foreground">{t("projects.loading")}</p>
-            )}
+            {loadingTrending &&
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div
+                  key={`trending-skeleton-${idx}`}
+                  className="animate-pulse rounded-2xl border border-border bg-card p-5 shadow-card"
+                >
+                  <div className="h-6 w-24 rounded-full bg-muted" />
+                  <div className="mt-4 h-6 w-3/4 rounded bg-muted" />
+                  <div className="mt-2 h-4 w-2/3 rounded bg-muted" />
+                  <div className="mt-4 h-12 rounded-lg bg-muted" />
+                  <div className="mt-4 h-9 rounded-md bg-muted" />
+                </div>
+              ))}
             {!loadingTrending && trendingProjects.length === 0 && (
               <p className="text-sm text-muted-foreground">{t("projects.no_projects")}</p>
             )}
             {!loadingTrending &&
               trendingProjects.map((project) => (
-                <div key={project.id} className="rounded-lg border border-border bg-card p-4 shadow-card">
-                  <p className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {project.category}
-                  </p>
-                  <h3 className="mt-2 line-clamp-1 font-display text-lg font-semibold text-foreground">
-                    {project.title}
-                  </h3>
-                  <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{project.address}</p>
-                  <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    {formatRelativeTime(project.created_at, i18n.language)}
+                <motion.article
+                  key={project.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35 }}
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elevated"
+                >
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <p className="inline-flex max-w-[70%] truncate rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        {(project.custom_category || project.category)
+                          .replace(/[_-]/g, " ")
+                          .replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                      </p>
+                      {Date.now() - new Date(project.created_at).getTime() <= 24 * 60 * 60 * 1000 && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                          New
+                        </span>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {formatRelativeTime(project.created_at, i18n.language)}
+                    </span>
                   </div>
-                </div>
+
+                  <div className="relative mt-3">
+                    <h3 className={`line-clamp-2 font-display text-lg font-semibold leading-tight text-foreground ${!user ? "blur-[2px] select-none" : ""}`}>
+                      {project.title}
+                    </h3>
+                    {!user && (
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/50 to-card/90" />
+                    )}
+                  </div>
+
+                  <div className="relative mt-2">
+                    <p className={`flex items-center gap-1.5 line-clamp-1 text-sm text-muted-foreground ${!user ? "blur-[2px] select-none" : ""}`}>
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      {project.address}
+                    </p>
+                    {!user && (
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card/40 to-card/90" />
+                    )}
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      {!user ? <Lock className="h-3.5 w-3.5 text-primary" /> : <Shield className="h-3.5 w-3.5 text-primary" />}
+                      {!user
+                        ? "Details are blurred for guests. Register to unlock full project details."
+                        : "Contact details stay protected and are shared through the secure offer flow."}
+                    </div>
+                  </div>
+
+                  <Button size="sm" variant="outline" className="mt-4 w-full" asChild>
+                    <Link to={user ? localePath("/dashboard/projects") : localePath("/register")}>
+                      {user ? "Open in dashboard" : "Register to apply"}
+                    </Link>
+                  </Button>
+                </motion.article>
               ))}
           </div>
         </div>

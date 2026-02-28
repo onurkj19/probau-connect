@@ -13,6 +13,11 @@ export interface User {
   name: string;
   companyName: string;
   profileTitle: string;
+  bio: string;
+  phone: string;
+  website: string;
+  city: string;
+  addressLine: string;
   avatarUrl: string;
   role: UserRole;
   isVerified: boolean;
@@ -97,6 +102,11 @@ async function fetchProfile(userId: string): Promise<User | null> {
     name: data.name,
     companyName: data.company_name,
     profileTitle: data.profile_title ?? "",
+    bio: data.bio ?? "",
+    phone: data.phone ?? "",
+    website: data.website ?? "",
+    city: data.city ?? "",
+    addressLine: data.address_line ?? "",
     avatarUrl: data.avatar_url ?? "",
     role: normalizedRole as UserRole,
     isVerified: Boolean(data.is_verified),

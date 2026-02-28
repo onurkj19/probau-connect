@@ -201,6 +201,7 @@ export interface Database {
           title: string;
           address: string;
           category: string;
+          custom_category: string | null;
           project_type: string | null;
           service: string;
           deadline: string;
@@ -218,6 +219,7 @@ export interface Database {
           title: string;
           address: string;
           category: string;
+          custom_category?: string | null;
           project_type?: string | null;
           service: string;
           deadline: string;
@@ -280,6 +282,11 @@ export interface Database {
           name: string;
           company_name: string;
           profile_title: string | null;
+          bio: string | null;
+          phone: string | null;
+          website: string | null;
+          city: string | null;
+          address_line: string | null;
           avatar_url: string | null;
           role: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
           is_verified: boolean;
@@ -301,6 +308,11 @@ export interface Database {
           name: string;
           company_name: string;
           profile_title?: string | null;
+          bio?: string | null;
+          phone?: string | null;
+          website?: string | null;
+          city?: string | null;
+          address_line?: string | null;
           avatar_url?: string | null;
           role?: "super_admin" | "admin" | "moderator" | "project_owner" | "contractor";
           is_verified?: boolean;

@@ -12,6 +12,7 @@ interface PublicProject {
   title: string;
   address: string;
   category: string;
+  custom_category: string | null;
   deadline: string;
   created_at: string;
   attachments: string[] | null;
@@ -32,7 +33,7 @@ const Projects = () => {
     const nowIso = new Date().toISOString();
     const { data } = await supabase
       .from("projects")
-      .select("id, owner_id, title, address, category, deadline, created_at, attachments, owner_company_name, owner_profile_title, owner_avatar_url")
+      .select("id, owner_id, title, address, category, custom_category, deadline, created_at, attachments, owner_company_name, owner_profile_title, owner_avatar_url")
       .eq("status", "active")
       .gt("deadline", nowIso)
       .order("created_at", { ascending: false });
@@ -84,7 +85,7 @@ const Projects = () => {
                 attachments={p.attachments}
                 projectId={p.id}
                 ownerId={p.owner_id}
-                projectType={p.category}
+                projectType={p.custom_category || p.category}
                 owner={{
                   company_name: p.owner_company_name,
                   profile_title: p.owner_profile_title,

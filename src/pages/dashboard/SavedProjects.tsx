@@ -9,6 +9,7 @@ interface DbProject {
   title: string;
   address: string;
   category: string;
+  custom_category: string | null;
   service: string;
   attachments: string[] | null;
   deadline: string;
@@ -61,7 +62,7 @@ const DashboardSavedProjects = () => {
 
       const { data } = await supabase
         .from("projects")
-        .select("id, title, address, category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
+        .select("id, title, address, category, custom_category, service, attachments, deadline, status, owner_id, owner_company_name, owner_profile_title, owner_avatar_url, created_at")
         .in("id", ids)
         .order("created_at", { ascending: false });
 
@@ -105,7 +106,7 @@ const DashboardSavedProjects = () => {
               attachments={project.attachments}
               projectId={project.id}
               ownerId={project.owner_id}
-              projectType={categoryLabelMap[project.category as keyof typeof categoryLabelMap] || project.category}
+              projectType={project.custom_category || categoryLabelMap[project.category as keyof typeof categoryLabelMap] || project.category}
               owner={{
                 company_name: project.owner_company_name,
                 profile_title: project.owner_profile_title,
