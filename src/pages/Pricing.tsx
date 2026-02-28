@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { trackEvent } from "@/lib/analytics";
 
 const Pricing = () => {
   const { t } = useTranslation();
@@ -69,11 +70,17 @@ const Pricing = () => {
                   asChild
                 >
                   {user ? (
-                    <Link to={`/${lang}/dashboard/subscription`}>
+                    <Link
+                      to={`/${lang}/dashboard/subscription`}
+                      onClick={() => trackEvent("pricing_cta_click", { plan, authenticated: true })}
+                    >
                       {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
                     </Link>
                   ) : (
-                    <Link to={`/${lang}/register`}>
+                    <Link
+                      to={`/${lang}/register`}
+                      onClick={() => trackEvent("pricing_cta_click", { plan, authenticated: false })}
+                    >
                       {plan === "enterprise" ? t("pricing.contact") : t("pricing.cta")}
                     </Link>
                   )}

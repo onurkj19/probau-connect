@@ -8,6 +8,7 @@ import { useLocalePath } from "@/lib/i18n-routing";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/time";
+import { trackEvent } from "@/lib/analytics";
 
 interface TrendingProject {
   id: string;
@@ -112,7 +113,10 @@ const Index = () => {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" className="gap-2 bg-accent text-accent-foreground shadow-hero hover:bg-accent/90" asChild>
-                <Link to={ownerPrimaryPath}>
+                <Link
+                  to={ownerPrimaryPath}
+                  onClick={() => trackEvent("cta_owner_click", { location: "hero", authenticated: Boolean(user) })}
+                >
                   {t("hero.cta_owner")}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -123,7 +127,12 @@ const Index = () => {
                 className="border-primary-foreground/60 bg-white/15 text-primary-foreground shadow-hero backdrop-blur-md hover:bg-white/25 hover:text-primary-foreground"
                 asChild
               >
-                <Link to={contractorPrimaryPath}>{t("hero.cta_contractor")}</Link>
+                <Link
+                  to={contractorPrimaryPath}
+                  onClick={() => trackEvent("cta_contractor_click", { location: "hero", authenticated: Boolean(user) })}
+                >
+                  {t("hero.cta_contractor")}
+                </Link>
               </Button>
             </div>
           </motion.div>
@@ -267,7 +276,14 @@ const Index = () => {
                   </div>
 
                   <Button size="sm" variant="outline" className="mt-4 w-full" asChild>
-                    <Link to={user ? localePath("/dashboard/projects") : localePath("/register")}>
+                    <Link
+                      to={user ? localePath("/dashboard/projects") : localePath("/register")}
+                      onClick={() =>
+                        trackEvent("trending_card_cta_click", {
+                          project_id: project.id,
+                          authenticated: Boolean(user),
+                        })}
+                    >
                       {user ? "Open in dashboard" : "Register to apply"}
                     </Link>
                   </Button>

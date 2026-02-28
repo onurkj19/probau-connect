@@ -1,9 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { LocaleLayout, LocaleRedirect } from "@/lib/i18n-routing";
 import Index from "./pages/Index";
@@ -30,6 +30,7 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 import { AdminRoleGuard } from "@/components/auth/AdminRoleGuard";
 import Unauthorized from "./pages/Unauthorized";
 import ScrollToTop from "@/components/ScrollToTop";
+import { trackPageView } from "@/lib/analytics";
 const AdminLayout = lazy(() => import("./pages/admin/Layout"));
 const AdminOverview = lazy(() => import("./pages/admin/Overview"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
@@ -47,6 +48,14 @@ import "./i18n";
 
 const queryClient = new QueryClient();
 
+const AnalyticsRouteTracker = () => {
+  const location = useLocation();
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -54,6 +63,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AnalyticsRouteTracker />
           <ScrollToTop />
           <Suspense
             fallback={

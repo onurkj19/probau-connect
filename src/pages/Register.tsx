@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth, type UserRole } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { trackEvent } from "@/lib/analytics";
 
 const Register = () => {
   const { t } = useTranslation();
@@ -26,6 +27,7 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    trackEvent("register_submit", { role });
     try {
       await register({
         email,
@@ -36,8 +38,10 @@ const Register = () => {
         avatarUrl,
         role,
       });
+      trackEvent("register_success", { role });
       navigate(`/${lang}/dashboard`);
     } catch (err) {
+      trackEvent("register_failure", { role });
       setError(err instanceof Error ? err.message : "Registration failed");
     }
   };

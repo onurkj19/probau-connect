@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { trackEvent } from "@/lib/analytics";
 
 const Login = () => {
   const { t } = useTranslation();
@@ -21,10 +22,13 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    trackEvent("login_submit");
     try {
       await login(email, password);
+      trackEvent("login_success");
       navigate(`/${lang}/dashboard`);
     } catch (err) {
+      trackEvent("login_failure");
       setError(err instanceof Error ? err.message : "Login failed");
     }
   };

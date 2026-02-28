@@ -7,6 +7,7 @@ import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { trackEvent } from "@/lib/analytics";
 
 const Subscription = () => {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ const Subscription = () => {
   const handleSubscribe = async (plan: PlanType) => {
     setLoading(true);
     setActionError(null);
+    trackEvent("checkout_start", { plan });
     try {
       const token = await getToken();
       if (!token) {
@@ -31,6 +33,7 @@ const Subscription = () => {
       await createCheckoutSession(plan, token);
     } catch (err) {
       console.error("Checkout error:", err);
+      trackEvent("checkout_failure", { plan });
       setActionError(err instanceof Error ? err.message : "Checkout failed");
     } finally {
       setLoading(false);
@@ -40,6 +43,7 @@ const Subscription = () => {
   const handleManage = async () => {
     setLoading(true);
     setActionError(null);
+    trackEvent("billing_portal_open");
     try {
       const token = await getToken();
       if (!token) {
@@ -48,6 +52,7 @@ const Subscription = () => {
       await createPortalSession(token);
     } catch (err) {
       console.error("Portal error:", err);
+      trackEvent("billing_portal_failure");
       setActionError(err instanceof Error ? err.message : "Portal request failed");
     } finally {
       setLoading(false);
