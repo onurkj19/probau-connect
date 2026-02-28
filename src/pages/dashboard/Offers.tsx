@@ -48,12 +48,24 @@ import {
 
 interface ChatItem {
   id: string;
+  project_id: string;
   owner_id: string;
   contractor_id: string;
   owner_company_name: string | null;
   contractor_company_name: string | null;
   project_title: string | null;
   updated_at: string;
+}
+
+interface OfferNegotiationItem {
+  id: string;
+  project_id: string;
+  owner_id: string;
+  contractor_id: string;
+  price_chf: number;
+  message: string;
+  status: "submitted" | "accepted" | "rejected";
+  created_at: string;
 }
 
 interface ChatMessageItem {
@@ -133,7 +145,7 @@ const getFileExtension = (url: string) => {
 
 const DashboardOffers = () => {
   const { t } = useTranslation();
-  const { user, offerLimit } = useAuth();
+  const { user, offerLimit, getToken } = useAuth();
   const { locale } = useParams<{ locale: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
@@ -158,6 +170,10 @@ const DashboardOffers = () => {
   const [confirmDeleteChatOpen, setConfirmDeleteChatOpen] = useState(false);
   const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
   const [processingChatAction, setProcessingChatAction] = useState(false);
+  const [latestOffer, setLatestOffer] = useState<OfferNegotiationItem | null>(null);
+  const [proposalAmount, setProposalAmount] = useState("");
+  const [proposalMessage, setProposalMessage] = useState("");
+  const [negotiating, setNegotiating] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
   const chatFileInputRef = useRef<HTMLInputElement | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -215,7 +231,7 @@ const DashboardOffers = () => {
     if (!user) return;
     const { data } = await supabase
       .from("chats")
-      .select("id, owner_id, contractor_id, owner_company_name, contractor_company_name, project_title, updated_at")
+      .select("id, project_id, owner_id, contractor_id, owner_company_name, contractor_company_name, project_title, updated_at")
       .or(`owner_id.eq.${user.id},contractor_id.eq.${user.id}`)
       .order("updated_at", { ascending: false });
 
@@ -259,6 +275,23 @@ const DashboardOffers = () => {
     setMessages((data ?? []) as ChatMessageItem[]);
   }, []);
 
+  const loadLatestOffer = useCallback(async (chat: ChatItem | null) => {
+    if (!chat) {
+      setLatestOffer(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("offers")
+      .select("id, project_id, owner_id, contractor_id, price_chf, message, status, created_at")
+      .eq("project_id", chat.project_id)
+      .eq("owner_id", chat.owner_id)
+      .eq("contractor_id", chat.contractor_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLatestOffer((data ?? null) as OfferNegotiationItem | null);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     void loadChats();
@@ -269,6 +302,11 @@ const DashboardOffers = () => {
   useEffect(() => {
     void loadMessages(selectedChatId);
   }, [loadMessages, selectedChatId]);
+
+  useEffect(() => {
+    const chat = chats.find((item) => item.id === selectedChatId) ?? null;
+    void loadLatestOffer(chat);
+  }, [chats, loadLatestOffer, selectedChatId]);
 
   useEffect(() => {
     if (!selectedChatId) return;
@@ -751,6 +789,97 @@ const DashboardOffers = () => {
     );
   };
 
+  const sendSystemChatMessage = useCallback(async (text: string) => {
+    if (!user || !selectedChatId) return;
+    const { error } = await supabase.from("chat_messages").insert({
+      chat_id: selectedChatId,
+      sender_id: user.id,
+      message: text,
+      attachments: [],
+    });
+    if (error) throw error;
+  }, [selectedChatId, user]);
+
+  const handleOfferDecision = async (action: "accept" | "reject") => {
+    if (!latestOffer || !selectedChatId) return;
+    setNegotiating(true);
+    setComposerError(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Session expired. Please sign in again.");
+      const response = await fetch("/api/offers/action", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action,
+          offerId: latestOffer.id,
+          chatId: selectedChatId,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Failed to process offer action");
+      await loadLatestOffer(selectedChat);
+      await loadMessages(selectedChatId);
+      await loadChats();
+    } catch (err) {
+      setComposerError(err instanceof Error ? err.message : "Failed to process offer action");
+    } finally {
+      setNegotiating(false);
+    }
+  };
+
+  const handleSendProposal = async () => {
+    if (!user || !selectedChat) return;
+    const amount = Number(proposalAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setComposerError("Please enter a valid amount for the proposal.");
+      return;
+    }
+    setNegotiating(true);
+    setComposerError(null);
+    try {
+      if (user.role === "contractor" && isActive) {
+        const token = await getToken();
+        if (!token) throw new Error("Session expired. Please sign in again.");
+        const response = await fetch("/api/offers/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            projectId: selectedChat.project_id,
+            ownerId: selectedChat.owner_id,
+            priceChf: amount,
+            content: proposalMessage.trim() || `Counter offer proposal: CHF ${amount.toFixed(2)}`,
+            attachments: [],
+            projectTitle: selectedChat.project_title ?? "",
+            ownerCompanyName: selectedChat.owner_company_name ?? "",
+            contractorCompanyName: selectedChat.contractor_company_name ?? "",
+          }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || payload.message || "Failed to send proposal as offer");
+      } else {
+        await sendSystemChatMessage(
+          `Counter proposal: CHF ${amount.toFixed(2)}${proposalMessage.trim() ? `\n\n${proposalMessage.trim()}` : ""}`,
+        );
+      }
+      setProposalAmount("");
+      setProposalMessage("");
+      await loadLatestOffer(selectedChat);
+      await loadMessages(selectedChatId);
+      await loadChats();
+    } catch (err) {
+      setComposerError(err instanceof Error ? err.message : "Failed to send proposal");
+    } finally {
+      setNegotiating(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-2xl font-bold text-foreground">
@@ -1144,6 +1273,59 @@ const DashboardOffers = () => {
                   <Trash2 className="mr-2 h-4 w-4" />
                   {t("dashboard.chat_delete_for_me")}
                 </Button>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Offer negotiation</p>
+                {!latestOffer ? (
+                  <p className="mt-2 text-xs text-muted-foreground">No offer submitted yet.</p>
+                ) : (
+                  <div className="mt-2 space-y-2 text-xs">
+                    <p className="font-medium text-foreground">Latest offer: CHF {Number(latestOffer.price_chf).toFixed(2)}</p>
+                    <p className="text-muted-foreground">Status: {latestOffer.status}</p>
+                    <p className="line-clamp-3 text-muted-foreground">{latestOffer.message}</p>
+                    {user?.role === "project_owner" && latestOffer.status === "submitted" && (
+                      <div className="flex gap-2">
+                        <Button size="sm" className="h-8" disabled={negotiating} onClick={() => void handleOfferDecision("accept")}>
+                          Accept
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8" disabled={negotiating} onClick={() => void handleOfferDecision("reject")}>
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="mt-3 space-y-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    placeholder="Proposal amount (CHF)"
+                    value={proposalAmount}
+                    onChange={(e) => setProposalAmount(e.target.value)}
+                    disabled={negotiating}
+                  />
+                  <Input
+                    placeholder="Optional note for proposal"
+                    value={proposalMessage}
+                    onChange={(e) => setProposalMessage(e.target.value)}
+                    disabled={negotiating}
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    disabled={negotiating || !proposalAmount.trim() || (user?.role === "contractor" && !isActive)}
+                    onClick={() => void handleSendProposal()}
+                  >
+                    {user?.role === "contractor" ? "Send as official offer" : "Send counter proposal"}
+                  </Button>
+                  {user?.role === "contractor" && !isActive && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Active subscription is required to submit an official offer.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
