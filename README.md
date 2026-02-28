@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# Probau Connect
 
-## Project info
+A modern web platform for managing workflows and connecting business processes efficiently.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Table of Contents
 
-## How can I edit this code?
+- [About the Project](#about-the-project)
+- [Tech Stack](#tech-stack)
+- [Local Setup](#local-setup)
+- [Main Commands](#main-commands)
+- [Build and Deployment](#build-and-deployment)
+- [Project Structure](#project-structure)
 
-There are several ways of editing your application.
+## About the Project
 
-**Use Lovable**
+`Probau Connect` is a frontend application designed for performance, scalability, and easy maintenance. The project follows modern development practices and is suitable for both local development and production deployment.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+This project uses:
 
-**Use your preferred IDE**
+- `React`
+- `TypeScript`
+- `Vite`
+- `Tailwind CSS`
+- `shadcn/ui`
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Local Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Make sure you have installed:
 
-Follow these steps:
+- `Node.js` (LTS version recommended)
+- `npm`
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Then run:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone <YOUR_REPOSITORY_URL>
+cd probau-connect
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at the address shown in the terminal (usually `http://localhost:5173`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Main Commands
 
-**Use GitHub Codespaces**
+```bash
+# start development server
+npm run dev
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# create production build
+npm run build
 
-## What technologies are used for this project?
+# preview production build locally
+npm run preview
+```
 
-This project is built with:
+## Build and Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+For production:
 
-## How can I deploy this project?
+1. Generate a build using `npm run build`.
+2. Deploy the build output folder using your preferred platform (for example Vercel, Netlify, or any static hosting server).
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Project Structure
 
-## Can I connect a custom domain to my Lovable project?
+The structure may evolve over time, but typically includes:
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- `src/` - main application source code
+- `public/` - static public assets
+- `index.html` - application entry point
+- `package.json` - scripts and dependencies
