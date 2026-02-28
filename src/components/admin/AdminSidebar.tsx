@@ -12,6 +12,7 @@ import {
   Settings2,
   Shield,
   SlidersHorizontal,
+  TicketPercent,
   Users,
   Menu,
   X,
@@ -33,6 +34,7 @@ const sections = [
   { key: "security", label: "Security", icon: Shield, path: "security" },
   { key: "auditLogs", label: "Audit Logs", icon: ScrollText, path: "audit-logs" },
   { key: "featureFlags", label: "Feature Flags", icon: SlidersHorizontal, path: "feature-flags" },
+  { key: "subscriptionPromos", label: "Subscription Promos", icon: TicketPercent, path: "subscription-promos" },
   { key: "systemSettings", label: "System Settings", icon: Settings2, path: "system-settings" },
 ];
 

@@ -44,6 +44,7 @@ const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
 const AdminFeatureFlags = lazy(() => import("./pages/admin/FeatureFlags"));
 const AdminSystemSettings = lazy(() => import("./pages/admin/SystemSettings"));
 const AdminAuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const AdminSubscriptionPromos = lazy(() => import("./pages/admin/SubscriptionPromos"));
 import "./i18n";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
                 <Route path="audit-logs" element={<AdminAuditLogs />} />
                 <Route path="feature-flags" element={<AdminFeatureFlags />} />
                 <Route path="system-settings" element={<AdminSystemSettings />} />
+                <Route path="subscription-promos" element={<AdminSubscriptionPromos />} />
               </Route>
             </Route>
 

@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type Stripe from "stripe";
 import { stripe, PLANS, type PlanType } from "../_lib/stripe.js";
 import { authenticateRequest } from "../_lib/auth.js";
 import { updateUserSubscription } from "../_lib/db.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
 
 function getErrorMessage(err: unknown): string {
   if (err && typeof err === "object" && "message" in err) {
@@ -32,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: "Only contractors can subscribe" });
     }
 
-    const { planType } = req.body as { planType?: PlanType };
+    const { planType, promoCode } = req.body as { planType?: PlanType; promoCode?: string };
 
     if (!planType || !PLANS[planType]) {
       return res.status(400).json({ error: "Invalid plan type. Use 'basic' or 'pro'." });
@@ -42,6 +44,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!plan.priceId) {
       return res.status(500).json({ error: "Stripe Price ID not configured for this plan" });
+    }
+
+    const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    const normalizedPromoCode = typeof promoCode === "string" ? promoCode.trim().toUpperCase() : "";
+    if (normalizedPromoCode) {
+      if (!/^[A-Z0-9_-]{3,32}$/.test(normalizedPromoCode)) {
+        return res.status(400).json({ error: "Invalid promo code format" });
+      }
+      const promoCodes = await stripe.promotionCodes.list({ code: normalizedPromoCode, active: true, limit: 1 });
+      const promo = promoCodes.data[0];
+      if (!promo) return res.status(400).json({ error: "Promo code is invalid or inactive" });
+      discounts.push({ promotion_code: promo.id });
+    } else {
+      const { data: discountConfigRow } = await supabaseAdmin
+        .from("settings")
+        .select("value")
+        .eq("key", "subscription_discount_config")
+        .maybeSingle();
+      const discountConfig = (discountConfigRow?.value as { enabled?: boolean; couponId?: string | null } | null) ?? null;
+      if (discountConfig?.enabled && typeof discountConfig.couponId === "string" && discountConfig.couponId) {
+        discounts.push({ coupon: discountConfig.couponId });
+      }
     }
 
     // Reuse existing Stripe customer or create new one
@@ -85,7 +109,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       metadata: {
         userId: user.id,
         planType: plan.type,
+        promoCode: normalizedPromoCode || "",
       },
+      ...(discounts.length > 0 ? { discounts } : {}),
     });
 
     return res.status(200).json({ url: session.url });

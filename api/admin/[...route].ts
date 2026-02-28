@@ -1,9 +1,33 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type Stripe from "stripe";
 import { getRequestIp, isUuid, logSecurityEvent, parsePagination, requireAdmin, safeJsonParse, sanitizeText } from "../_lib/admin.js";
 import { supabaseAdmin } from "../_lib/supabase.js";
 import { getPlanByPriceId, stripe } from "../_lib/stripe.js";
 
 const PLAN_PRICING: Record<string, number> = { basic: 79, pro: 149 };
+const SUBSCRIPTION_DISCOUNT_SETTING_KEY = "subscription_discount_config";
+
+interface SubscriptionDiscountConfig {
+  enabled: boolean;
+  percentOff: number;
+  couponId: string | null;
+  updatedAt: string | null;
+}
+
+async function getSubscriptionDiscountConfig(): Promise<SubscriptionDiscountConfig> {
+  const { data: row } = await supabaseAdmin
+    .from("settings")
+    .select("value")
+    .eq("key", SUBSCRIPTION_DISCOUNT_SETTING_KEY)
+    .maybeSingle();
+  const raw = (row?.value as Partial<SubscriptionDiscountConfig> | null) ?? null;
+  return {
+    enabled: Boolean(raw?.enabled),
+    percentOff: Number(raw?.percentOff ?? 0),
+    couponId: typeof raw?.couponId === "string" ? raw.couponId : null,
+    updatedAt: typeof raw?.updatedAt === "string" ? raw.updatedAt : null,
+  };
+}
 
 function getRoutePath(req: VercelRequest): string {
   const raw = req.query.route;
@@ -310,6 +334,149 @@ async function handleSubscriptionsAction(req: VercelRequest, res: VercelResponse
     ipAddress: getRequestIp(req),
     userAgent: String(req.headers["user-agent"] ?? ""),
     details: { extraDays: extraDays ?? null },
+    severity: "warning",
+  });
+  return res.status(200).json({ success: true });
+}
+
+async function handleSubscriptionPromosList(req: VercelRequest, res: VercelResponse) {
+  const actor = await requireAdmin(req, res, ["super_admin"]);
+  if (!actor) return;
+  const [discountConfig, activeCodesRes, inactiveCodesRes] = await Promise.all([
+    getSubscriptionDiscountConfig(),
+    stripe.promotionCodes.list({ limit: 100, active: true }),
+    stripe.promotionCodes.list({ limit: 100, active: false }),
+  ]);
+  const mergedCodes = [...activeCodesRes.data, ...inactiveCodesRes.data];
+  return res.status(200).json({
+    discountConfig,
+    promoCodes: mergedCodes
+      .filter((promo) => typeof promo.code === "string" && promo.coupon && typeof promo.coupon !== "string" && promo.coupon.percent_off !== null)
+      .map((promo) => ({
+        id: promo.id,
+        code: promo.code,
+        active: promo.active,
+        percentOff: Number((promo.coupon as Stripe.Coupon).percent_off ?? 0),
+        maxRedemptions: promo.max_redemptions ?? null,
+        timesRedeemed: promo.times_redeemed ?? 0,
+        expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
+        createdAt: new Date(promo.created * 1000).toISOString(),
+      }))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  });
+}
+
+async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelResponse) {
+  const actor = await requireAdmin(req, res, ["super_admin"]);
+  if (!actor) return;
+  const { action, percentOff, code, maxRedemptions, expiresAt, promotionCodeId } = (req.body ?? {}) as {
+    action?: "set_default_discount" | "create_promo_code" | "deactivate_promo_code";
+    percentOff?: number;
+    code?: string;
+    maxRedemptions?: number | null;
+    expiresAt?: string | null;
+    promotionCodeId?: string;
+  };
+  if (!action) return res.status(400).json({ error: "Missing action" });
+
+  if (action === "set_default_discount") {
+    const cleanPercent = Number(percentOff);
+    if (!Number.isFinite(cleanPercent) || cleanPercent < 0 || cleanPercent > 100) {
+      return res.status(400).json({ error: "percentOff must be between 0 and 100" });
+    }
+    const roundedPercent = Number(cleanPercent.toFixed(2));
+    if (roundedPercent === 0) {
+      await supabaseAdmin.from("settings").upsert({
+        key: SUBSCRIPTION_DISCOUNT_SETTING_KEY,
+        value: {
+          enabled: false,
+          percentOff: 0,
+          couponId: null,
+          updatedAt: new Date().toISOString(),
+        },
+        updated_by: actor.id,
+      });
+    } else {
+      const coupon = await stripe.coupons.create({
+        percent_off: roundedPercent,
+        duration: "forever",
+        name: `Default subscription discount ${roundedPercent}%`,
+        metadata: {
+          source: "admin_default_subscription_discount",
+          actorId: actor.id,
+        },
+      });
+      await supabaseAdmin.from("settings").upsert({
+        key: SUBSCRIPTION_DISCOUNT_SETTING_KEY,
+        value: {
+          enabled: true,
+          percentOff: roundedPercent,
+          couponId: coupon.id,
+          updatedAt: new Date().toISOString(),
+        },
+        updated_by: actor.id,
+      });
+    }
+  } else if (action === "create_promo_code") {
+    const cleanCode = sanitizeText(code, 32).toUpperCase();
+    const cleanPercent = Number(percentOff);
+    if (!/^[A-Z0-9_-]{3,32}$/.test(cleanCode)) return res.status(400).json({ error: "Invalid promo code format" });
+    if (!Number.isFinite(cleanPercent) || cleanPercent <= 0 || cleanPercent > 100) {
+      return res.status(400).json({ error: "percentOff must be between 1 and 100" });
+    }
+    const roundedPercent = Number(cleanPercent.toFixed(2));
+    const cleanMaxRedemptions = maxRedemptions === null || typeof maxRedemptions === "undefined"
+      ? null
+      : Math.max(1, Math.floor(Number(maxRedemptions)));
+    if (cleanMaxRedemptions !== null && !Number.isFinite(cleanMaxRedemptions)) {
+      return res.status(400).json({ error: "Invalid maxRedemptions" });
+    }
+    let expiresAtTimestamp: number | undefined;
+    if (expiresAt) {
+      const parsed = new Date(expiresAt);
+      if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= Date.now()) {
+        return res.status(400).json({ error: "expiresAt must be a valid future date" });
+      }
+      expiresAtTimestamp = Math.floor(parsed.getTime() / 1000);
+    }
+    const coupon = await stripe.coupons.create({
+      percent_off: roundedPercent,
+      duration: "forever",
+      name: `Promo ${cleanCode} (${roundedPercent}%)`,
+      metadata: {
+        source: "admin_subscription_promo_code",
+        actorId: actor.id,
+        code: cleanCode,
+      },
+    });
+    await stripe.promotionCodes.create({
+      coupon: coupon.id,
+      code: cleanCode,
+      max_redemptions: cleanMaxRedemptions ?? undefined,
+      expires_at: expiresAtTimestamp,
+      metadata: {
+        source: "admin_subscription_promo_code",
+        actorId: actor.id,
+      },
+    });
+  } else if (action === "deactivate_promo_code") {
+    const cleanId = sanitizeText(promotionCodeId, 120);
+    if (!cleanId) return res.status(400).json({ error: "Missing promotionCodeId" });
+    await stripe.promotionCodes.update(cleanId, { active: false });
+  } else {
+    return res.status(400).json({ error: "Unsupported action" });
+  }
+
+  await logSecurityEvent({
+    eventType: `admin_subscription_promos_${action}`,
+    actorId: actor.id,
+    ipAddress: getRequestIp(req),
+    userAgent: String(req.headers["user-agent"] ?? ""),
+    details: {
+      percentOff: typeof percentOff === "number" ? Number(percentOff.toFixed(2)) : null,
+      code: sanitizeText(code, 32).toUpperCase() || null,
+      promotionCodeId: sanitizeText(promotionCodeId, 120) || null,
+    },
     severity: "warning",
   });
   return res.status(200).json({ success: true });
@@ -892,6 +1059,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "POST" && endpoint === "users-action") return await handleUsersAction(req, res);
     if (req.method === "GET" && endpoint === "subscriptions-list") return await handleSimpleList(req, res, "subscriptions");
     if (req.method === "POST" && endpoint === "subscriptions-action") return await handleSubscriptionsAction(req, res);
+    if (req.method === "GET" && endpoint === "subscription-promos-list") return await handleSubscriptionPromosList(req, res);
+    if (req.method === "POST" && endpoint === "subscription-promos-action") return await handleSubscriptionPromosAction(req, res);
     if (req.method === "GET" && endpoint === "security-state") return await handleSecurityState(req, res);
     if (req.method === "POST" && endpoint === "security-action") return await handleSecurityAction(req, res);
     if (req.method === "GET" && endpoint === "projects-list") return await handleProjectsList(req, res);

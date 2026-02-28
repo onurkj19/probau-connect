@@ -15,14 +15,14 @@ export function getStripe() {
   return stripePromise;
 }
 
-export async function createCheckoutSession(planType: "basic" | "pro", token: string) {
+export async function createCheckoutSession(planType: "basic" | "pro", token: string, promoCode?: string) {
   const res = await fetch("/api/stripe/create-checkout", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ planType }),
+    body: JSON.stringify({ planType, promoCode: promoCode?.trim().toUpperCase() || null }),
   });
 
   if (!res.ok) {

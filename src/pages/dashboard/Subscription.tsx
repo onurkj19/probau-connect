@@ -6,6 +6,7 @@ import { createCheckoutSession, createPortalSession } from "@/lib/stripe-client"
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { trackEvent } from "@/lib/analytics";
 
@@ -17,23 +18,25 @@ const Subscription = () => {
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
   const autoTriggered = useRef(false);
 
   const requestedPlan = searchParams.get("plan");
 
-  const handleSubscribe = async (plan: PlanType) => {
+  const handleSubscribe = async (plan: PlanType, promoOverride?: string) => {
     setLoading(true);
     setActionError(null);
-    trackEvent("checkout_start", { plan });
+    const normalizedPromoCode = (promoOverride ?? promoCode).trim().toUpperCase();
+    trackEvent("checkout_start", { plan, hasPromoCode: Boolean(normalizedPromoCode) });
     try {
       const token = await getToken();
       if (!token) {
         throw new Error("Session expired. Please sign in again.");
       }
-      await createCheckoutSession(plan, token);
+      await createCheckoutSession(plan, token, normalizedPromoCode || undefined);
     } catch (err) {
       console.error("Checkout error:", err);
-      trackEvent("checkout_failure", { plan });
+      trackEvent("checkout_failure", { plan, hasPromoCode: Boolean(normalizedPromoCode) });
       setActionError(err instanceof Error ? err.message : "Checkout failed");
     } finally {
       setLoading(false);
@@ -65,7 +68,7 @@ const Subscription = () => {
     if (user.subscriptionStatus !== "none" && user.subscriptionStatus !== "canceled") return;
     if (requestedPlan !== "basic" && requestedPlan !== "pro") return;
     autoTriggered.current = true;
-    void handleSubscribe(requestedPlan);
+    void handleSubscribe(requestedPlan, "");
   }, [requestedPlan, user, loading]);
 
   if (!user || user.role !== "contractor") return null;
@@ -171,6 +174,15 @@ const Subscription = () => {
       {(hasNoPlan || isCanceled) && (
         <div className="mt-8">
           <p className="text-muted-foreground">{t("subscription.choose_plan")}</p>
+          <div className="mt-4 max-w-sm space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Promo code (optional)</p>
+            <Input
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              placeholder="Enter promo code"
+              disabled={loading}
+            />
+          </div>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {/* Basic Plan */}
