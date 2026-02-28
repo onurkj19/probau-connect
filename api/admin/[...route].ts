@@ -472,7 +472,10 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
         },
       });
       await stripe.promotionCodes.create({
-        coupon: coupon.id,
+        promotion: {
+          type: "coupon",
+          coupon: coupon.id,
+        },
         code: cleanCode,
         max_redemptions: cleanMaxRedemptions ?? undefined,
         expires_at: expiresAtTimestamp,
