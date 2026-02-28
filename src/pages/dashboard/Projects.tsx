@@ -50,6 +50,18 @@ const getDefaultDeadlineValue = () => {
   return toDateTimeLocalValue(next);
 };
 
+const mergeFiles = (existing: File[], incoming: File[]) => {
+  const seen = new Set(existing.map((file) => `${file.name}::${file.size}::${file.lastModified}`));
+  const merged = [...existing];
+  for (const file of incoming) {
+    const key = `${file.name}::${file.size}::${file.lastModified}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(file);
+  }
+  return merged;
+};
+
 const DashboardProjects = () => {
   const { t } = useTranslation();
   const { user, canSubmitOffer, offerLimitReached, refreshUser } = useAuth();
@@ -560,14 +572,59 @@ const DashboardProjects = () => {
                 type="file"
                 className="hidden"
                 multiple
-                onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.files || []);
+                  setFiles((prev) => mergeFiles(prev, selected));
+                  e.currentTarget.value = "";
+                }}
               />
               {files.length > 0 && (
                 <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
                   <p className="mb-1 font-medium text-foreground">{t("dashboard.files_selected", { count: files.length })}</p>
                   <ul className="space-y-1">
-                    {files.map((file) => (
-                      <li key={file.name} className="truncate">{file.name}</li>
+                    {files.map((file, index) => (
+                      <li key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center justify-between gap-2">
+                        <span className="truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-[11px] font-medium text-destructive hover:underline"
+                          onClick={() => setFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index))}
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {existingAttachmentUrls.length > 0 && (
+                <div className="rounded-md border border-border bg-background p-3 text-xs text-muted-foreground">
+                  <p className="mb-1 font-medium text-foreground">
+                    Existing files ({existingAttachmentUrls.length})
+                  </p>
+                  <ul className="space-y-1">
+                    {existingAttachmentUrls.map((url, index) => (
+                      <li key={`${url}-${index}`} className="flex items-center justify-between gap-2">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-primary hover:underline"
+                        >
+                          {url.split("/").pop() || `attachment-${index + 1}`}
+                        </a>
+                        <button
+                          type="button"
+                          className="text-[11px] font-medium text-destructive hover:underline"
+                          onClick={() =>
+                            setExistingAttachmentUrls((prev) =>
+                              prev.filter((_, attachmentIndex) => attachmentIndex !== index),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -787,6 +844,16 @@ const DashboardProjects = () => {
                     </Button>
                   ) : isOwner ? (
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          handleEditProject(p);
+                        }}
+                      >
+                        <UploadCloud className="mr-1 h-4 w-4" />
+                        Add files
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"

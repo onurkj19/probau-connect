@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bookmark, Building2, CalendarClock, Clock, Download, ExternalLink, FileText, MapPin, Paperclip } from "lucide-react";
+import { Bookmark, Building2, CalendarClock, ChevronLeft, ChevronRight, Clock, Download, ExternalLink, FileText, MapPin, Paperclip } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -81,6 +81,8 @@ export function ProjectCard({
   const [isBookmarkedLocal, setIsBookmarkedLocal] = useState(false);
   const [ownerSnapshot, setOwnerSnapshot] = useState<OwnerSnapshot | null>(null);
   const [offerCountState, setOfferCountState] = useState<number | null>(offerCount ?? null);
+  const [activeAttachmentIndex, setActiveAttachmentIndex] = useState(0);
+  const [armedPdfUrl, setArmedPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowTs(Date.now()), 1000);
@@ -152,6 +154,7 @@ export function ProjectCard({
   const companyInitial = displayCompany?.charAt(0).toUpperCase() || "P";
   const fileLinks = attachments?.filter((file) => Boolean(file)) ?? [];
   const isBookmarked = bookmarked ?? isBookmarkedLocal;
+  const activeAttachmentUrl = fileLinks[activeAttachmentIndex] ?? null;
   const countdownLabel = useMemo(() => {
     if (!isActive) return t("projects.deadline_passed");
     const totalSeconds = Math.floor(msRemaining / 1000);
@@ -175,9 +178,7 @@ export function ProjectCard({
     if (isImage) {
       return (
         <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
-          <a href={url} target="_blank" rel="noreferrer">
-            <img src={url} alt={fileName} className="max-h-52 w-full rounded-md object-cover" />
-          </a>
+          <img src={url} alt={fileName} className="h-56 w-full rounded-md object-cover" />
           <div className="flex items-center gap-3 text-xs">
             <a href={url} target="_blank" rel="noreferrer" className="text-primary underline">
               <ExternalLink className="mr-1 inline h-3 w-3" />
@@ -195,7 +196,10 @@ export function ProjectCard({
     if (isPdf) {
       return (
         <div key={url} className="space-y-1 rounded-md border border-border/60 bg-background p-2">
-          <object data={url} type="application/pdf" className="h-52 w-full rounded-md bg-background" />
+          <object data={url} type="application/pdf" className="h-56 w-full rounded-md bg-background" />
+          <p className="text-[11px] text-muted-foreground">
+            Click once to browse next document, click the PDF link twice to open in a new tab.
+          </p>
           <div className="flex items-center gap-3 text-xs">
             <a href={url} target="_blank" rel="noreferrer" className="text-primary underline">
               <ExternalLink className="mr-1 inline h-3 w-3" />
@@ -252,6 +256,35 @@ export function ProjectCard({
       </div>
     );
   };
+
+  const moveAttachment = (direction: "next" | "prev") => {
+    if (fileLinks.length <= 1) return;
+    setArmedPdfUrl(null);
+    setActiveAttachmentIndex((prev) => {
+      if (direction === "next") return (prev + 1) % fileLinks.length;
+      return (prev - 1 + fileLinks.length) % fileLinks.length;
+    });
+  };
+
+  const handleAttachmentClick = () => {
+    if (!activeAttachmentUrl) return;
+    const ext = getFileExtension(activeAttachmentUrl);
+    if (ext === "pdf") {
+      if (armedPdfUrl === activeAttachmentUrl) {
+        window.open(activeAttachmentUrl, "_blank", "noopener,noreferrer");
+        setArmedPdfUrl(null);
+        return;
+      }
+      setArmedPdfUrl(activeAttachmentUrl);
+      return;
+    }
+    moveAttachment("next");
+  };
+
+  useEffect(() => {
+    if (activeAttachmentIndex < fileLinks.length) return;
+    setActiveAttachmentIndex(0);
+  }, [activeAttachmentIndex, fileLinks.length]);
 
   return (
     <div className="relative rounded-lg border border-border bg-card p-5 shadow-none">
@@ -320,13 +353,45 @@ export function ProjectCard({
 
       {fileLinks.length > 0 && (
         <div className="mt-3 rounded-md border border-border/70 bg-muted/20 p-2">
-          <p className="mb-1 text-xs font-medium text-foreground">{t("projects.project_files")}</p>
-          <div className="space-y-2">
-            {fileLinks.map((url) => (
-              <div key={url}>
-                {renderProjectAttachment(url)}
-              </div>
-            ))}
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-medium text-foreground">{t("projects.project_files")}</p>
+            <p className="text-xs text-muted-foreground">
+              {activeAttachmentIndex + 1}/{fileLinks.length} documents
+            </p>
+          </div>
+          <div
+            className="cursor-pointer"
+            onClick={handleAttachmentClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleAttachmentClick();
+              }
+            }}
+          >
+            {activeAttachmentUrl ? renderProjectAttachment(activeAttachmentUrl) : null}
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted disabled:opacity-50"
+              onClick={() => moveAttachment("prev")}
+              disabled={fileLinks.length <= 1}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Prev
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted disabled:opacity-50"
+              onClick={() => moveAttachment("next")}
+              disabled={fileLinks.length <= 1}
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       )}
