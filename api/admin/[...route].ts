@@ -1107,6 +1107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: "Admin endpoint not found" });
   } catch (error) {
     console.error("Admin catch-all error", endpoint, error);
-    return res.status(500).json({ error: "Admin request failed" });
+    const details = getErrorMessage(error);
+    return res.status(500).json({ error: `Admin request failed: ${details}` });
   }
 }
