@@ -37,6 +37,43 @@ async function getSubscriptionDiscountConfig(): Promise<SubscriptionDiscountConf
   };
 }
 
+async function createPromotionCodeDirect(params: {
+  couponId: string;
+  code: string;
+  maxRedemptions: number | null;
+  expiresAtTimestamp?: number;
+  actorId: string;
+}) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured.");
+  }
+  const body = new URLSearchParams();
+  body.set("promotion[type]", "coupon");
+  body.set("promotion[coupon]", params.couponId);
+  body.set("code", params.code);
+  body.set("metadata[source]", "admin_subscription_promo_code");
+  body.set("metadata[actorId]", params.actorId);
+  if (params.maxRedemptions !== null) {
+    body.set("max_redemptions", String(params.maxRedemptions));
+  }
+  if (typeof params.expiresAtTimestamp === "number") {
+    body.set("expires_at", String(params.expiresAtTimestamp));
+  }
+  const response = await fetch("https://api.stripe.com/v1/promotion_codes", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+  const payload = (await response.json().catch(() => ({}))) as { error?: { message?: string } };
+  if (!response.ok) {
+    throw new Error(payload.error?.message || "Stripe promotion code creation failed");
+  }
+}
+
 function getRoutePath(req: VercelRequest): string {
   const raw = req.query.route;
   if (Array.isArray(raw)) return raw.join("/");
@@ -471,18 +508,12 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
           code: cleanCode,
         },
       });
-      await stripe.promotionCodes.create({
-        promotion: {
-          type: "coupon",
-          coupon: coupon.id,
-        },
+      await createPromotionCodeDirect({
+        couponId: coupon.id,
         code: cleanCode,
-        max_redemptions: cleanMaxRedemptions ?? undefined,
-        expires_at: expiresAtTimestamp,
-        metadata: {
-          source: "admin_subscription_promo_code",
-          actorId: actor.id,
-        },
+        maxRedemptions: cleanMaxRedemptions,
+        expiresAtTimestamp,
+        actorId: actor.id,
       });
     } catch (error) {
       return res.status(400).json({ error: `Failed to create promo code: ${getErrorMessage(error)}` });
