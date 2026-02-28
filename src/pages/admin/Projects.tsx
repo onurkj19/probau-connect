@@ -80,7 +80,7 @@ const AdminProjects = () => {
         <h1 className="font-display text-3xl font-bold text-foreground">Projects Control</h1>
         <p className="mt-1 text-sm text-muted-foreground">Moderate active and closed projects.</p>
       </div>
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-5">
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-5">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title/category/custom/service" />
         <select
           value={status}

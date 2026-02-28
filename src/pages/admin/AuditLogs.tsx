@@ -67,7 +67,7 @@ const AdminAuditLogs = () => {
         <p className="mt-1 text-sm text-muted-foreground">Append-only security events with advanced filters.</p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-4">
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-4">
         <select
           value={severity}
           onChange={(e) => setSeverity(e.target.value)}

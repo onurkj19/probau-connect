@@ -70,7 +70,7 @@ const AdminFeatureFlags = () => {
         <p className="mt-1 text-sm text-muted-foreground">Enable/disable platform capabilities safely.</p>
       </div>
 
-      <div className="grid gap-2 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_2fr_auto]">
+      <div className="grid gap-2 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-[1fr_2fr_auto]">
         <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="flag_name" />
         <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Description" />
         <Button

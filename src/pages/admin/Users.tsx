@@ -127,7 +127,7 @@ const AdminUsers = () => {
         <p className="mt-1 text-sm text-muted-foreground">Role, moderation, subscription and lifecycle control.</p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-6">
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-6">
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

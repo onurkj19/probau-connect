@@ -92,7 +92,7 @@ const AdminSystemSettings = () => {
         <p className="mt-1 text-sm text-muted-foreground">Manage runtime JSON configuration centrally.</p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[1fr_1fr_auto]">
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
         <Input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="new_setting_key" />
         <Input value="{}" disabled />
         <Button

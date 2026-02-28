@@ -75,7 +75,7 @@ const AdminOffers = () => {
         <h1 className="font-display text-3xl font-bold text-foreground">Offers Control</h1>
         <p className="mt-1 text-sm text-muted-foreground">Review, accept/reject, or remove offers.</p>
       </div>
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-6">
+      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-6">
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
