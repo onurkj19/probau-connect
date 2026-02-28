@@ -396,17 +396,34 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
   return res.status(200).json({
     discountConfig,
     promoCodes: mergedCodes
-      .filter((promo) => typeof promo.code === "string" && promo.coupon && typeof promo.coupon !== "string" && promo.coupon.percent_off !== null)
-      .map((promo) => ({
-        id: promo.id,
-        code: promo.code,
-        active: promo.active,
-        percentOff: Number((promo.coupon as Stripe.Coupon).percent_off ?? 0),
-        maxRedemptions: promo.max_redemptions ?? null,
-        timesRedeemed: promo.times_redeemed ?? 0,
-        expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
-        createdAt: new Date(promo.created * 1000).toISOString(),
-      }))
+      .map((promo) => {
+        const legacyCoupon = promo.coupon && typeof promo.coupon !== "string" ? promo.coupon as Stripe.Coupon : null;
+        const promotionCoupon = promo.promotion?.coupon && typeof promo.promotion.coupon !== "string"
+          ? promo.promotion.coupon as Stripe.Coupon
+          : null;
+        const coupon = legacyCoupon ?? promotionCoupon;
+        if (!promo.code || !coupon || coupon.percent_off === null) return null;
+        return {
+          id: promo.id,
+          code: promo.code,
+          active: promo.active,
+          percentOff: Number(coupon.percent_off ?? 0),
+          maxRedemptions: promo.max_redemptions ?? null,
+          timesRedeemed: promo.times_redeemed ?? 0,
+          expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
+          createdAt: new Date(promo.created * 1000).toISOString(),
+        };
+      })
+      .filter((row): row is {
+        id: string;
+        code: string;
+        active: boolean;
+        percentOff: number;
+        maxRedemptions: number | null;
+        timesRedeemed: number;
+        expiresAt: string | null;
+        createdAt: string;
+      } => Boolean(row))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   });
 }

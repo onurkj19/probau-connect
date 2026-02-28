@@ -52,8 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!/^[A-Z0-9_-]{3,32}$/.test(normalizedPromoCode)) {
         return res.status(400).json({ error: "Invalid promo code format" });
       }
-      const promoCodes = await stripe.promotionCodes.list({ code: normalizedPromoCode, active: true, limit: 1 });
-      const promo = promoCodes.data[0];
+      const promoCodes = await stripe.promotionCodes.list({ active: true, limit: 100 });
+      const promo = promoCodes.data.find((item) => (item.code ?? "").toUpperCase() === normalizedPromoCode);
       if (!promo) return res.status(400).json({ error: "Promo code is invalid or inactive" });
       discounts.push({ promotion_code: promo.id });
     } else {
