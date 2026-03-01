@@ -11,9 +11,16 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { trackEvent } from "@/lib/analytics";
 import {
   applyPercentDiscount,
-  BASE_PLAN_PRICES,
-  fetchDefaultSubscriptionDiscountPercent,
+  fetchStripePlanPrices,
+  fetchSubscriptionPricingConfig,
   formatChf,
+  getOfferDescription,
+  getOfferValidUntil,
+  getPlanPrice,
+  getYearlySavingsPercent,
+  type BillingCycle,
+  type StripePlanPrices,
+  type SubscriptionPricingConfig,
 } from "@/lib/subscription-pricing";
 
 const Subscription = () => {
@@ -25,22 +32,33 @@ const Subscription = () => {
   const [loading, setLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
-  const [defaultDiscountPercent, setDefaultDiscountPercent] = useState(0);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>(
+    searchParams.get("cycle") === "yearly" ? "yearly" : "monthly",
+  );
+  const [pricingConfig, setPricingConfig] = useState<SubscriptionPricingConfig | null>(null);
+  const [stripePrices, setStripePrices] = useState<StripePlanPrices | null>(null);
   const autoTriggered = useRef(false);
 
   const requestedPlan = searchParams.get("plan");
+  const requestedCycle = searchParams.get("cycle");
 
-  const handleSubscribe = async (plan: PlanType, promoOverride?: string) => {
+  useEffect(() => {
+    if (requestedCycle === "yearly") setBillingCycle("yearly");
+    else if (requestedCycle === "monthly") setBillingCycle("monthly");
+  }, [requestedCycle]);
+
+  const handleSubscribe = async (plan: PlanType, promoOverride?: string, cycleOverride?: BillingCycle) => {
     setLoading(true);
     setActionError(null);
+    const cycle = cycleOverride ?? billingCycle;
     const normalizedPromoCode = (promoOverride ?? promoCode).trim().toUpperCase();
-    trackEvent("checkout_start", { plan, hasPromoCode: Boolean(normalizedPromoCode) });
+    trackEvent("checkout_start", { plan, hasPromoCode: Boolean(normalizedPromoCode), billingCycle: cycle });
     try {
       const token = await getToken();
       if (!token) {
         throw new Error("Session expired. Please sign in again.");
       }
-      await createCheckoutSession(plan, token, normalizedPromoCode || undefined);
+      await createCheckoutSession(plan, token, normalizedPromoCode || undefined, cycle);
     } catch (err) {
       console.error("Checkout error:", err);
       trackEvent("checkout_failure", { plan, hasPromoCode: Boolean(normalizedPromoCode) });
@@ -75,10 +93,18 @@ const Subscription = () => {
     if (user.subscriptionStatus !== "none" && user.subscriptionStatus !== "canceled") return;
     if (requestedPlan !== "basic" && requestedPlan !== "pro") return;
     autoTriggered.current = true;
-    void handleSubscribe(requestedPlan, "");
-  }, [requestedPlan, user, loading]);
+    void handleSubscribe(requestedPlan, "", billingCycle);
+  }, [requestedPlan, user, loading, billingCycle]);
   useEffect(() => {
-    void fetchDefaultSubscriptionDiscountPercent().then(setDefaultDiscountPercent).catch(() => setDefaultDiscountPercent(0));
+    void Promise.all([fetchSubscriptionPricingConfig(), fetchStripePlanPrices()])
+      .then(([config, prices]) => {
+        setPricingConfig(config);
+        setStripePrices(prices);
+      })
+      .catch(() => {
+        setPricingConfig(null);
+        setStripePrices(null);
+      });
   }, []);
 
   if (!user || user.role !== "contractor") return null;
@@ -92,14 +118,31 @@ const Subscription = () => {
 
   const offerLimit = user.planType === "basic" ? 10 : null;
   const offerUsage = user.offerCountThisMonth;
+  const monthlyDiscountPercent =
+    pricingConfig?.monthly.enabled && (!pricingConfig.monthly.validUntil || new Date(pricingConfig.monthly.validUntil).getTime() > Date.now())
+      ? pricingConfig.monthly.percentOff
+      : 0;
+  const yearlyDiscountPercent =
+    pricingConfig?.yearly.enabled && (!pricingConfig.yearly.validUntil || new Date(pricingConfig.yearly.validUntil).getTime() > Date.now())
+      ? Number(((pricingConfig.yearly.freeMonths / 12) * 100).toFixed(2))
+      : 0;
+  const activeDiscountPercent = billingCycle === "yearly" ? yearlyDiscountPercent : monthlyDiscountPercent;
+  const basicBasePrice = getPlanPrice("basic", billingCycle, stripePrices);
+  const proBasePrice = getPlanPrice("pro", billingCycle, stripePrices);
   const basicDiscountedPrice =
-    defaultDiscountPercent > 0
-      ? applyPercentDiscount(BASE_PLAN_PRICES.basic, defaultDiscountPercent)
-      : null;
+    activeDiscountPercent > 0 ? applyPercentDiscount(basicBasePrice, activeDiscountPercent) : null;
   const proDiscountedPrice =
-    defaultDiscountPercent > 0
-      ? applyPercentDiscount(BASE_PLAN_PRICES.pro, defaultDiscountPercent)
-      : null;
+    activeDiscountPercent > 0 ? applyPercentDiscount(proBasePrice, activeDiscountPercent) : null;
+  const basicYearlySavingsPercent =
+    billingCycle === "yearly"
+      ? getYearlySavingsPercent("basic", basicDiscountedPrice ?? basicBasePrice, stripePrices)
+      : 0;
+  const proYearlySavingsPercent =
+    billingCycle === "yearly"
+      ? getYearlySavingsPercent("pro", proDiscountedPrice ?? proBasePrice, stripePrices)
+      : 0;
+  const offerDescription = pricingConfig ? getOfferDescription(pricingConfig, billingCycle) : "";
+  const offerValidUntil = pricingConfig ? getOfferValidUntil(pricingConfig, billingCycle) : null;
 
   const renewalDate = user.subscriptionCurrentPeriodEnd
     ? new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString(lang, {
@@ -192,6 +235,32 @@ const Subscription = () => {
       {(hasNoPlan || isCanceled) && (
         <div className="mt-8">
           <p className="text-muted-foreground">{t("subscription.choose_plan")}</p>
+          <div className="mt-4 inline-flex rounded-lg border border-border bg-muted/40 p-1">
+            <Button
+              type="button"
+              size="sm"
+              variant={billingCycle === "monthly" ? "default" : "ghost"}
+              onClick={() => setBillingCycle("monthly")}
+              disabled={loading}
+            >
+              {t("pricing.monthly_toggle")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={billingCycle === "yearly" ? "default" : "ghost"}
+              onClick={() => setBillingCycle("yearly")}
+              disabled={loading}
+            >
+              {t("pricing.yearly_toggle")}
+            </Button>
+          </div>
+          {activeDiscountPercent > 0 && (
+            <p className="mt-3 text-sm text-accent">
+              {offerDescription || `-${activeDiscountPercent}% limited offer`}
+              {offerValidUntil ? ` · valid until ${new Date(offerValidUntil).toLocaleDateString(lang)}` : ""}
+            </p>
+          )}
           <div className="mt-4 max-w-sm space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Promo code (optional)</p>
             <Input
@@ -211,22 +280,40 @@ const Subscription = () => {
               <p className="mt-1 text-sm text-muted-foreground">{t("pricing.basic.description")}</p>
               {basicDiscountedPrice !== null ? (
                 <div className="mt-4 space-y-1">
-                  <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                  <p className="text-sm font-medium text-accent">
+                    {offerDescription || `-${activeDiscountPercent}% limited offer`}
+                  </p>
                   <div className="flex items-end gap-2">
                     <span className="text-base font-medium text-muted-foreground line-through">
-                      CHF {formatChf(BASE_PLAN_PRICES.basic)}
+                      CHF {formatChf(basicBasePrice)}
                     </span>
                     <p className="font-display text-3xl font-bold text-foreground">
                       CHF {formatChf(basicDiscountedPrice)}
-                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                      <span className="text-base font-normal text-muted-foreground">
+                        {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                      </span>
                     </p>
                   </div>
+                  {basicYearlySavingsPercent > 0 && billingCycle === "yearly" && (
+                    <p className="text-xs font-medium text-accent">
+                      Save {basicYearlySavingsPercent}% vs paying monthly for 12 months
+                    </p>
+                  )}
                 </div>
               ) : (
-                <p className="mt-4 font-display text-3xl font-bold text-foreground">
-                  CHF {BASE_PLAN_PRICES.basic}
-                  <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-                </p>
+                <div className="mt-4 space-y-1">
+                  <p className="font-display text-3xl font-bold text-foreground">
+                    CHF {formatChf(basicBasePrice)}
+                    <span className="text-base font-normal text-muted-foreground">
+                      {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                    </span>
+                  </p>
+                  {basicYearlySavingsPercent > 0 && billingCycle === "yearly" && (
+                    <p className="text-xs font-medium text-accent">
+                      Save {basicYearlySavingsPercent}% vs paying monthly for 12 months
+                    </p>
+                  )}
+                </div>
               )}
               <ul className="mt-4 space-y-2">
                 {(t("pricing.basic.features", { returnObjects: true }) as string[]).map((f, i) => (
@@ -252,22 +339,40 @@ const Subscription = () => {
               <p className="mt-1 text-sm text-muted-foreground">{t("pricing.pro.description")}</p>
               {proDiscountedPrice !== null ? (
                 <div className="mt-4 space-y-1">
-                  <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                  <p className="text-sm font-medium text-accent">
+                    {offerDescription || `-${activeDiscountPercent}% limited offer`}
+                  </p>
                   <div className="flex items-end gap-2">
                     <span className="text-base font-medium text-muted-foreground line-through">
-                      CHF {formatChf(BASE_PLAN_PRICES.pro)}
+                      CHF {formatChf(proBasePrice)}
                     </span>
                     <p className="font-display text-3xl font-bold text-foreground">
                       CHF {formatChf(proDiscountedPrice)}
-                      <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                      <span className="text-base font-normal text-muted-foreground">
+                        {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                      </span>
                     </p>
                   </div>
+                  {proYearlySavingsPercent > 0 && billingCycle === "yearly" && (
+                    <p className="text-xs font-medium text-accent">
+                      Save {proYearlySavingsPercent}% vs paying monthly for 12 months
+                    </p>
+                  )}
                 </div>
               ) : (
-                <p className="mt-4 font-display text-3xl font-bold text-foreground">
-                  CHF {BASE_PLAN_PRICES.pro}
-                  <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-                </p>
+                <div className="mt-4 space-y-1">
+                  <p className="font-display text-3xl font-bold text-foreground">
+                    CHF {formatChf(proBasePrice)}
+                    <span className="text-base font-normal text-muted-foreground">
+                      {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                    </span>
+                  </p>
+                  {proYearlySavingsPercent > 0 && billingCycle === "yearly" && (
+                    <p className="text-xs font-medium text-accent">
+                      Save {proYearlySavingsPercent}% vs paying monthly for 12 months
+                    </p>
+                  )}
+                </div>
               )}
               <ul className="mt-4 space-y-2">
                 {(t("pricing.pro.features", { returnObjects: true }) as string[]).map((f, i) => (
