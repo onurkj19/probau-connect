@@ -1,9 +1,34 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type Stripe from "stripe";
-import { stripe, PLANS, type PlanType } from "../_lib/stripe.js";
+import { stripe, PLANS, type PlanType, type BillingCycle, getPlanPriceId } from "../_lib/stripe.js";
 import { authenticateRequest } from "../_lib/auth.js";
 import { updateUserSubscription } from "../_lib/db.js";
 import { supabaseAdmin } from "../_lib/supabase.js";
+
+const SUBSCRIPTION_PRICE_SETTING_KEY = "subscription_price_config";
+
+async function getRuntimePlanPriceId(planType: PlanType, cycle: BillingCycle): Promise<string> {
+  const fallback = getPlanPriceId(planType, cycle);
+  try {
+    const { data: row } = await supabaseAdmin
+      .from("settings")
+      .select("value")
+      .eq("key", SUBSCRIPTION_PRICE_SETTING_KEY)
+      .maybeSingle();
+    const value = (row?.value as {
+      basic?: { monthlyPriceId?: string | null; yearlyPriceId?: string | null };
+      pro?: { monthlyPriceId?: string | null; yearlyPriceId?: string | null };
+    } | null) ?? null;
+    const configured =
+      cycle === "yearly"
+        ? value?.[planType]?.yearlyPriceId
+        : value?.[planType]?.monthlyPriceId;
+    if (typeof configured === "string" && configured.trim()) return configured;
+  } catch {
+    // Fallback to env-based Stripe price IDs if settings lookup fails.
+  }
+  return fallback;
+}
 
 function getErrorMessage(err: unknown): string {
   if (err && typeof err === "object" && "message" in err) {
@@ -34,15 +59,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: "Only contractors can subscribe" });
     }
 
-    const { planType, promoCode } = req.body as { planType?: PlanType; promoCode?: string };
+    const { planType, promoCode, billingCycle } = req.body as {
+      planType?: PlanType;
+      promoCode?: string;
+      billingCycle?: BillingCycle;
+    };
 
     if (!planType || !PLANS[planType]) {
       return res.status(400).json({ error: "Invalid plan type. Use 'basic' or 'pro'." });
     }
 
+    const selectedCycle: BillingCycle = billingCycle === "yearly" ? "yearly" : "monthly";
     const plan = PLANS[planType];
-
-    if (!plan.priceId) {
+    const planPriceId = await getRuntimePlanPriceId(planType, selectedCycle);
+    if (!planPriceId) {
       return res.status(500).json({ error: "Stripe Price ID not configured for this plan" });
     }
 
@@ -62,8 +92,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select("value")
         .eq("key", "subscription_discount_config")
         .maybeSingle();
-      const discountConfig = (discountConfigRow?.value as { enabled?: boolean; couponId?: string | null } | null) ?? null;
-      if (discountConfig?.enabled && typeof discountConfig.couponId === "string" && discountConfig.couponId) {
+      const discountConfig = (discountConfigRow?.value as {
+        enabled?: boolean;
+        couponId?: string | null;
+        validUntil?: string | null;
+        yearlyOffer?: {
+          enabled?: boolean;
+          couponId?: string | null;
+          validUntil?: string | null;
+        } | null;
+      } | null) ?? null;
+      const isValid = (value: string | null | undefined) => {
+        if (!value) return true;
+        const ts = new Date(value).getTime();
+        return Number.isFinite(ts) && ts > Date.now();
+      };
+      if (selectedCycle === "yearly") {
+        const yearly = discountConfig?.yearlyOffer;
+        if (yearly?.enabled && isValid(yearly.validUntil) && typeof yearly.couponId === "string" && yearly.couponId) {
+          discounts.push({ coupon: yearly.couponId });
+        }
+      } else if (discountConfig?.enabled && isValid(discountConfig.validUntil) && typeof discountConfig.couponId === "string" && discountConfig.couponId) {
         discounts.push({ coupon: discountConfig.couponId });
       }
     }
@@ -94,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: plan.priceId,
+          price: planPriceId,
           quantity: 1,
         },
       ],
@@ -104,11 +153,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: {
           userId: user.id,
           planType: plan.type,
+          billingCycle: selectedCycle,
         },
       },
       metadata: {
         userId: user.id,
         planType: plan.type,
+        billingCycle: selectedCycle,
         promoCode: normalizedPromoCode || "",
       },
       ...(discounts.length > 0 ? { discounts } : {}),

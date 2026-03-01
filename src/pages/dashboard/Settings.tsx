@@ -24,6 +24,7 @@ const DashboardSettings = () => {
   const { user, refreshUser } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [companyName, setCompanyName] = useState(user?.companyName || "");
+  const [vatNumber, setVatNumber] = useState(user?.vatNumber || "");
   const [profileTitle, setProfileTitle] = useState(user?.profileTitle || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [phone, setPhone] = useState(user?.phone || "");
@@ -40,6 +41,7 @@ const DashboardSettings = () => {
 
   useEffect(() => {
     setCompanyName(user?.companyName || "");
+    setVatNumber(user?.vatNumber || "");
     setName(user?.name || "");
     setProfileTitle(user?.profileTitle || "");
     setBio(user?.bio || "");
@@ -48,7 +50,7 @@ const DashboardSettings = () => {
     setCity(user?.city || "");
     setAddressLine(user?.addressLine || "");
     setAvatarUrl(user?.avatarUrl || "");
-  }, [user?.name, user?.companyName, user?.profileTitle, user?.bio, user?.phone, user?.website, user?.city, user?.addressLine, user?.avatarUrl]);
+  }, [user?.name, user?.companyName, user?.vatNumber, user?.profileTitle, user?.bio, user?.phone, user?.website, user?.city, user?.addressLine, user?.avatarUrl]);
 
   const handleAvatarUpload = async (file: File) => {
     if (!user) return;
@@ -80,6 +82,7 @@ const DashboardSettings = () => {
     try {
       const trimmedName = name.trim();
       const trimmedCompanyName = companyName.trim();
+      const trimmedVatNumber = vatNumber.trim();
       const trimmedProfileTitle = profileTitle.trim() || null;
       const trimmedBio = bio.trim() || null;
       const trimmedPhone = phone.trim() || null;
@@ -114,6 +117,11 @@ const DashboardSettings = () => {
         })
         .eq("owner_id", user.id);
       if (snapshotError) throw snapshotError;
+
+      const { error: authMetadataError } = await supabase.auth.updateUser({
+        data: { vat_number: trimmedVatNumber },
+      });
+      if (authMetadataError) throw authMetadataError;
 
       await refreshUser();
       setSaved(true);
@@ -230,6 +238,14 @@ const DashboardSettings = () => {
                 <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
               </div>
               <div className="space-y-2">
+                <Label>{t("auth.vat_number")}</Label>
+                <Input
+                  value={vatNumber}
+                  onChange={(e) => setVatNumber(e.target.value)}
+                  placeholder={t("auth.vat_number_placeholder")}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>{t("auth.profile_title")}</Label>
                 <Input
                   value={profileTitle}
@@ -312,6 +328,7 @@ const DashboardSettings = () => {
               </div>
             </div>
             <p className="mt-3 text-sm text-foreground">{companyName || "Company name"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("auth.vat_number")}: {vatNumber || "-"}</p>
             <p className="mt-2 text-xs text-muted-foreground">{bio || "Your bio will appear here."}</p>
             <div className="mt-3 space-y-1 text-xs text-muted-foreground">
               <p>{phone || "Phone not set"}</p>

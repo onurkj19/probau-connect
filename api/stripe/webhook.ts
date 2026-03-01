@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
 import { stripe, getPlanByPriceId } from "../_lib/stripe.js";
 import { updateUserByStripeCustomerId } from "../_lib/db.js";
+import { supabaseAdmin } from "../_lib/supabase.js";
 
 /**
  * Stripe webhook endpoint.
@@ -22,6 +23,36 @@ export const config = {
     bodyParser: false,
   },
 };
+
+const SUBSCRIPTION_PRICE_SETTING_KEY = "subscription_price_config";
+
+async function resolvePlanTypeByPriceId(priceId: string): Promise<"basic" | "pro" | null> {
+  const knownPlan = getPlanByPriceId(priceId);
+  if (knownPlan?.type === "basic" || knownPlan?.type === "pro") return knownPlan.type;
+  try {
+    const { data: row } = await supabaseAdmin
+      .from("settings")
+      .select("value")
+      .eq("key", SUBSCRIPTION_PRICE_SETTING_KEY)
+      .maybeSingle();
+    const value = (row?.value as {
+      basic?: { monthlyPriceId?: string | null; yearlyPriceId?: string | null };
+      pro?: { monthlyPriceId?: string | null; yearlyPriceId?: string | null };
+    } | null) ?? null;
+    if (
+      priceId === value?.basic?.monthlyPriceId ||
+      priceId === value?.basic?.yearlyPriceId
+    ) {
+      return "basic";
+    }
+    if (priceId === value?.pro?.monthlyPriceId || priceId === value?.pro?.yearlyPriceId) {
+      return "pro";
+    }
+  } catch {
+    // Keep null when settings are unavailable.
+  }
+  return null;
+}
 
 async function getRawBody(req: VercelRequest): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -111,19 +142,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   );
 
   const priceId = subscription.items.data[0]?.price.id;
-  const plan = priceId ? getPlanByPriceId(priceId) : undefined;
+  const planType = priceId ? await resolvePlanTypeByPriceId(priceId) : null;
   const periodEndUnix = getSubscriptionPeriodEndUnix(subscription as Stripe.Subscription);
 
   await updateUserByStripeCustomerId(customerId, {
     subscriptionStatus: "active",
-    planType: plan?.type || null,
+    planType,
     subscriptionCurrentPeriodEnd: periodEndUnix
       ? new Date(periodEndUnix * 1000).toISOString()
       : null,
     offerCountThisMonth: 0,
   });
 
-  console.log(`Checkout completed for customer ${customerId}, plan: ${plan?.type}`);
+  console.log(`Checkout completed for customer ${customerId}, plan: ${planType}`);
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -133,7 +164,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       : subscription.customer.id;
 
   const priceId = subscription.items.data[0]?.price.id;
-  const plan = priceId ? getPlanByPriceId(priceId) : undefined;
+  const planType = priceId ? await resolvePlanTypeByPriceId(priceId) : null;
 
   const statusMap: Record<string, string> = {
     active: "active",
@@ -152,7 +183,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const update: Parameters<typeof updateUserByStripeCustomerId>[1] = {
     subscriptionStatus: mappedStatus,
-    planType: mappedStatus === "active" ? (plan?.type || null) : null,
+    planType: mappedStatus === "active" ? planType : null,
     subscriptionCurrentPeriodEnd: periodEndUnix
       ? new Date(periodEndUnix * 1000).toISOString()
       : null,
@@ -166,7 +197,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   await updateUserByStripeCustomerId(customerId, update);
 
   console.log(
-    `Subscription updated for customer ${customerId}: status=${mappedStatus}, plan=${plan?.type}`,
+    `Subscription updated for customer ${customerId}: status=${mappedStatus}, plan=${planType}`,
   );
 }
 

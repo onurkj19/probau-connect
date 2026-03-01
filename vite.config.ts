@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       "/api": {
-        target: "https://probau-connect.vercel.app",
+        target: "https://www.projektmarkt.ch",
         changeOrigin: true,
         secure: true,
       },

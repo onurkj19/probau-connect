@@ -12,6 +12,7 @@ export interface User {
   email: string;
   name: string;
   companyName: string;
+  vatNumber: string;
   profileTitle: string;
   bio: string;
   phone: string;
@@ -54,8 +55,9 @@ interface RegisterData {
   password: string;
   name: string;
   companyName: string;
+  vatNumber?: string;
   profileTitle?: string;
-  avatarUrl?: string;
+  avatarFile?: File | null;
   role: "project_owner" | "contractor";
 }
 
@@ -101,6 +103,7 @@ async function fetchProfile(userId: string): Promise<User | null> {
     email: data.email,
     name: data.name,
     companyName: data.company_name,
+    vatNumber: "",
     profileTitle: data.profile_title ?? "",
     bio: data.bio ?? "",
     phone: data.phone ?? "",
@@ -152,7 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const profile = await fetchProfile(session.user.id);
-    setState({ user: profile, session, isLoading: false });
+    const vatFromMetadata = typeof session.user.user_metadata?.vat_number === "string"
+      ? session.user.user_metadata.vat_number.trim()
+      : "";
+    const enrichedProfile = profile ? { ...profile, vatNumber: vatFromMetadata } : null;
+    setState({ user: enrichedProfile, session, isLoading: false });
   }, []);
 
   // Listen for auth state changes
@@ -197,15 +204,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (data: RegisterData) => {
     setState((s) => ({ ...s, isLoading: true }));
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           name: data.name,
           company_name: data.companyName,
+          vat_number: data.vatNumber?.trim() || "",
           profile_title: data.profileTitle ?? "",
-          avatar_url: data.avatarUrl ?? "",
+          avatar_url: "",
           role: data.role,
         },
       },
@@ -213,6 +221,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       setState((s) => ({ ...s, isLoading: false }));
       throw error;
+    }
+
+    const userId = signUpData.user?.id;
+    if (userId && data.avatarFile) {
+      const extension = data.avatarFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filePath = `${userId}/${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, data.avatarFile, { upsert: true });
+
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+        await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrlData.publicUrl })
+          .eq("id", userId);
+      } else {
+        console.warn("Avatar upload skipped during register:", uploadError.message);
+      }
     }
   }, []);
 
@@ -225,7 +252,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       const profile = await fetchProfile(session.user.id);
-      setState((s) => ({ ...s, user: profile, session }));
+      const vatFromMetadata = typeof session.user.user_metadata?.vat_number === "string"
+        ? session.user.user_metadata.vat_number.trim()
+        : "";
+      const enrichedProfile = profile ? { ...profile, vatNumber: vatFromMetadata } : null;
+      setState((s) => ({ ...s, user: enrichedProfile, session }));
     }
   }, []);
 

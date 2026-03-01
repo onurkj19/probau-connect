@@ -8,6 +8,14 @@ interface DiscountConfig {
   enabled: boolean;
   percentOff: number;
   couponId: string | null;
+  description: string;
+  validUntil: string | null;
+  yearlyOffer: {
+    enabled: boolean;
+    freeMonths: number;
+    description: string;
+    validUntil: string | null;
+  };
   updatedAt: string | null;
 }
 
@@ -25,8 +33,38 @@ interface PromoCodeRow {
 
 interface SubscriptionPromosResponse {
   discountConfig: DiscountConfig;
+  priceConfig?: {
+    basic: {
+      monthlyPriceId: string | null;
+      yearlyPriceId: string | null;
+    };
+    pro: {
+      monthlyPriceId: string | null;
+      yearlyPriceId: string | null;
+    };
+    amounts?: {
+      basic?: { monthly?: number | null; yearly?: number | null };
+      pro?: { monthly?: number | null; yearly?: number | null };
+    };
+  };
   promoCodes: PromoCodeRow[];
 }
+
+const EMPTY_YEARLY_OFFER: DiscountConfig["yearlyOffer"] = {
+  enabled: false,
+  freeMonths: 0,
+  description: "",
+  validUntil: null,
+};
+
+const EMPTY_PRICE_CONFIG: SubscriptionPromosResponse["priceConfig"] = {
+  basic: { monthlyPriceId: null, yearlyPriceId: null },
+  pro: { monthlyPriceId: null, yearlyPriceId: null },
+  amounts: {
+    basic: { monthly: null, yearly: null },
+    pro: { monthly: null, yearly: null },
+  },
+};
 
 const AdminSubscriptionPromos = () => {
   const { user, getToken } = useAuth();
@@ -36,6 +74,17 @@ const AdminSubscriptionPromos = () => {
   const [activePromoId, setActivePromoId] = useState<string | null>(null);
   const [savingDiscount, setSavingDiscount] = useState(false);
   const [defaultPercent, setDefaultPercent] = useState("0");
+  const [defaultDescription, setDefaultDescription] = useState("");
+  const [defaultValidUntil, setDefaultValidUntil] = useState("");
+  const [savingYearly, setSavingYearly] = useState(false);
+  const [savingPrices, setSavingPrices] = useState(false);
+  const [yearlyFreeMonths, setYearlyFreeMonths] = useState("0");
+  const [yearlyDescription, setYearlyDescription] = useState("");
+  const [yearlyValidUntil, setYearlyValidUntil] = useState("");
+  const [basicMonthlyPrice, setBasicMonthlyPrice] = useState("");
+  const [basicYearlyPrice, setBasicYearlyPrice] = useState("");
+  const [proMonthlyPrice, setProMonthlyPrice] = useState("");
+  const [proYearlyPrice, setProYearlyPrice] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [promoPercent, setPromoPercent] = useState("10");
   const [promoMaxRedemptions, setPromoMaxRedemptions] = useState("");
@@ -48,8 +97,73 @@ const AdminSubscriptionPromos = () => {
     setError(null);
     try {
       const response = await adminFetch<SubscriptionPromosResponse>("/api/admin/subscription-promos-list", getToken);
-      setData(response);
-      setDefaultPercent(String(response.discountConfig.percentOff ?? 0));
+      const fallbackPriceResponse = await fetch("/api/stripe/pricing")
+        .then(async (res) => {
+          if (!res.ok) return null;
+          const payload = (await res.json()) as {
+            prices?: {
+              basic?: { monthly?: number | null; yearly?: number | null };
+              pro?: { monthly?: number | null; yearly?: number | null };
+            };
+          };
+          return payload?.prices ?? null;
+        })
+        .catch(() => null);
+      const normalized: SubscriptionPromosResponse = {
+        ...response,
+        priceConfig: {
+          basic: {
+            monthlyPriceId: response.priceConfig?.basic?.monthlyPriceId ?? null,
+            yearlyPriceId: response.priceConfig?.basic?.yearlyPriceId ?? null,
+          },
+          pro: {
+            monthlyPriceId: response.priceConfig?.pro?.monthlyPriceId ?? null,
+            yearlyPriceId: response.priceConfig?.pro?.yearlyPriceId ?? null,
+          },
+          amounts: {
+            basic: {
+              monthly:
+                response.priceConfig?.amounts?.basic?.monthly ??
+                fallbackPriceResponse?.basic?.monthly ??
+                null,
+              yearly:
+                response.priceConfig?.amounts?.basic?.yearly ??
+                fallbackPriceResponse?.basic?.yearly ??
+                null,
+            },
+            pro: {
+              monthly:
+                response.priceConfig?.amounts?.pro?.monthly ??
+                fallbackPriceResponse?.pro?.monthly ??
+                null,
+              yearly:
+                response.priceConfig?.amounts?.pro?.yearly ??
+                fallbackPriceResponse?.pro?.yearly ??
+                null,
+            },
+          },
+        },
+        discountConfig: {
+          enabled: Boolean(response.discountConfig?.enabled),
+          percentOff: Number(response.discountConfig?.percentOff ?? 0),
+          couponId: response.discountConfig?.couponId ?? null,
+          description: response.discountConfig?.description ?? "",
+          validUntil: response.discountConfig?.validUntil ?? null,
+          updatedAt: response.discountConfig?.updatedAt ?? null,
+          yearlyOffer: response.discountConfig?.yearlyOffer ?? EMPTY_YEARLY_OFFER,
+        },
+      };
+      setData(normalized);
+      setBasicMonthlyPrice(String(normalized.priceConfig?.amounts?.basic?.monthly ?? ""));
+      setBasicYearlyPrice(String(normalized.priceConfig?.amounts?.basic?.yearly ?? ""));
+      setProMonthlyPrice(String(normalized.priceConfig?.amounts?.pro?.monthly ?? ""));
+      setProYearlyPrice(String(normalized.priceConfig?.amounts?.pro?.yearly ?? ""));
+      setDefaultPercent(String(normalized.discountConfig.percentOff ?? 0));
+      setDefaultDescription(normalized.discountConfig.description ?? "");
+      setDefaultValidUntil(normalized.discountConfig.validUntil ? normalized.discountConfig.validUntil.slice(0, 16) : "");
+      setYearlyFreeMonths(String(normalized.discountConfig.yearlyOffer.freeMonths ?? 0));
+      setYearlyDescription(normalized.discountConfig.yearlyOffer.description ?? "");
+      setYearlyValidUntil(normalized.discountConfig.yearlyOffer.validUntil ? normalized.discountConfig.yearlyOffer.validUntil.slice(0, 16) : "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load subscription promos");
     } finally {
@@ -75,6 +189,8 @@ const AdminSubscriptionPromos = () => {
         body: JSON.stringify({
           action: "set_default_discount",
           percentOff: percent,
+          description: defaultDescription.trim(),
+          validUntil: defaultValidUntil || null,
         }),
       });
       await load();
@@ -82,6 +198,67 @@ const AdminSubscriptionPromos = () => {
       setError(err instanceof Error ? err.message : "Failed to save default discount");
     } finally {
       setSavingDiscount(false);
+    }
+  };
+
+  const saveBasePrices = async () => {
+    const basicMonthly = Number(basicMonthlyPrice);
+    const basicYearly = Number(basicYearlyPrice);
+    const proMonthly = Number(proMonthlyPrice);
+    const proYearly = Number(proYearlyPrice);
+    if (
+      !Number.isFinite(basicMonthly) || basicMonthly <= 0 ||
+      !Number.isFinite(basicYearly) || basicYearly <= 0 ||
+      !Number.isFinite(proMonthly) || proMonthly <= 0 ||
+      !Number.isFinite(proYearly) || proYearly <= 0
+    ) {
+      setError("All base prices must be numbers greater than 0.");
+      return;
+    }
+    setSavingPrices(true);
+    setError(null);
+    try {
+      await adminFetch("/api/admin/subscription-promos-action", getToken, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "set_base_prices",
+          basicMonthlyPrice: basicMonthly,
+          basicYearlyPrice: basicYearly,
+          proMonthlyPrice: proMonthly,
+          proYearlyPrice: proYearly,
+        }),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save base prices");
+    } finally {
+      setSavingPrices(false);
+    }
+  };
+
+  const saveYearlyOffer = async () => {
+    const freeMonths = Number(yearlyFreeMonths);
+    if (Number.isNaN(freeMonths) || freeMonths < 0 || freeMonths > 11) {
+      setError("Yearly free months must be between 0 and 11.");
+      return;
+    }
+    setSavingYearly(true);
+    setError(null);
+    try {
+      await adminFetch("/api/admin/subscription-promos-action", getToken, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "set_yearly_offer",
+          freeMonths,
+          description: yearlyDescription.trim(),
+          validUntil: yearlyValidUntil || null,
+        }),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save yearly offer");
+    } finally {
+      setSavingYearly(false);
     }
   };
 
@@ -191,6 +368,83 @@ const AdminSubscriptionPromos = () => {
       )}
 
       <div className="rounded-xl border border-border bg-card p-4">
+        <p className="text-sm font-medium text-foreground">Base subscription prices (Stripe)</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Directly updates plan prices by creating new Stripe prices and switching active IDs.
+        </p>
+        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          <Input
+            type="number"
+            min={0.01}
+            step={0.01}
+            placeholder="Basic monthly"
+            value={basicMonthlyPrice}
+            onChange={(e) => setBasicMonthlyPrice(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingPrices}
+          />
+          <Input
+            type="number"
+            min={0.01}
+            step={0.01}
+            placeholder="Basic yearly"
+            value={basicYearlyPrice}
+            onChange={(e) => setBasicYearlyPrice(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingPrices}
+          />
+          <Input
+            type="number"
+            min={0.01}
+            step={0.01}
+            placeholder="Pro monthly"
+            value={proMonthlyPrice}
+            onChange={(e) => setProMonthlyPrice(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingPrices}
+          />
+          <Input
+            type="number"
+            min={0.01}
+            step={0.01}
+            placeholder="Pro yearly"
+            value={proYearlyPrice}
+            onChange={(e) => setProYearlyPrice(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingPrices}
+          />
+        </div>
+        <div className="mt-3">
+          <Button onClick={() => void saveBasePrices()} disabled={!isSuperAdmin || loading || savingPrices}>
+            Save base prices
+          </Button>
+        </div>
+        {data?.priceConfig && (
+          <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+            <p>
+              Current amounts:
+              {" "}
+              Basic {data.priceConfig.amounts?.basic?.monthly ?? "-"} /month,
+              {" "}
+              {data.priceConfig.amounts?.basic?.yearly ?? "-"} /year ·
+              {" "}
+              Pro {data.priceConfig.amounts?.pro?.monthly ?? "-"} /month,
+              {" "}
+              {data.priceConfig.amounts?.pro?.yearly ?? "-"} /year
+            </p>
+            <p>
+              Active IDs:
+              {" "}
+              basic(m): {data.priceConfig.basic.monthlyPriceId ?? "-"},
+              {" "}
+              basic(y): {data.priceConfig.basic.yearlyPriceId ?? "-"}
+            </p>
+            <p>
+              pro(m): {data.priceConfig.pro.monthlyPriceId ?? "-"},
+              {" "}
+              pro(y): {data.priceConfig.pro.yearlyPriceId ?? "-"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
         <p className="text-sm font-medium text-foreground">Default subscription discount</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Applies automatically at checkout when no promo code is provided. Set `0` to disable.
@@ -206,6 +460,20 @@ const AdminSubscriptionPromos = () => {
             onChange={(e) => setDefaultPercent(e.target.value)}
             disabled={!isSuperAdmin || loading || savingDiscount}
           />
+          <Input
+            className="min-w-[280px] flex-1"
+            placeholder="Description (e.g. First Year -50%)"
+            value={defaultDescription}
+            onChange={(e) => setDefaultDescription(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingDiscount}
+          />
+          <Input
+            className="w-56"
+            type="datetime-local"
+            value={defaultValidUntil}
+            onChange={(e) => setDefaultValidUntil(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingDiscount}
+          />
           <Button onClick={() => void saveDefaultDiscount()} disabled={!isSuperAdmin || loading || savingDiscount}>
             Save default discount
           </Button>
@@ -213,6 +481,51 @@ const AdminSubscriptionPromos = () => {
         {data && (
           <p className="mt-3 text-xs text-muted-foreground">
             Current: {data.discountConfig.enabled ? `${data.discountConfig.percentOff}%` : "Disabled"}
+            {data.discountConfig.description ? ` · ${data.discountConfig.description}` : ""}
+            {data.discountConfig.validUntil ? ` · valid until ${new Date(data.discountConfig.validUntil).toLocaleString()}` : ""}
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="text-sm font-medium text-foreground">Yearly offer</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Configure yearly subscription promotions (example: 3 months free = 25% off first yearly payment).
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Input
+            className="w-40"
+            type="number"
+            min={0}
+            max={11}
+            step={1}
+            value={yearlyFreeMonths}
+            onChange={(e) => setYearlyFreeMonths(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingYearly}
+          />
+          <Input
+            className="min-w-[280px] flex-1"
+            placeholder="Description (e.g. 3 months for free)"
+            value={yearlyDescription}
+            onChange={(e) => setYearlyDescription(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingYearly}
+          />
+          <Input
+            className="w-56"
+            type="datetime-local"
+            value={yearlyValidUntil}
+            onChange={(e) => setYearlyValidUntil(e.target.value)}
+            disabled={!isSuperAdmin || loading || savingYearly}
+          />
+          <Button onClick={() => void saveYearlyOffer()} disabled={!isSuperAdmin || loading || savingYearly}>
+            Save yearly offer
+          </Button>
+        </div>
+        {data && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Current yearly offer: {data.discountConfig.yearlyOffer.enabled ? `${data.discountConfig.yearlyOffer.freeMonths} months free` : "Disabled"}
+            {data.discountConfig.yearlyOffer.description ? ` · ${data.discountConfig.yearlyOffer.description}` : ""}
+            {data.discountConfig.yearlyOffer.validUntil ? ` · valid until ${new Date(data.discountConfig.yearlyOffer.validUntil).toLocaleString()}` : ""}
           </p>
         )}
       </div>

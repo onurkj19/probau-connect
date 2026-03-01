@@ -2,15 +2,38 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type Stripe from "stripe";
 import { getRequestIp, isUuid, logSecurityEvent, parsePagination, requireAdmin, safeJsonParse, sanitizeText } from "../_lib/admin.js";
 import { supabaseAdmin } from "../_lib/supabase.js";
-import { getPlanByPriceId, stripe } from "../_lib/stripe.js";
+import { getPlanByPriceId, PLANS, stripe, type BillingCycle, type PlanType } from "../_lib/stripe.js";
 
 const PLAN_PRICING: Record<string, number> = { basic: 79, pro: 149 };
 const SUBSCRIPTION_DISCOUNT_SETTING_KEY = "subscription_discount_config";
+const SUBSCRIPTION_PRICE_SETTING_KEY = "subscription_price_config";
+
+interface SubscriptionPriceConfig {
+  basic: {
+    monthlyPriceId: string | null;
+    yearlyPriceId: string | null;
+  };
+  pro: {
+    monthlyPriceId: string | null;
+    yearlyPriceId: string | null;
+  };
+  updatedAt: string | null;
+}
 
 interface SubscriptionDiscountConfig {
   enabled: boolean;
   percentOff: number;
   couponId: string | null;
+  description: string;
+  validUntil: string | null;
+  yearlyOffer: {
+    enabled: boolean;
+    freeMonths: number;
+    couponId: string | null;
+    description: string;
+    validUntil: string | null;
+    updatedAt: string | null;
+  };
   updatedAt: string | null;
 }
 
@@ -29,12 +52,74 @@ async function getSubscriptionDiscountConfig(): Promise<SubscriptionDiscountConf
     .eq("key", SUBSCRIPTION_DISCOUNT_SETTING_KEY)
     .maybeSingle();
   const raw = (row?.value as Partial<SubscriptionDiscountConfig> | null) ?? null;
+  const yearlyFreeMonthsRaw = Number(raw?.yearlyOffer?.freeMonths ?? 0);
+  const yearlyFreeMonths = Number.isFinite(yearlyFreeMonthsRaw)
+    ? Math.max(0, Math.min(11, Math.floor(yearlyFreeMonthsRaw)))
+    : 0;
   return {
     enabled: Boolean(raw?.enabled),
     percentOff: Number(raw?.percentOff ?? 0),
     couponId: typeof raw?.couponId === "string" ? raw.couponId : null,
+    description: typeof raw?.description === "string" ? raw.description : "",
+    validUntil: typeof raw?.validUntil === "string" ? raw.validUntil : null,
+    yearlyOffer: {
+      enabled: Boolean(raw?.yearlyOffer?.enabled),
+      freeMonths: yearlyFreeMonths,
+      couponId: typeof raw?.yearlyOffer?.couponId === "string" ? raw.yearlyOffer.couponId : null,
+      description: typeof raw?.yearlyOffer?.description === "string" ? raw.yearlyOffer.description : "",
+      validUntil: typeof raw?.yearlyOffer?.validUntil === "string" ? raw.yearlyOffer.validUntil : null,
+      updatedAt: typeof raw?.yearlyOffer?.updatedAt === "string" ? raw.yearlyOffer.updatedAt : null,
+    },
     updatedAt: typeof raw?.updatedAt === "string" ? raw.updatedAt : null,
   };
+}
+
+async function getSubscriptionPriceConfig(): Promise<SubscriptionPriceConfig> {
+  const { data: row } = await supabaseAdmin
+    .from("settings")
+    .select("value")
+    .eq("key", SUBSCRIPTION_PRICE_SETTING_KEY)
+    .maybeSingle();
+
+  const raw = (row?.value as Partial<SubscriptionPriceConfig> | null) ?? null;
+  return {
+    basic: {
+      monthlyPriceId:
+        typeof raw?.basic?.monthlyPriceId === "string" && raw.basic.monthlyPriceId.trim()
+          ? raw.basic.monthlyPriceId
+          : (PLANS.basic.monthlyPriceId || null),
+      yearlyPriceId:
+        typeof raw?.basic?.yearlyPriceId === "string" && raw.basic.yearlyPriceId.trim()
+          ? raw.basic.yearlyPriceId
+          : (PLANS.basic.yearlyPriceId || null),
+    },
+    pro: {
+      monthlyPriceId:
+        typeof raw?.pro?.monthlyPriceId === "string" && raw.pro.monthlyPriceId.trim()
+          ? raw.pro.monthlyPriceId
+          : (PLANS.pro.monthlyPriceId || null),
+      yearlyPriceId:
+        typeof raw?.pro?.yearlyPriceId === "string" && raw.pro.yearlyPriceId.trim()
+          ? raw.pro.yearlyPriceId
+          : (PLANS.pro.yearlyPriceId || null),
+    },
+    updatedAt: typeof raw?.updatedAt === "string" ? raw.updatedAt : null,
+  };
+}
+
+function resolvePlanTypeByPriceId(priceId: string, priceConfig: SubscriptionPriceConfig): PlanType | null {
+  const knownPlan = getPlanByPriceId(priceId);
+  if (knownPlan?.type) return knownPlan.type;
+  if (
+    priceId === priceConfig.basic.monthlyPriceId ||
+    priceId === priceConfig.basic.yearlyPriceId
+  ) {
+    return "basic";
+  }
+  if (priceId === priceConfig.pro.monthlyPriceId || priceId === priceConfig.pro.yearlyPriceId) {
+    return "pro";
+  }
+  return null;
 }
 
 async function createPromotionCodeDirect(params: {
@@ -284,49 +369,178 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
     if (actor.role !== "super_admin") {
       return res.status(403).json({ error: "Only super admins can permanently delete users" });
     }
-
-    const dependencyChecks = [
-      { table: "projects", column: "owner_id", label: "projects" },
-      { table: "offers", column: "owner_id", label: "offers_as_owner" },
-      { table: "offers", column: "contractor_id", label: "offers_as_contractor" },
-      { table: "chats", column: "owner_id", label: "chats_as_owner" },
-      { table: "chats", column: "contractor_id", label: "chats_as_contractor" },
-      { table: "chat_messages", column: "sender_id", label: "chat_messages" },
-      { table: "bookmarks", column: "user_id", label: "bookmarks" },
-      { table: "notifications", column: "user_id", label: "notifications" },
-      { table: "reports", column: "reporter_id", label: "reports_reporter" },
-      { table: "reports", column: "resolved_by", label: "reports_resolver" },
-      { table: "blocked_users", column: "blocker_id", label: "blocked_users_blocker" },
-      { table: "blocked_users", column: "blocked_id", label: "blocked_users_blocked" },
-      { table: "security_events", column: "actor_id", label: "security_events_actor" },
-      { table: "security_events", column: "target_user_id", label: "security_events_target" },
-    ] as const;
-
     for (const targetId of validTargetIds) {
-      const checks = await Promise.all(
-        dependencyChecks.map(async (check) => {
-          const { count } = await supabaseAdmin
-            .from(check.table)
-            .select("id", { count: "exact", head: true })
-            .eq(check.column, targetId);
-          return { label: check.label, count: count ?? 0 };
-        }),
-      );
-      const blocking = checks.filter((item) => item.count > 0);
-      if (blocking.length > 0) {
-        const details = blocking.map((item) => `${item.label}:${item.count}`).join(", ");
-        return res.status(409).json({
-          error: `Cannot permanently delete user with related records (${details}). Use soft delete first.`,
-        });
-      }
+      try {
+        const { data: ownedProjects, error: ownedProjectsError } = await supabaseAdmin
+          .from("projects")
+          .select("id")
+          .eq("owner_id", targetId);
+        if (ownedProjectsError) throw new Error(`read owned projects failed: ${getErrorMessage(ownedProjectsError)}`);
+        const ownedProjectIds = (ownedProjects ?? []).map((row) => row.id);
 
-      const deleteAuthResult = await supabaseAdmin.auth.admin.deleteUser(targetId);
-      if (deleteAuthResult.error) {
+        let chatIds: string[] = [];
+        if (ownedProjectIds.length > 0) {
+          const { data: projectChats, error: projectChatsError } = await supabaseAdmin
+            .from("chats")
+            .select("id")
+            .in("project_id", ownedProjectIds);
+          if (projectChatsError) throw new Error(`read project chats failed: ${getErrorMessage(projectChatsError)}`);
+          chatIds = (projectChats ?? []).map((row) => row.id);
+        }
+        const { data: userChats, error: userChatsError } = await supabaseAdmin
+          .from("chats")
+          .select("id")
+          .or(`owner_id.eq.${targetId},contractor_id.eq.${targetId}`);
+        if (userChatsError) throw new Error(`read user chats failed: ${getErrorMessage(userChatsError)}`);
+        chatIds = [...new Set([...chatIds, ...(userChats ?? []).map((row) => row.id)])];
+
+        if (chatIds.length > 0) {
+          const { error: deleteChatSettingsByChatError } = await supabaseAdmin
+            .from("chat_user_settings")
+            .delete()
+            .in("chat_id", chatIds);
+          if (deleteChatSettingsByChatError) throw new Error(`delete chat_user_settings by chat failed: ${getErrorMessage(deleteChatSettingsByChatError)}`);
+
+          const { error: deleteChatMessagesByChatError } = await supabaseAdmin
+            .from("chat_messages")
+            .delete()
+            .in("chat_id", chatIds);
+          if (deleteChatMessagesByChatError) throw new Error(`delete chat_messages by chat failed: ${getErrorMessage(deleteChatMessagesByChatError)}`);
+
+          const { error: deleteChatsError } = await supabaseAdmin
+            .from("chats")
+            .delete()
+            .in("id", chatIds);
+          if (deleteChatsError) throw new Error(`delete chats failed: ${getErrorMessage(deleteChatsError)}`);
+        }
+
+        const { error: deleteChatMessagesBySenderError } = await supabaseAdmin
+          .from("chat_messages")
+          .delete()
+          .eq("sender_id", targetId);
+        if (deleteChatMessagesBySenderError) throw new Error(`delete chat_messages by sender failed: ${getErrorMessage(deleteChatMessagesBySenderError)}`);
+
+        const { error: deleteChatSettingsByUserError } = await supabaseAdmin
+          .from("chat_user_settings")
+          .delete()
+          .eq("user_id", targetId);
+        if (deleteChatSettingsByUserError) throw new Error(`delete chat_user_settings by user failed: ${getErrorMessage(deleteChatSettingsByUserError)}`);
+
+        const { error: deleteOffersByOwnerError } = await supabaseAdmin
+          .from("offers")
+          .delete()
+          .eq("owner_id", targetId);
+        if (deleteOffersByOwnerError) throw new Error(`delete offers (owner) failed: ${getErrorMessage(deleteOffersByOwnerError)}`);
+
+        const { error: deleteOffersByContractorError } = await supabaseAdmin
+          .from("offers")
+          .delete()
+          .eq("contractor_id", targetId);
+        if (deleteOffersByContractorError) throw new Error(`delete offers (contractor) failed: ${getErrorMessage(deleteOffersByContractorError)}`);
+
+        if (ownedProjectIds.length > 0) {
+          const { error: deleteOffersByProjectError } = await supabaseAdmin
+            .from("offers")
+            .delete()
+            .in("project_id", ownedProjectIds);
+          if (deleteOffersByProjectError) throw new Error(`delete offers (project) failed: ${getErrorMessage(deleteOffersByProjectError)}`);
+
+          const { error: deleteBookmarksByProjectError } = await supabaseAdmin
+            .from("bookmarks")
+            .delete()
+            .in("project_id", ownedProjectIds);
+          if (deleteBookmarksByProjectError) throw new Error(`delete bookmarks (project) failed: ${getErrorMessage(deleteBookmarksByProjectError)}`);
+        }
+
+        const { error: deleteBookmarksByUserError } = await supabaseAdmin
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", targetId);
+        if (deleteBookmarksByUserError) throw new Error(`delete bookmarks (user) failed: ${getErrorMessage(deleteBookmarksByUserError)}`);
+
+        const { error: deleteNotificationsError } = await supabaseAdmin
+          .from("notifications")
+          .delete()
+          .eq("user_id", targetId);
+        if (deleteNotificationsError) throw new Error(`delete notifications failed: ${getErrorMessage(deleteNotificationsError)}`);
+
+        const { error: deleteReportsByReporterError } = await supabaseAdmin
+          .from("reports")
+          .delete()
+          .eq("reporter_id", targetId);
+        if (deleteReportsByReporterError) throw new Error(`delete reports (reporter) failed: ${getErrorMessage(deleteReportsByReporterError)}`);
+
+        const { error: deleteReportsByResolverError } = await supabaseAdmin
+          .from("reports")
+          .delete()
+          .eq("resolved_by", targetId);
+        if (deleteReportsByResolverError) throw new Error(`delete reports (resolver) failed: ${getErrorMessage(deleteReportsByResolverError)}`);
+
+        const { error: deleteReportsByTargetError } = await supabaseAdmin
+          .from("reports")
+          .delete()
+          .eq("target_type", "user")
+          .eq("target_id", targetId);
+        if (deleteReportsByTargetError) throw new Error(`delete reports (target) failed: ${getErrorMessage(deleteReportsByTargetError)}`);
+
+        const { error: deleteBlockedByBlockerError } = await supabaseAdmin
+          .from("blocked_users")
+          .delete()
+          .eq("blocker_id", targetId);
+        if (deleteBlockedByBlockerError) throw new Error(`delete blocked_users (blocker) failed: ${getErrorMessage(deleteBlockedByBlockerError)}`);
+
+        const { error: deleteBlockedByBlockedError } = await supabaseAdmin
+          .from("blocked_users")
+          .delete()
+          .eq("blocked_id", targetId);
+        if (deleteBlockedByBlockedError) throw new Error(`delete blocked_users (blocked) failed: ${getErrorMessage(deleteBlockedByBlockedError)}`);
+
+        const { error: deleteSecurityByActorError } = await supabaseAdmin
+          .from("security_events")
+          .delete()
+          .eq("actor_id", targetId);
+        if (deleteSecurityByActorError) throw new Error(`delete security_events (actor) failed: ${getErrorMessage(deleteSecurityByActorError)}`);
+
+        const { error: deleteSecurityByTargetError } = await supabaseAdmin
+          .from("security_events")
+          .delete()
+          .eq("target_user_id", targetId);
+        if (deleteSecurityByTargetError) throw new Error(`delete security_events (target) failed: ${getErrorMessage(deleteSecurityByTargetError)}`);
+
+        const { error: clearSettingsUpdatedByError } = await supabaseAdmin
+          .from("settings")
+          .update({ updated_by: null })
+          .eq("updated_by", targetId);
+        if (clearSettingsUpdatedByError) {
+          throw new Error(`clear settings.updated_by failed: ${getErrorMessage(clearSettingsUpdatedByError)}`);
+        }
+
+        const { error: clearFeatureFlagsUpdatedByError } = await supabaseAdmin
+          .from("feature_flags")
+          .update({ updated_by: null })
+          .eq("updated_by", targetId);
+        if (clearFeatureFlagsUpdatedByError) {
+          throw new Error(`clear feature_flags.updated_by failed: ${getErrorMessage(clearFeatureFlagsUpdatedByError)}`);
+        }
+
+        const { error: deleteProjectsError } = await supabaseAdmin
+          .from("projects")
+          .delete()
+          .eq("owner_id", targetId);
+        if (deleteProjectsError) throw new Error(`delete projects failed: ${getErrorMessage(deleteProjectsError)}`);
+
+        const { error: deleteProfileError } = await supabaseAdmin.from("profiles").delete().eq("id", targetId);
+        if (deleteProfileError) throw new Error(`delete profile failed: ${getErrorMessage(deleteProfileError)}`);
+
+        const deleteAuthResult = await supabaseAdmin.auth.admin.deleteUser(targetId);
+        if (deleteAuthResult.error) {
+          throw new Error(`delete auth user failed: ${getErrorMessage(deleteAuthResult.error)}`);
+        }
+      } catch (error) {
         return res.status(400).json({
-          error: `Failed to permanently delete auth user: ${getErrorMessage(deleteAuthResult.error)}`,
+          error: `Permanent delete failed for user ${targetId}: ${getErrorMessage(error)}`,
         });
       }
-      await supabaseAdmin.from("profiles").delete().eq("id", targetId);
     }
   } else if (action === "impersonate") {
     if (validTargetIds.length !== 1) return res.status(400).json({ error: "Impersonation requires a single user target" });
@@ -400,12 +614,13 @@ async function handleSubscriptionsAction(req: VercelRequest, res: VercelResponse
       await supabaseAdmin.from("profiles").update({ subscription_status: "none", plan_type: null, subscription_current_period_end: null }).eq("id", userId);
     } else {
       const maybePriceId = activeSub.items.data[0]?.price?.id;
-      const mappedPlan = maybePriceId ? getPlanByPriceId(maybePriceId) : undefined;
+      const priceConfig = await getSubscriptionPriceConfig();
+      const mappedPlanType = maybePriceId ? resolvePlanTypeByPriceId(maybePriceId, priceConfig) : null;
       const maybeCurrentPeriodEnd = (activeSub as unknown as { current_period_end?: number }).current_period_end;
       const periodEndIso = typeof maybeCurrentPeriodEnd === "number" ? new Date(maybeCurrentPeriodEnd * 1000).toISOString() : null;
       await supabaseAdmin.from("profiles").update({
         subscription_status: activeSub.status === "trialing" ? "active" : (activeSub.status as "active" | "past_due" | "canceled"),
-        plan_type: mappedPlan?.type ?? null,
+        plan_type: mappedPlanType,
         subscription_current_period_end: periodEndIso,
       }).eq("id", userId);
     }
@@ -436,10 +651,31 @@ async function handleSubscriptionsAction(req: VercelRequest, res: VercelResponse
 async function handleSubscriptionPromosList(req: VercelRequest, res: VercelResponse) {
   const actor = await requireAdmin(req, res, ["super_admin"]);
   if (!actor) return;
-  const [discountConfig, activeCodesRes, inactiveCodesRes] = await Promise.all([
+  const [discountConfig, priceConfig, activeCodesRes, inactiveCodesRes] = await Promise.all([
     getSubscriptionDiscountConfig(),
+    getSubscriptionPriceConfig(),
     stripe.promotionCodes.list({ limit: 100, active: true, expand: ["data.coupon", "data.promotion.coupon"] }),
     stripe.promotionCodes.list({ limit: 100, active: false, expand: ["data.coupon", "data.promotion.coupon"] }),
+  ]);
+  const getPriceAmount = async (priceId: string | null): Promise<number | null> => {
+    if (!priceId) return null;
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      if (typeof price.unit_amount === "number") return Number((price.unit_amount / 100).toFixed(2));
+      if (typeof price.unit_amount_decimal === "string") {
+        const parsed = Number(price.unit_amount_decimal);
+        if (Number.isFinite(parsed)) return Number((parsed / 100).toFixed(2));
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+  const [basicMonthlyAmount, basicYearlyAmount, proMonthlyAmount, proYearlyAmount] = await Promise.all([
+    getPriceAmount(priceConfig.basic.monthlyPriceId),
+    getPriceAmount(priceConfig.basic.yearlyPriceId),
+    getPriceAmount(priceConfig.pro.monthlyPriceId),
+    getPriceAmount(priceConfig.pro.yearlyPriceId),
   ]);
   const mergedCodes = [...activeCodesRes.data, ...inactiveCodesRes.data];
   const resolveCoupon = (promo: Stripe.PromotionCode): Stripe.Coupon | null => {
@@ -451,6 +687,13 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
   };
   return res.status(200).json({
     discountConfig,
+    priceConfig: {
+      ...priceConfig,
+      amounts: {
+        basic: { monthly: basicMonthlyAmount, yearly: basicYearlyAmount },
+        pro: { monthly: proMonthlyAmount, yearly: proYearlyAmount },
+      },
+    },
     promoCodes: mergedCodes
       .map((promo) => {
         const coupon = resolveCoupon(promo);
@@ -485,14 +728,21 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
 async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelResponse) {
   const actor = await requireAdmin(req, res, ["super_admin"]);
   if (!actor) return;
-  const { action, percentOff, code, maxRedemptions, expiresAt, promotionCodeId, couponId } = (req.body ?? {}) as {
-    action?: "set_default_discount" | "create_promo_code" | "deactivate_promo_code" | "delete_promo_code";
+  const { action, percentOff, code, maxRedemptions, expiresAt, promotionCodeId, couponId, description, validUntil, freeMonths, basicMonthlyPrice, basicYearlyPrice, proMonthlyPrice, proYearlyPrice } = (req.body ?? {}) as {
+    action?: "set_default_discount" | "set_yearly_offer" | "set_base_prices" | "create_promo_code" | "deactivate_promo_code" | "delete_promo_code";
     percentOff?: number;
     code?: string;
     maxRedemptions?: number | null;
     expiresAt?: string | null;
     promotionCodeId?: string;
     couponId?: string | null;
+    description?: string;
+    validUntil?: string | null;
+    freeMonths?: number;
+    basicMonthlyPrice?: number;
+    basicYearlyPrice?: number;
+    proMonthlyPrice?: number;
+    proYearlyPrice?: number;
   };
   if (!action) return res.status(400).json({ error: "Missing action" });
 
@@ -502,6 +752,15 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
       return res.status(400).json({ error: "percentOff must be between 0 and 100" });
     }
     const roundedPercent = Number(cleanPercent.toFixed(2));
+    const cleanDescription = sanitizeText(description, 120);
+    const cleanValidUntil = typeof validUntil === "string" ? validUntil : null;
+    if (cleanValidUntil) {
+      const parsed = new Date(cleanValidUntil);
+      if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= Date.now()) {
+        return res.status(400).json({ error: "validUntil must be a valid future date" });
+      }
+    }
+    const existingConfig = await getSubscriptionDiscountConfig();
     if (roundedPercent === 0) {
       await supabaseAdmin.from("settings").upsert({
         key: SUBSCRIPTION_DISCOUNT_SETTING_KEY,
@@ -509,6 +768,9 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
           enabled: false,
           percentOff: 0,
           couponId: null,
+          description: cleanDescription,
+          validUntil: cleanValidUntil,
+          yearlyOffer: existingConfig.yearlyOffer,
           updatedAt: new Date().toISOString(),
         },
         updated_by: actor.id,
@@ -534,11 +796,137 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
           enabled: true,
           percentOff: roundedPercent,
           couponId: coupon.id,
+          description: cleanDescription,
+          validUntil: cleanValidUntil,
+          yearlyOffer: existingConfig.yearlyOffer,
           updatedAt: new Date().toISOString(),
         },
         updated_by: actor.id,
       });
     }
+  } else if (action === "set_yearly_offer") {
+    const cleanMonths = Math.floor(Number(freeMonths));
+    if (!Number.isFinite(cleanMonths) || cleanMonths < 0 || cleanMonths > 11) {
+      return res.status(400).json({ error: "freeMonths must be between 0 and 11" });
+    }
+    const cleanDescription = sanitizeText(description, 120);
+    const cleanValidUntil = typeof validUntil === "string" ? validUntil : null;
+    if (cleanValidUntil) {
+      const parsed = new Date(cleanValidUntil);
+      if (Number.isNaN(parsed.getTime()) || parsed.getTime() <= Date.now()) {
+        return res.status(400).json({ error: "validUntil must be a valid future date" });
+      }
+    }
+    const current = await getSubscriptionDiscountConfig();
+    let yearlyCouponId: string | null = current.yearlyOffer.couponId;
+    if (cleanMonths > 0) {
+      const yearlyPercentOff = Number(((cleanMonths / 12) * 100).toFixed(2));
+      try {
+        const yearlyCoupon = await stripe.coupons.create({
+          percent_off: yearlyPercentOff,
+          duration: "once",
+          name: `Yearly offer ${cleanMonths} months free`,
+          metadata: {
+            source: "admin_yearly_subscription_offer",
+            actorId: actor.id,
+            freeMonths: String(cleanMonths),
+          },
+        });
+        yearlyCouponId = yearlyCoupon.id;
+      } catch (error) {
+        return res.status(400).json({ error: `Failed to create yearly offer coupon: ${getErrorMessage(error)}` });
+      }
+    } else {
+      yearlyCouponId = null;
+    }
+    await supabaseAdmin.from("settings").upsert({
+      key: SUBSCRIPTION_DISCOUNT_SETTING_KEY,
+      value: {
+        enabled: current.enabled,
+        percentOff: current.percentOff,
+        couponId: current.couponId,
+        description: current.description,
+        validUntil: current.validUntil,
+        yearlyOffer: {
+          enabled: cleanMonths > 0,
+          freeMonths: cleanMonths,
+          couponId: yearlyCouponId,
+          description: cleanDescription,
+          validUntil: cleanValidUntil,
+          updatedAt: new Date().toISOString(),
+        },
+        updatedAt: current.updatedAt ?? new Date().toISOString(),
+      },
+      updated_by: actor.id,
+    });
+  } else if (action === "set_base_prices") {
+    const parsePrice = (value: unknown): number | null => {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed <= 0) return null;
+      return Number(parsed.toFixed(2));
+    };
+    const newBasicMonthly = parsePrice(basicMonthlyPrice);
+    const newBasicYearly = parsePrice(basicYearlyPrice);
+    const newProMonthly = parsePrice(proMonthlyPrice);
+    const newProYearly = parsePrice(proYearlyPrice);
+    if (!newBasicMonthly || !newBasicYearly || !newProMonthly || !newProYearly) {
+      return res.status(400).json({ error: "All prices must be numbers greater than 0." });
+    }
+
+    const currentPriceConfig = await getSubscriptionPriceConfig();
+    const createStripePrice = async (
+      planType: PlanType,
+      cycle: BillingCycle,
+      amount: number,
+    ): Promise<string> => {
+      const sourcePriceId =
+        cycle === "monthly"
+          ? currentPriceConfig[planType].monthlyPriceId
+          : currentPriceConfig[planType].yearlyPriceId;
+      if (!sourcePriceId) {
+        throw new Error(`Missing source price ID for ${planType} ${cycle}`);
+      }
+      const sourcePrice = await stripe.prices.retrieve(sourcePriceId);
+      const productId =
+        typeof sourcePrice.product === "string"
+          ? sourcePrice.product
+          : sourcePrice.product?.id;
+      if (!productId) throw new Error(`Missing Stripe product for ${planType} ${cycle}`);
+      const newPrice = await stripe.prices.create({
+        currency: (sourcePrice.currency ?? "chf").toLowerCase(),
+        unit_amount: Math.round(amount * 100),
+        recurring: {
+          interval: cycle === "monthly" ? "month" : "year",
+          interval_count: 1,
+        },
+        product: productId,
+        metadata: {
+          source: "admin_set_base_prices",
+          actorId: actor.id,
+          planType,
+          billingCycle: cycle,
+        },
+        nickname: `${planType.toUpperCase()} ${cycle} CHF ${amount}`,
+      });
+      return newPrice.id;
+    };
+
+    const [basicMonthlyId, basicYearlyId, proMonthlyId, proYearlyId] = await Promise.all([
+      createStripePrice("basic", "monthly", newBasicMonthly),
+      createStripePrice("basic", "yearly", newBasicYearly),
+      createStripePrice("pro", "monthly", newProMonthly),
+      createStripePrice("pro", "yearly", newProYearly),
+    ]);
+
+    await supabaseAdmin.from("settings").upsert({
+      key: SUBSCRIPTION_PRICE_SETTING_KEY,
+      value: {
+        basic: { monthlyPriceId: basicMonthlyId, yearlyPriceId: basicYearlyId },
+        pro: { monthlyPriceId: proMonthlyId, yearlyPriceId: proYearlyId },
+        updatedAt: new Date().toISOString(),
+      },
+      updated_by: actor.id,
+    });
   } else if (action === "create_promo_code") {
     const cleanCode = sanitizeText(code, 32).toUpperCase();
     const cleanPercent = Number(percentOff);
@@ -617,6 +1005,13 @@ async function handleSubscriptionPromosAction(req: VercelRequest, res: VercelRes
     userAgent: String(req.headers["user-agent"] ?? ""),
     details: {
       percentOff: typeof percentOff === "number" ? Number(percentOff.toFixed(2)) : null,
+      freeMonths: typeof freeMonths === "number" ? Math.floor(freeMonths) : null,
+      basicMonthlyPrice: typeof basicMonthlyPrice === "number" ? Number(basicMonthlyPrice.toFixed(2)) : null,
+      basicYearlyPrice: typeof basicYearlyPrice === "number" ? Number(basicYearlyPrice.toFixed(2)) : null,
+      proMonthlyPrice: typeof proMonthlyPrice === "number" ? Number(proMonthlyPrice.toFixed(2)) : null,
+      proYearlyPrice: typeof proYearlyPrice === "number" ? Number(proYearlyPrice.toFixed(2)) : null,
+      description: sanitizeText(description, 120) || null,
+      validUntil: typeof validUntil === "string" ? validUntil : null,
       code: sanitizeText(code, 32).toUpperCase() || null,
       promotionCodeId: sanitizeText(promotionCodeId, 120) || null,
       couponId: sanitizeText(couponId, 120) || null,

@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { useAuth, type UserRole } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { trackEvent } from "@/lib/analytics";
+import { CheckCircle2, Loader2 } from "lucide-react";
+
+const STRONG_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
 
 const Register = () => {
   const { t } = useTranslation();
@@ -17,16 +20,33 @@ const Register = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [vatNumber, setVatNumber] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [role, setRole] = useState<UserRole>("project_owner");
   const [error, setError] = useState<string | null>(null);
+  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setError(t("auth.password_strength_error"));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(t("auth.password_mismatch"));
+      return;
+    }
+    if (!acceptedTerms) {
+      setError(t("auth.terms_accept_required"));
+      return;
+    }
+    setSubmitState("submitting");
     trackEvent("register_submit", { role });
     try {
       await register({
@@ -34,14 +54,19 @@ const Register = () => {
         password,
         name,
         companyName,
+        vatNumber,
         profileTitle,
-        avatarUrl,
+        avatarFile,
         role,
       });
       trackEvent("register_success", { role });
-      navigate(`/${lang}/dashboard`);
+      setSubmitState("success");
+      setTimeout(() => {
+        navigate(`/${lang}/login`);
+      }, 900);
     } catch (err) {
       trackEvent("register_failure", { role });
+      setSubmitState("idle");
       setError(err instanceof Error ? err.message : "Registration failed");
     }
   };
@@ -68,6 +93,15 @@ const Register = () => {
               <Input id="company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="vat-number">{t("auth.vat_number")}</Label>
+              <Input
+                id="vat-number"
+                value={vatNumber}
+                onChange={(e) => setVatNumber(e.target.value)}
+                placeholder={t("auth.vat_number_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="profile-title">{t("auth.profile_title")}</Label>
               <Input
                 id="profile-title"
@@ -77,15 +111,15 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="avatar-url">{t("auth.profile_photo_url")}</Label>
+              <Label htmlFor="avatar-file">{t("auth.profile_photo_upload")}</Label>
               <Input
-                id="avatar-url"
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://..."
+                id="avatar-file"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
               />
               <p className="text-xs text-muted-foreground">{t("auth.profile_photo_hint")}</p>
+              {avatarFile && <p className="text-xs text-foreground">{avatarFile.name}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")}</Label>
@@ -94,6 +128,17 @@ const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="password">{t("auth.password")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <p className="text-xs text-muted-foreground">{t("auth.password_requirements")}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">{t("auth.confirm_password")}</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label>{t("auth.role_select")}</Label>
@@ -116,8 +161,36 @@ const Register = () => {
                 </Button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "..." : t("auth.register_button")}
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-input"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                required
+              />
+              <span>
+                {t("auth.terms_accept_label")}{" "}
+                <Link to={`/${lang}/terms`} className="font-medium text-primary hover:underline">
+                  {t("nav.terms")}
+                </Link>
+                .
+              </span>
+            </label>
+            <Button type="submit" className="w-full gap-2" disabled={isLoading || submitState !== "idle"}>
+              {submitState === "submitting" || isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("auth.processing")}
+                </>
+              ) : submitState === "success" ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 animate-bounce" />
+                  {t("auth.done")}
+                </>
+              ) : (
+                t("auth.register_button")
+              )}
             </Button>
           </form>
 

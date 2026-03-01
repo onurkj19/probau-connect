@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell, CheckCheck, Inbox, MessageCircle, FolderOpen } from "lucide-react";
+import { Bell, CheckCheck, Inbox, MessageCircle, FolderOpen, Trash2, MoreHorizontal } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NotificationRow {
   id: string;
@@ -26,6 +34,9 @@ const DashboardNotifications = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [markingAll, setMarkingAll] = useState(false);
   const [markingSelected, setMarkingSelected] = useState(false);
+  const [deletingSelected, setDeletingSelected] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deletingOneId, setDeletingOneId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -104,6 +115,51 @@ const DashboardNotifications = () => {
     setMarkingSelected(false);
   };
 
+  const deleteSelected = async () => {
+    if (!user || selectedIds.length === 0) return;
+    setDeletingSelected(true);
+    const ids = [...selectedIds];
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", user.id)
+      .in("id", ids);
+    if (!error) {
+      setRows((prev) => prev.filter((row) => !ids.includes(row.id)));
+      setSelectedIds([]);
+    }
+    setDeletingSelected(false);
+  };
+
+  const deleteAll = async () => {
+    if (!user || rows.length === 0) return;
+    setDeletingAll(true);
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", user.id);
+    if (!error) {
+      setRows([]);
+      setSelectedIds([]);
+    }
+    setDeletingAll(false);
+  };
+
+  const deleteOne = async (notificationId: string) => {
+    if (!user) return;
+    setDeletingOneId(notificationId);
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("id", notificationId);
+    if (!error) {
+      setRows((prev) => prev.filter((row) => row.id !== notificationId));
+      setSelectedIds((prev) => prev.filter((id) => id !== notificationId));
+    }
+    setDeletingOneId(null);
+  };
+
   return (
     <div>
       <div className="rounded-xl border border-border bg-card shadow-sm">
@@ -116,23 +172,60 @@ const DashboardNotifications = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void markSelectedRead()}
-              disabled={markingSelected || selectedIds.length === 0}
-            >
-              <CheckCheck className="mr-1 h-4 w-4" />
-              Mark selected read
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void markAllRead()}
-              disabled={markingAll || rows.every((row) => row.is_read)}
-            >
-              {t("dashboard.mark_all_read")}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Notification actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={markingSelected || selectedIds.length === 0}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    void markSelectedRead();
+                  }}
+                >
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                  Mark selected read
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={markingAll || rows.every((row) => row.is_read)}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    void markAllRead();
+                  }}
+                >
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                  {t("dashboard.mark_all_read")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={deletingSelected || selectedIds.length === 0}
+                  className="text-destructive focus:text-destructive"
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    void deleteSelected();
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("dashboard.delete_selected")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={deletingAll || rows.length === 0}
+                  className="text-destructive focus:text-destructive"
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    void deleteAll();
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("dashboard.delete_all")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -197,6 +290,26 @@ const DashboardNotifications = () => {
                 </div>
                 {item.body && <p className="mt-0.5 truncate text-sm text-muted-foreground">{item.body}</p>}
               </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className={`h-4 w-4 ${deletingOneId === item.id ? "animate-pulse" : ""}`} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    disabled={deletingOneId === item.id}
+                    onSelect={(event) => {
+                      event.preventDefault();
+                      void deleteOne(item.id);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t("dashboard.delete_notification")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ))}
         </div>

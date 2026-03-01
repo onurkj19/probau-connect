@@ -3,7 +3,16 @@ import { adminFetch } from "@/lib/admin-api";
 import { useAuth, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { downloadCsv } from "@/lib/csv";
+import { Check, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 
 interface AdminUserRow {
   id: string;
@@ -44,6 +53,7 @@ type UserActionPayload = {
   planType?: "basic" | "pro" | null;
   subscriptionStatus?: "active" | "canceled" | "past_due" | "none";
 };
+type UserActionType = UserActionPayload["action"];
 
 const roleOptions: UserRole[] = ["super_admin", "admin", "moderator", "project_owner", "contractor"];
 
@@ -55,9 +65,10 @@ const AdminUsers = () => {
   const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem("admin_users_status") ?? "");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeActionId, setActiveActionId] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<{ id: string; action: UserActionType } | null>(null);
   const [roleDraft, setRoleDraft] = useState<Record<string, UserRole>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [actionSuccess, setActionSuccess] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,13 +105,24 @@ const AdminUsers = () => {
   }, [roleFilter, search, statusFilter]);
 
   const runAction = async (payload: UserActionPayload & { userIds?: string[] }) => {
-    setActiveActionId(payload.userId ?? "bulk");
+    setActiveAction({ id: payload.userId ?? "bulk", action: payload.action });
     setError(null);
     try {
       await adminFetch<{ success: boolean }>("/api/admin/users-action", getToken, {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      const key = payload.userId ? `${payload.userId}:${payload.action}` : null;
+      if (key) {
+        setActionSuccess((prev) => ({ ...prev, [key]: Date.now() }));
+        setTimeout(() => {
+          setActionSuccess((prev) => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+        }, 1600);
+      }
       await load();
       if (payload.action === "impersonate") {
         localStorage.setItem("admin_impersonation_target", payload.userId);
@@ -108,7 +130,7 @@ const AdminUsers = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to execute action");
     } finally {
-      setActiveActionId(null);
+      setActiveAction(null);
     }
   };
 
@@ -120,6 +142,37 @@ const AdminUsers = () => {
         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
         : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
     }`;
+  const isActionRunning = (userId: string, action: UserActionType) =>
+    activeAction?.id === userId && activeAction.action === action;
+  const isActionDone = (userId: string, action: UserActionType) =>
+    Boolean(actionSuccess[`${userId}:${action}`]);
+  const isRowBusy = (userId: string) => activeAction?.id === userId;
+
+  const actionContent = (
+    userId: string,
+    action: UserActionType,
+    idleLabel: string,
+    doneLabel = "Done",
+    doneIcon: "check" | "trash" = "check",
+  ) => {
+    if (isActionRunning(userId, action)) {
+      return (
+        <>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Working...
+        </>
+      );
+    }
+    if (isActionDone(userId, action)) {
+      return (
+        <>
+          {doneIcon === "trash" ? <Trash2 className="h-3.5 w-3.5 animate-bounce" /> : <Check className="h-3.5 w-3.5 animate-bounce" />}
+          {doneLabel}
+        </>
+      );
+    }
+    return idleLabel;
+  };
 
   return (
     <div className="space-y-4">
@@ -200,6 +253,20 @@ const AdminUsers = () => {
           }}
         >
           Unban selected
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={selectedCount === 0}
+          onClick={async () => {
+            const confirmed = window.confirm(
+              `This will permanently delete ${selectedCount} selected users and all related records. Continue?`,
+            );
+            if (!confirmed) return;
+            await runAction({ action: "hard_delete", userIds: selectedIds, userId: selectedIds[0] });
+            setSelectedIds([]);
+          }}
+        >
+          Delete permanently selected ({selectedCount})
         </Button>
       </div>
 
@@ -282,12 +349,12 @@ const AdminUsers = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={activeActionId === row.id || isSuperAdmin}
+                        disabled={activeAction?.id === row.id || isSuperAdmin}
                         onClick={() => {
                           void runAction({ action: "change_role", userId: row.id, role: roleDraft[row.id] ?? row.role });
                         }}
                       >
-                        {isSuperAdmin ? "Locked" : "Apply"}
+                        {isSuperAdmin ? "Locked" : actionContent(row.id, "change_role", "Apply", "Saved")}
                       </Button>
                     </div>
                   </td>
@@ -306,70 +373,84 @@ const AdminUsers = () => {
                   <td className="px-3 py-2">{row.offersCount}</td>
                   <td className="px-3 py-2">{row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : "-"}</td>
                   <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={activeActionId === row.id || isSuperAdmin}
-                        onClick={() => void runAction({ action: row.isVerified ? "unverify" : "verify", userId: row.id })}
-                      >
-                        {row.isVerified ? "Unverify" : "Verify"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={row.isBanned ? "default" : "destructive"}
-                        disabled={activeActionId === row.id || isSuperAdmin}
-                        onClick={() => void runAction({ action: row.isBanned ? "unban" : "ban", userId: row.id })}
-                      >
-                        {row.isBanned ? "Unban" : "Ban"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={activeActionId === row.id || isSuperAdmin}
-                        onClick={() =>
-                          void runAction({
-                            action: "set_subscription",
-                            userId: row.id,
-                            planType: row.planType === "pro" ? "basic" : "pro",
-                            subscriptionStatus: "active",
-                          })
-                        }
-                      >
-                        {row.planType === "pro" ? "Downgrade" : "Upgrade"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={activeActionId === row.id || Boolean(row.deletedAt) || isSuperAdmin}
-                        onClick={() => void runAction({ action: "soft_delete", userId: row.id })}
-                      >
-                        Soft delete
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={activeActionId === row.id || isSuperAdmin}
-                        onClick={() => {
-                          const confirmed = window.confirm(
-                            "This will permanently delete the user if no related records exist. Continue?",
-                          );
-                          if (!confirmed) return;
-                          void runAction({ action: "hard_delete", userId: row.id });
-                        }}
-                      >
-                        Delete permanently
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={activeActionId === row.id || isSuperAdmin}
-                        onClick={() => void runAction({ action: "impersonate", userId: row.id })}
-                      >
-                        Impersonate
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="outline" className="h-8 w-8" disabled={isSuperAdmin}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>User actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || isSuperAdmin}
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void runAction({ action: row.isVerified ? "unverify" : "verify", userId: row.id });
+                          }}
+                        >
+                          {actionContent(row.id, row.isVerified ? "unverify" : "verify", row.isVerified ? "Unverify" : "Verify", "Updated")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || isSuperAdmin}
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void runAction({ action: row.isBanned ? "unban" : "ban", userId: row.id });
+                          }}
+                        >
+                          {actionContent(row.id, row.isBanned ? "unban" : "ban", row.isBanned ? "Unban" : "Ban", "Applied")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || isSuperAdmin}
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void runAction({
+                              action: "set_subscription",
+                              userId: row.id,
+                              planType: row.planType === "pro" ? "basic" : "pro",
+                              subscriptionStatus: "active",
+                            });
+                          }}
+                        >
+                          {actionContent(row.id, "set_subscription", row.planType === "pro" ? "Downgrade" : "Upgrade", "Updated")}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || Boolean(row.deletedAt) || isSuperAdmin}
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void runAction({ action: "soft_delete", userId: row.id });
+                          }}
+                        >
+                          {actionContent(row.id, "soft_delete", "Soft delete", "Moved to trash", "trash")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || isSuperAdmin}
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            const confirmed = window.confirm(
+                              "This will permanently delete the user and all related records. Continue?",
+                            );
+                            if (!confirmed) return;
+                            void runAction({ action: "hard_delete", userId: row.id });
+                          }}
+                        >
+                          {actionContent(row.id, "hard_delete", "Delete permanently", "Deleted", "trash")}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={isRowBusy(row.id) || isSuperAdmin}
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void runAction({ action: "impersonate", userId: row.id });
+                          }}
+                        >
+                          {actionContent(row.id, "impersonate", "Impersonate", "Ready")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
                   );

@@ -10,12 +10,14 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export type PlanType = "basic" | "pro";
+export type BillingCycle = "monthly" | "yearly";
 
 export interface PlanConfig {
   type: PlanType;
-  priceId: string;
+  monthlyPriceId: string;
+  yearlyPriceId: string;
   monthlyOfferLimit: number | null; // null = unlimited
-  priceChf: number;
+  monthlyPriceChf: number;
 }
 
 /**
@@ -29,18 +31,27 @@ export interface PlanConfig {
 export const PLANS: Record<PlanType, PlanConfig> = {
   basic: {
     type: "basic",
-    priceId: process.env.STRIPE_PRICE_BASIC || "",
+    monthlyPriceId: process.env.STRIPE_PRICE_BASIC || "",
+    yearlyPriceId: process.env.STRIPE_PRICE_BASIC_YEARLY || "",
     monthlyOfferLimit: 10,
-    priceChf: 79,
+    monthlyPriceChf: 79,
   },
   pro: {
     type: "pro",
-    priceId: process.env.STRIPE_PRICE_PRO || "",
+    monthlyPriceId: process.env.STRIPE_PRICE_PRO || "",
+    yearlyPriceId: process.env.STRIPE_PRICE_PRO_YEARLY || "",
     monthlyOfferLimit: null,
-    priceChf: 149,
+    monthlyPriceChf: 149,
   },
 };
 
+export function getPlanPriceId(planType: PlanType, cycle: BillingCycle): string {
+  const plan = PLANS[planType];
+  return cycle === "yearly" ? plan.yearlyPriceId : plan.monthlyPriceId;
+}
+
 export function getPlanByPriceId(priceId: string): PlanConfig | undefined {
-  return Object.values(PLANS).find((p) => p.priceId === priceId);
+  return Object.values(PLANS).find(
+    (p) => p.monthlyPriceId === priceId || p.yearlyPriceId === priceId,
+  );
 }

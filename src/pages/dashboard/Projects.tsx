@@ -50,6 +50,26 @@ const getDefaultDeadlineValue = () => {
   return toDateTimeLocalValue(next);
 };
 
+const VAT_PREFIX = "VAT/MWST:";
+
+const splitVatLine = (text: string) => {
+  const lines = text.split("\n");
+  const vatLineIndex = lines.findIndex((line) => line.trim().toUpperCase().startsWith(VAT_PREFIX));
+  if (vatLineIndex === -1) {
+    return { content: text, vatNumber: "" };
+  }
+  const vatNumber = lines[vatLineIndex].slice(lines[vatLineIndex].indexOf(":") + 1).trim();
+  const withoutVat = lines.filter((_, index) => index !== vatLineIndex).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return { content: withoutVat, vatNumber };
+};
+
+const appendVatLine = (text: string, vatNumber: string) => {
+  const base = splitVatLine(text).content.trim();
+  const cleanVat = vatNumber.trim();
+  if (!cleanVat) return base;
+  return `${base}\n\n${VAT_PREFIX} ${cleanVat}`;
+};
+
 const mergeFiles = (existing: File[], incoming: File[]) => {
   const seen = new Set(existing.map((file) => `${file.name}::${file.size}::${file.lastModified}`));
   const merged = [...existing];
@@ -257,7 +277,7 @@ const DashboardProjects = () => {
         category,
         custom_category: isCustomCategory ? customCategory.trim() : null,
         project_type: isCustomCategory ? customCategory.trim() : category,
-        service: service.trim(),
+        service: appendVatLine(service.trim(), user.vatNumber),
         deadline: new Date(deadlineAt).toISOString(),
         status: "active" as const,
         attachments: attachmentUrls,
@@ -331,7 +351,8 @@ const DashboardProjects = () => {
       setCategory("other");
       setCustomCategory(project.custom_category || project.category || "");
     }
-    setService(project.service);
+    const projectDetails = splitVatLine(project.service);
+    setService(projectDetails.content);
     setDeadlineAt(toDateTimeLocalValue(new Date(project.deadline)));
     setExistingAttachmentUrls(project.attachments ?? []);
     setFiles([]);
@@ -398,6 +419,7 @@ const DashboardProjects = () => {
         attachmentUrls.push(data.publicUrl);
       }
 
+      const composedOfferMessage = appendVatLine(offerMessage.trim(), user.vatNumber);
       const { data: offerRow, error: offerError } = await supabase
         .from("offers")
         .insert({
@@ -405,7 +427,7 @@ const DashboardProjects = () => {
           contractor_id: user.id,
           owner_id: selectedProject.owner_id,
           price_chf: parsedPrice,
-          message: offerMessage.trim(),
+          message: composedOfferMessage,
           attachments: attachmentUrls,
           status: "submitted",
         })
@@ -445,7 +467,7 @@ const DashboardProjects = () => {
         .insert({
           chat_id: chatId,
           sender_id: user.id,
-          message: `Offer submitted: CHF ${parsedPrice.toFixed(2)}\n\n${offerMessage.trim()}`,
+          message: `Offer submitted: CHF ${parsedPrice.toFixed(2)}\n\n${composedOfferMessage}`,
           attachments: attachmentUrls,
         });
       if (messageError) throw messageError;
@@ -549,6 +571,9 @@ const DashboardProjects = () => {
                 required
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.vat_number")}: {user?.vatNumber || "-"}
+            </p>
 
             <div className="grid gap-2">
               <Label htmlFor="project-deadline">{t("dashboard.project_deadline")}</Label>
@@ -711,6 +736,9 @@ const DashboardProjects = () => {
               <Label>{t("auth.email")}</Label>
               <Input value={user?.email || ""} disabled />
             </div>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.vat_number")}: {user?.vatNumber || "-"}
+            </p>
             <div className="grid gap-2">
               <Label>{t("dashboard.offer_price_chf")}</Label>
               <Input
