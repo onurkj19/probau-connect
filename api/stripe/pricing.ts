@@ -1,8 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { stripe, getPlanPriceId } from "../_lib/stripe.js";
+import { stripe } from "../_lib/stripe.js";
 
 type Plan = "basic" | "pro";
 type Cycle = "monthly" | "yearly";
+
+const PRICE_IDS: Record<Plan, Record<Cycle, string>> = {
+  basic: {
+    monthly: process.env.STRIPE_PRICE_BASIC || "",
+    yearly: process.env.STRIPE_PRICE_BASIC_YEARLY || "",
+  },
+  pro: {
+    monthly: process.env.STRIPE_PRICE_PRO || "",
+    yearly: process.env.STRIPE_PRICE_PRO_YEARLY || "",
+  },
+};
 
 function toChfAmount(price: { unit_amount: number | null; unit_amount_decimal: string | null }): number | null {
   if (typeof price.unit_amount === "number") {
@@ -31,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     for (const plan of plans) {
       for (const cycle of cycles) {
-        const priceId = getPlanPriceId(plan, cycle);
+        const priceId = PRICE_IDS[plan][cycle];
         if (!priceId) continue;
         try {
           const stripePrice = await stripe.prices.retrieve(priceId);
