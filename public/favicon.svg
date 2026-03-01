@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ProjektMarkt">
-  <rect width="64" height="64" rx="12" fill="#0f1c4d"/>
-  <path d="M10 31.5 32 13l22 18.5" fill="none" stroke="#38d4c1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M16 37h32v13H16z" fill="#2f5ce7" opacity="0.95"/>
-  <text x="50%" y="46.5" text-anchor="middle" dominant-baseline="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#ffffff">PM</text>
-</svg>
