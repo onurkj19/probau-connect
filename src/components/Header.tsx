@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useChangeLocale, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/lib/i18n-routing";
 import { useAuth } from "@/lib/auth";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const languages: { code: Locale; label: string; flag: string }[] = [
   { code: "de", label: "Deutsch", flag: "🇩🇪" },
@@ -33,14 +34,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
-        <Link to={`/${lang}`} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-accent">
-            <span className="font-display text-sm font-bold text-accent-foreground">P</span>
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">
-            Pro<span className="text-accent">Bau</span>.ch
-          </span>
-        </Link>
+        <BrandLogo to={`/${lang}`} imageClassName="h-9" />
 
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (

@@ -77,7 +77,7 @@ const Projects = () => {
             projects.map((p) => (
               <ProjectCard
                 key={p.id}
-                company={p.owner_company_name || "ProBau.ch"}
+                company={p.owner_company_name || "ProjektMarkt"}
                 description={p.title}
                 location={p.address}
                 deadline={p.deadline}

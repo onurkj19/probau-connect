@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VerificationBadge } from "@/components/common/VerificationBadge";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function DashboardSidebar() {
   const { t } = useTranslation();
@@ -53,14 +54,7 @@ export function DashboardSidebar() {
   const navContent = (
     <>
       <div className="flex items-center gap-2 border-b border-border px-4 py-5">
-        <Link to={`/${lang}`} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-accent">
-            <span className="font-display text-sm font-bold text-accent-foreground">P</span>
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">
-            Pro<span className="text-accent">Bau</span>.ch
-          </span>
-        </Link>
+        <BrandLogo to={`/${lang}`} imageClassName="h-9" />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">

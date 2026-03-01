@@ -25,7 +25,7 @@
     "trending_view_all": "Vedi tutti i progetti"
   },
   "features": {
-    "title": "Perché ProBau.ch?",
+    "title": "Perché ProjektMarkt?",
     "subtitle": "La piattaforma leader per le gare d'appalto in Svizzera",
     "free_posting": {
       "title": "Pubblica gratis",
@@ -99,9 +99,9 @@
   },
   "impressum": {
     "title": "Impressum",
-    "company": "Azienda: ProBau.ch AG",
+    "company": "Azienda: ProjektMarkt AG",
     "address": "Indirizzo: Musterstrasse 1, 8001 Zürich, Svizzera",
-    "email": "E-mail: info@probau.ch",
+    "email": "E-mail: info@projektmarkt.ch",
     "phone": "Telefono: +41 44 000 00 00",
     "uid": "UID: CHE-000.000.000",
     "responsible": "Responsabile del contenuto",
@@ -114,25 +114,25 @@
     "intro": "La protezione dei vostri dati personali è molto importante per noi.",
     "dsg": "Questa informativa è basata sulla legge svizzera sulla protezione dei dati (LPD) e sul GDPR.",
     "controller_title": "1. Titolare del trattamento",
-    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "controller_text": "ProjektMarkt AG, Musterstrasse 1, 8001 Zürich",
     "data_title": "2. Dati raccolti",
     "data_text": "Raccogliamo dati personali solo nell'ambito dell'utilizzo della piattaforma: nome, e-mail, telefono, dati aziendali.",
     "cookies_title": "3. Cookie",
     "cookies_text": "Il nostro sito utilizza cookie tecnicamente necessari. È possibile disattivare i cookie nel browser.",
     "rights_title": "4. I vostri diritti",
-    "rights_text": "Avete il diritto di accesso, rettifica e cancellazione dei vostri dati. Contattateci a info@probau.ch."
+    "rights_text": "Avete il diritto di accesso, rettifica e cancellazione dei vostri dati. Contattateci a info@projektmarkt.ch."
   },
   "terms": {
     "title": "Condizioni generali",
-    "intro": "Utilizzando la piattaforma ProBau.ch, accetti queste condizioni generali.",
+    "intro": "Utilizzando la piattaforma ProjektMarkt, accetti queste condizioni generali.",
     "scope_title": "1. Ambito di applicazione",
-    "scope_text": "Le presenti condizioni si applicano a tutti gli utenti della piattaforma ProBau.ch, compresi committenti e imprenditori.",
+    "scope_text": "Le presenti condizioni si applicano a tutti gli utenti della piattaforma ProjektMarkt, compresi committenti e imprenditori.",
     "registration_title": "2. Registrazione",
     "registration_text": "L'utilizzo della piattaforma richiede una registrazione con dati veritieri.",
     "services_title": "3. Servizi",
     "services_text": "I committenti possono pubblicare progetti gratuitamente. Gli imprenditori necessitano di un abbonamento a pagamento.",
     "liability_title": "4. Responsabilità",
-    "liability_text": "ProBau.ch non è responsabile per il contenuto dei progetti e delle offerte pubblicati dagli utenti.",
+    "liability_text": "ProjektMarkt non è responsabile per il contenuto dei progetti e delle offerte pubblicati dagli utenti.",
     "law_title": "5. Diritto applicabile",
     "law_text": "Si applica il diritto svizzero. Il foro competente è Zurigo."
   },

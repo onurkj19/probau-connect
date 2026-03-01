@@ -25,7 +25,7 @@
     "trending_view_all": "Alle Projekte ansehen"
   },
   "features": {
-    "title": "Warum ProBau.ch?",
+    "title": "Warum ProjektMarkt?",
     "subtitle": "Die führende Plattform für Bauausschreibungen in der Schweiz",
     "free_posting": {
       "title": "Kostenlos ausschreiben",
@@ -99,9 +99,9 @@
   },
   "impressum": {
     "title": "Impressum",
-    "company": "Firmenname: ProBau.ch AG",
+    "company": "Firmenname: ProjektMarkt AG",
     "address": "Adresse: Musterstrasse 1, 8001 Zürich, Schweiz",
-    "email": "E-Mail: info@probau.ch",
+    "email": "E-Mail: info@projektmarkt.ch",
     "phone": "Telefon: +41 44 000 00 00",
     "uid": "UID: CHE-000.000.000",
     "responsible": "Verantwortlich für den Inhalt",
@@ -114,25 +114,25 @@
     "intro": "Der Schutz Ihrer persönlichen Daten ist uns sehr wichtig.",
     "dsg": "Diese Datenschutzerklärung basiert auf dem Schweizer Datenschutzgesetz (DSG) und der DSGVO.",
     "controller_title": "1. Verantwortliche Stelle",
-    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "controller_text": "ProjektMarkt AG, Musterstrasse 1, 8001 Zürich",
     "data_title": "2. Erhobene Daten",
     "data_text": "Wir erheben personenbezogene Daten nur im Rahmen der Nutzung unserer Plattform: Name, E-Mail, Telefon, Firmenangaben.",
     "cookies_title": "3. Cookies",
     "cookies_text": "Unsere Webseite verwendet technisch notwendige Cookies. Sie können Cookies in Ihrem Browser deaktivieren.",
     "rights_title": "4. Ihre Rechte",
-    "rights_text": "Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer Daten. Kontaktieren Sie uns unter info@probau.ch."
+    "rights_text": "Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer Daten. Kontaktieren Sie uns unter info@projektmarkt.ch."
   },
   "terms": {
     "title": "Allgemeine Geschäftsbedingungen (AGB)",
-    "intro": "Durch die Nutzung der Plattform ProBau.ch erklären Sie sich mit diesen AGB einverstanden.",
+    "intro": "Durch die Nutzung der Plattform ProjektMarkt erklären Sie sich mit diesen AGB einverstanden.",
     "scope_title": "1. Geltungsbereich",
-    "scope_text": "Diese AGB gelten für alle Nutzer der Plattform ProBau.ch, einschliesslich Arbeitgeber und Unternehmer.",
+    "scope_text": "Diese AGB gelten für alle Nutzer der Plattform ProjektMarkt, einschliesslich Arbeitgeber und Unternehmer.",
     "registration_title": "2. Registrierung",
     "registration_text": "Die Nutzung der Plattform erfordert eine Registrierung mit wahrheitsgemässen Angaben.",
     "services_title": "3. Leistungen",
     "services_text": "Arbeitgeber können kostenlos Projekte ausschreiben. Unternehmer benötigen ein kostenpflichtiges Abonnement.",
     "liability_title": "4. Haftung",
-    "liability_text": "ProBau.ch haftet nicht für die Inhalte der von Nutzern eingestellten Projekte und Offerten.",
+    "liability_text": "ProjektMarkt haftet nicht für die Inhalte der von Nutzern eingestellten Projekte und Offerten.",
     "law_title": "5. Anwendbares Recht",
     "law_text": "Es gilt Schweizer Recht. Gerichtsstand ist Zürich."
   },

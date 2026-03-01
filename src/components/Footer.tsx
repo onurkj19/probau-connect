@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -13,14 +14,7 @@ const Footer = () => {
       <div className="container py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-1">
-            <Link to={`/${lang}`} className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded bg-accent">
-                <span className="font-display text-sm font-bold text-accent-foreground">P</span>
-              </div>
-              <span className="font-display text-lg font-bold">
-                Pro<span className="text-accent">Bau</span>.ch
-              </span>
-            </Link>
+            <BrandLogo to={`/${lang}`} imageClassName="h-9" textClassName="text-primary-foreground" />
             <p className="mt-3 text-sm text-primary-foreground/70">
               {t("footer.description")}
             </p>
@@ -51,14 +45,14 @@ const Footer = () => {
             <h4 className="mb-3 font-display text-sm font-semibold">{t("footer.contact")}</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/70">
               <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t("footer.location")}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> info@probau.ch</li>
+              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> info@projektmarkt.ch</li>
               <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> +41 44 000 00 00</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-8 border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/50">
-          &copy; {new Date().getFullYear()} ProBau.ch AG. {t("footer.rights")}
+          &copy; {new Date().getFullYear()} ProjektMarkt AG. {t("footer.rights")}
         </div>
       </div>
     </footer>

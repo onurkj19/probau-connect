@@ -25,7 +25,7 @@
     "trending_view_all": "View all projects"
   },
   "features": {
-    "title": "Why ProBau.ch?",
+    "title": "Why ProjektMarkt?",
     "subtitle": "The leading platform for construction tenders in Switzerland",
     "free_posting": {
       "title": "Post for Free",
@@ -99,9 +99,9 @@
   },
   "impressum": {
     "title": "Imprint",
-    "company": "Company: ProBau.ch AG",
+    "company": "Company: ProjektMarkt AG",
     "address": "Address: Musterstrasse 1, 8001 Zürich, Switzerland",
-    "email": "Email: info@probau.ch",
+    "email": "Email: info@projektmarkt.ch",
     "phone": "Phone: +41 44 000 00 00",
     "uid": "UID: CHE-000.000.000",
     "responsible": "Responsible for content",
@@ -114,25 +114,25 @@
     "intro": "The protection of your personal data is very important to us.",
     "dsg": "This privacy policy is based on the Swiss Data Protection Act (DSG) and the GDPR.",
     "controller_title": "1. Data Controller",
-    "controller_text": "ProBau.ch AG, Musterstrasse 1, 8001 Zürich",
+    "controller_text": "ProjektMarkt AG, Musterstrasse 1, 8001 Zürich",
     "data_title": "2. Data Collected",
     "data_text": "We only collect personal data in the context of platform usage: name, email, phone, company details.",
     "cookies_title": "3. Cookies",
     "cookies_text": "Our website uses technically necessary cookies. You can disable cookies in your browser settings.",
     "rights_title": "4. Your Rights",
-    "rights_text": "You have the right to access, rectify and delete your data. Contact us at info@probau.ch."
+    "rights_text": "You have the right to access, rectify and delete your data. Contact us at info@projektmarkt.ch."
   },
   "terms": {
     "title": "Terms and Conditions",
-    "intro": "By using the ProBau.ch platform, you agree to these terms and conditions.",
+    "intro": "By using the ProjektMarkt platform, you agree to these terms and conditions.",
     "scope_title": "1. Scope",
-    "scope_text": "These terms apply to all users of the ProBau.ch platform, including project owners and contractors.",
+    "scope_text": "These terms apply to all users of the ProjektMarkt platform, including project owners and contractors.",
     "registration_title": "2. Registration",
     "registration_text": "Use of the platform requires registration with truthful information.",
     "services_title": "3. Services",
     "services_text": "Project owners can post projects for free. Contractors require a paid subscription.",
     "liability_title": "4. Liability",
-    "liability_text": "ProBau.ch is not liable for the content of projects and offers posted by users.",
+    "liability_text": "ProjektMarkt is not liable for the content of projects and offers posted by users.",
     "law_title": "5. Applicable Law",
     "law_text": "Swiss law applies. The place of jurisdiction is Zurich."
   },

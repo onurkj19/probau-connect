@@ -21,6 +21,7 @@ import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const sections = [
   { key: "overview", label: "Overview", icon: Gauge, path: "" },
@@ -69,7 +70,8 @@ export function AdminSidebar() {
         )}
       >
         <div className="border-b border-border px-5 py-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Enterprise Control</p>
+          <BrandLogo to={`/${lang}`} imageClassName="h-9" />
+          <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Enterprise Control</p>
           <h1 className="mt-1 font-display text-xl font-semibold text-foreground">Admin Panel</h1>
         </div>
         <nav className="space-y-1 p-3">
