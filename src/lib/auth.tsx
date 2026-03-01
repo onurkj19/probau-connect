@@ -60,6 +60,7 @@ interface RegisterData {
   avatarFile?: File | null;
   role: "project_owner" | "contractor";
   emailRedirectTo?: string;
+  preferredLocale?: string;
 }
 
 const OFFER_LIMITS: Record<PlanType, number | null> = {
@@ -222,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profile_title: data.profileTitle ?? "",
           avatar_url: "",
           role: data.role,
+          preferred_locale: data.preferredLocale ?? "de",
         },
       },
     });

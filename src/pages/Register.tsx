@@ -103,6 +103,7 @@ const Register = () => {
         avatarFile,
         role,
         emailRedirectTo: `${window.location.origin}/${lang}/login?confirmed=1`,
+        preferredLocale: lang,
       });
       trackEvent("register_success", { role });
       setSubmitState("success");
