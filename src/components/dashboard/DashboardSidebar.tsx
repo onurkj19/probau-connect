@@ -54,7 +54,7 @@ export function DashboardSidebar() {
   const navContent = (
     <>
       <div className="flex items-center gap-2 border-b border-border px-4 py-5">
-        <BrandLogo to={`/${lang}`} imageClassName="h-9" />
+        <BrandLogo to={`/${lang}`} imageClassName="h-11" />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">

@@ -70,7 +70,7 @@ export function AdminSidebar() {
         )}
       >
         <div className="border-b border-border px-5 py-4">
-          <BrandLogo to={`/${lang}`} imageClassName="h-9" />
+          <BrandLogo to={`/${lang}`} imageClassName="h-11" />
           <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Enterprise Control</p>
           <h1 className="mt-1 font-display text-xl font-semibold text-foreground">Admin Panel</h1>
         </div>

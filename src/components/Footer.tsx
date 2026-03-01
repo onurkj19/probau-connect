@@ -14,7 +14,11 @@ const Footer = () => {
       <div className="container py-12">
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-1">
-            <BrandLogo to={`/${lang}`} imageClassName="h-9" textClassName="text-primary-foreground" />
+            <BrandLogo
+              to={`/${lang}`}
+              imageWrapperClassName="inline-flex rounded-lg bg-white px-3 py-2 shadow-md ring-1 ring-white/50"
+              imageClassName="h-14"
+            />
             <p className="mt-3 text-sm text-primary-foreground/70">
               {t("footer.description")}
             </p>
@@ -52,7 +56,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/50">
-          &copy; {new Date().getFullYear()} ProjektMarkt AG. {t("footer.rights")}
+          &copy; {new Date().getFullYear()}. {t("footer.rights")}
         </div>
       </div>
     </footer>

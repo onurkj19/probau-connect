@@ -34,7 +34,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
-        <BrandLogo to={`/${lang}`} imageClassName="h-9" />
+        <BrandLogo to={`/${lang}`} className="shrink-0" imageClassName="h-14" />
 
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (

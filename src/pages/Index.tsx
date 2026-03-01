@@ -9,6 +9,12 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/time";
 import { trackEvent } from "@/lib/analytics";
+import {
+  applyPercentDiscount,
+  BASE_PLAN_PRICES,
+  fetchDefaultSubscriptionDiscountPercent,
+  formatChf,
+} from "@/lib/subscription-pricing";
 
 interface TrendingProject {
   id: string;
@@ -25,6 +31,7 @@ const Index = () => {
   const { user } = useAuth();
   const [trendingProjects, setTrendingProjects] = useState<TrendingProject[]>([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
+  const [defaultDiscountPercent, setDefaultDiscountPercent] = useState(0);
 
   const contractorPrimaryPath = user
     ? user.role === "contractor"
@@ -87,73 +94,136 @@ const Index = () => {
     };
   }, []);
 
+  useEffect(() => {
+    void fetchDefaultSubscriptionDiscountPercent().then(setDefaultDiscountPercent).catch(() => setDefaultDiscountPercent(0));
+  }, []);
+
   return (
     <main>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-navy" />
-        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="container relative z-10 py-20 md:py-32">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-2xl"
-          >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium text-primary-foreground/80">
-              <Shield className="h-3 w-3" />
-              {t("hero.trusted")}
-            </div>
-            <h1 className="font-display text-4xl font-bold leading-tight text-primary-foreground md:text-5xl lg:text-6xl">
-              {t("hero.title")}
-            </h1>
-            <p className="mt-4 text-lg text-primary-foreground/70 md:text-xl">
-              {t("hero.subtitle")}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="gap-2 bg-accent text-accent-foreground shadow-hero hover:bg-accent/90" asChild>
-                <Link
-                  to={ownerPrimaryPath}
-                  onClick={() => trackEvent("cta_owner_click", { location: "hero", authenticated: Boolean(user) })}
+      <section className="relative overflow-hidden bg-[#0f1026]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(45,212,191,0.24),transparent_34%),radial-gradient(circle_at_88%_12%,rgba(168,85,247,0.26),transparent_35%),linear-gradient(140deg,#141432_10%,#1d1f47_45%,#102e46_100%)]" />
+        <motion.div
+          aria-hidden
+          className="absolute -left-12 top-10 h-56 w-56 rounded-full bg-[#2dd4bf]/20 blur-3xl"
+          animate={{ x: [0, 14, 0], y: [0, -8, 0] }}
+          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          aria-hidden
+          className="absolute -right-16 bottom-8 h-64 w-64 rounded-full bg-[#a855f7]/18 blur-3xl"
+          animate={{ x: [0, -12, 0], y: [0, 8, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="container relative z-10 py-16 md:py-24">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="max-w-2xl"
+            >
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+                <Shield className="h-3 w-3" />
+                {t("hero.trusted")}
+              </div>
+              <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                {t("hero.title")}
+              </h1>
+              <p className="mt-4 max-w-xl text-lg text-white/75 md:text-xl">
+                {t("hero.subtitle")}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" className="gap-2 bg-[#2dd4bf] text-[#0c1a1b] shadow-hero hover:bg-[#25d0b8]" asChild>
+                  <Link
+                    to={ownerPrimaryPath}
+                    onClick={() => trackEvent("cta_owner_click", { location: "hero", authenticated: Boolean(user) })}
+                  >
+                    {t("hero.cta_owner")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/45 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
+                  asChild
                 >
-                  {t("hero.cta_owner")}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-primary-foreground/60 bg-white/15 text-primary-foreground shadow-hero backdrop-blur-md hover:bg-white/25 hover:text-primary-foreground"
-                asChild
-              >
-                <Link
-                  to={contractorPrimaryPath}
-                  onClick={() => trackEvent("cta_contractor_click", { location: "hero", authenticated: Boolean(user) })}
-                >
-                  {t("hero.cta_contractor")}
-                </Link>
-              </Button>
-            </div>
-          </motion.div>
+                  <Link
+                    to={contractorPrimaryPath}
+                    onClick={() => trackEvent("cta_contractor_click", { location: "hero", authenticated: Boolean(user) })}
+                  >
+                    {t("hero.cta_contractor")}
+                  </Link>
+                </Button>
+              </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3 text-xs text-white/85">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur-sm">
+                  <Clock className="h-3.5 w-3.5" />
+                  {t("home.trending_subtitle")}
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur-sm">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  {t("pricing.free_owner")}
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.12 }}
+              className="hidden md:block"
+            >
+              <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-hero backdrop-blur-md">
+                <div className="grid grid-cols-2 gap-3">
+                  {stats.map((s, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 + i * 0.08, duration: 0.45 }}
+                      className="rounded-2xl border border-white/15 bg-white/10 p-4"
+                    >
+                      <p className="font-display text-2xl font-bold text-white">{s.value}</p>
+                      <p className="mt-1 text-xs text-white/75">{s.label}</p>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-white">
+                  <p className="text-sm font-semibold">{t("features.secure.title")}</p>
+                  <div className="mt-3 space-y-2 text-sm text-white/80">
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      {t("footer.location")}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      {t("features.secure.description")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="border-b border-border bg-card">
-        <div className="container py-10">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+      <section className="relative z-20 -mt-8">
+        <div className="container">
+          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[#7c3aed]/25 bg-gradient-to-r from-[#ffffff] to-[#f4f7ff] p-4 shadow-card backdrop-blur-sm md:grid-cols-4 md:gap-4 md:p-6">
             {stats.map((s, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
+                transition={{ delay: i * 0.06 }}
+                className="rounded-xl border border-[#d7ddff] bg-white/80 px-3 py-4 text-center"
               >
-                <div className="font-display text-3xl font-bold text-foreground">{s.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
+                <div className="font-display text-2xl font-bold text-[#181b3d] md:text-3xl">{s.value}</div>
+                <div className="mt-1 text-xs text-[#4b5578] md:text-sm">{s.label}</div>
               </motion.div>
             ))}
           </div>
@@ -333,6 +403,12 @@ const Index = () => {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {(["basic", "pro", "enterprise"] as const).map((plan, i) => {
               const isPopular = plan === "pro";
+              const isSubscriptionPlan = plan === "basic" || plan === "pro";
+              const basePrice = isSubscriptionPlan ? BASE_PLAN_PRICES[plan] : null;
+              const discountedPrice =
+                basePrice !== null && defaultDiscountPercent > 0
+                  ? applyPercentDiscount(basePrice, defaultDiscountPercent)
+                  : null;
               return (
                 <motion.div
                   key={plan}
@@ -357,10 +433,25 @@ const Index = () => {
                   <p className="mt-1 text-sm text-muted-foreground">{t(`pricing.${plan}.description`)}</p>
                   <div className="mt-4">
                     {plan !== "enterprise" ? (
-                      <span className="font-display text-3xl font-bold text-foreground">
-                        CHF {t(`pricing.${plan}.price`)}
-                        <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
-                      </span>
+                      discountedPrice !== null ? (
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-accent">-{defaultDiscountPercent}% limited offer</p>
+                          <div className="flex items-end gap-2">
+                            <span className="text-base font-medium text-muted-foreground line-through">
+                              CHF {formatChf(basePrice)}
+                            </span>
+                            <span className="font-display text-3xl font-bold text-foreground">
+                              CHF {formatChf(discountedPrice)}
+                              <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="font-display text-3xl font-bold text-foreground">
+                          CHF {basePrice}
+                          <span className="text-base font-normal text-muted-foreground">{t("pricing.monthly")}</span>
+                        </span>
+                      )
                     ) : (
                       <span className="font-display text-xl font-bold text-foreground">{t(`pricing.${plan}.price`)}</span>
                     )}
