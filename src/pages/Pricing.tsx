@@ -51,6 +51,10 @@ const Pricing = () => {
   const activeDiscountPercent = billingCycle === "yearly" ? yearlyDiscountPercent : monthlyDiscountPercent;
   const activeDescription = pricingConfig ? getOfferDescription(pricingConfig, billingCycle) : "";
   const activeValidUntil = pricingConfig ? getOfferValidUntil(pricingConfig, billingCycle) : null;
+  const monthlyToggleLabel = t("pricing.monthly_toggle", { defaultValue: "Monthly" });
+  const yearlyToggleLabel = t("pricing.yearly_toggle", { defaultValue: "Yearly" });
+  const monthlySuffix = t("pricing.monthly", { defaultValue: "/month" });
+  const yearlySuffix = t("pricing.yearly", { defaultValue: "/year" });
 
   const plans = ["basic", "pro", "enterprise"] as const;
   const getPlanTarget = (plan: (typeof plans)[number]) => {
@@ -73,7 +77,7 @@ const Pricing = () => {
               variant={billingCycle === "monthly" ? "default" : "ghost"}
               onClick={() => setBillingCycle("monthly")}
             >
-              {t("pricing.monthly_toggle")}
+              {monthlyToggleLabel}
             </Button>
             <Button
               type="button"
@@ -81,7 +85,7 @@ const Pricing = () => {
               variant={billingCycle === "yearly" ? "default" : "ghost"}
               onClick={() => setBillingCycle("yearly")}
             >
-              {t("pricing.yearly_toggle")}
+              {yearlyToggleLabel}
             </Button>
           </div>
           {activeDiscountPercent > 0 && (
@@ -137,7 +141,7 @@ const Pricing = () => {
                           <span className="font-display text-3xl font-bold text-foreground">
                             CHF {formatChf(discountedPrice)}
                             <span className="text-base font-normal text-muted-foreground">
-                              {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                              {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                             </span>
                           </span>
                         </div>
@@ -152,7 +156,7 @@ const Pricing = () => {
                         <span className="font-display text-3xl font-bold text-foreground">
                           CHF {formatChf(basePrice)}
                           <span className="text-base font-normal text-muted-foreground">
-                            {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                            {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                           </span>
                         </span>
                         {yearlySavingsPercent > 0 && billingCycle === "yearly" && (

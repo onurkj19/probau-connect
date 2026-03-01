@@ -33,11 +33,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       for (const cycle of cycles) {
         const priceId = getPlanPriceId(plan, cycle);
         if (!priceId) continue;
-        const stripePrice = await stripe.prices.retrieve(priceId);
-        result[plan][cycle] = toChfAmount({
-          unit_amount: stripePrice.unit_amount,
-          unit_amount_decimal: stripePrice.unit_amount_decimal ?? null,
-        });
+        try {
+          const stripePrice = await stripe.prices.retrieve(priceId);
+          result[plan][cycle] = toChfAmount({
+            unit_amount: stripePrice.unit_amount,
+            unit_amount_decimal: stripePrice.unit_amount_decimal ?? null,
+          });
+        } catch (error) {
+          console.error(`Failed to load Stripe price for ${plan}/${cycle} (${priceId})`, error);
+          result[plan][cycle] = null;
+        }
       }
     }
 

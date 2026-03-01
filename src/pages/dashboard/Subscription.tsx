@@ -143,6 +143,10 @@ const Subscription = () => {
       : 0;
   const offerDescription = pricingConfig ? getOfferDescription(pricingConfig, billingCycle) : "";
   const offerValidUntil = pricingConfig ? getOfferValidUntil(pricingConfig, billingCycle) : null;
+  const monthlyToggleLabel = t("pricing.monthly_toggle", { defaultValue: "Monthly" });
+  const yearlyToggleLabel = t("pricing.yearly_toggle", { defaultValue: "Yearly" });
+  const monthlySuffix = t("pricing.monthly", { defaultValue: "/month" });
+  const yearlySuffix = t("pricing.yearly", { defaultValue: "/year" });
 
   const renewalDate = user.subscriptionCurrentPeriodEnd
     ? new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString(lang, {
@@ -198,7 +202,7 @@ const Subscription = () => {
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
                 <p className="font-display text-lg font-bold text-green-900">
-                  {t(`pricing.${user.planType}.name`)} — CHF {user.planType === "basic" ? "79" : "149"}{t("pricing.monthly")}
+                  {t(`pricing.${user.planType}.name`)} — CHF {user.planType === "basic" ? "79" : "149"}{monthlySuffix}
                 </p>
                 {renewalDate && (
                   <p className="text-sm text-green-700">
@@ -243,7 +247,7 @@ const Subscription = () => {
               onClick={() => setBillingCycle("monthly")}
               disabled={loading}
             >
-              {t("pricing.monthly_toggle")}
+              {monthlyToggleLabel}
             </Button>
             <Button
               type="button"
@@ -252,7 +256,7 @@ const Subscription = () => {
               onClick={() => setBillingCycle("yearly")}
               disabled={loading}
             >
-              {t("pricing.yearly_toggle")}
+              {yearlyToggleLabel}
             </Button>
           </div>
           {activeDiscountPercent > 0 && (
@@ -290,7 +294,7 @@ const Subscription = () => {
                     <p className="font-display text-3xl font-bold text-foreground">
                       CHF {formatChf(basicDiscountedPrice)}
                       <span className="text-base font-normal text-muted-foreground">
-                        {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                        {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                       </span>
                     </p>
                   </div>
@@ -305,7 +309,7 @@ const Subscription = () => {
                   <p className="font-display text-3xl font-bold text-foreground">
                     CHF {formatChf(basicBasePrice)}
                     <span className="text-base font-normal text-muted-foreground">
-                      {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                      {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                     </span>
                   </p>
                   {basicYearlySavingsPercent > 0 && billingCycle === "yearly" && (
@@ -349,7 +353,7 @@ const Subscription = () => {
                     <p className="font-display text-3xl font-bold text-foreground">
                       CHF {formatChf(proDiscountedPrice)}
                       <span className="text-base font-normal text-muted-foreground">
-                        {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                        {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                       </span>
                     </p>
                   </div>
@@ -364,7 +368,7 @@ const Subscription = () => {
                   <p className="font-display text-3xl font-bold text-foreground">
                     CHF {formatChf(proBasePrice)}
                     <span className="text-base font-normal text-muted-foreground">
-                      {billingCycle === "yearly" ? t("pricing.yearly") : t("pricing.monthly")}
+                      {billingCycle === "yearly" ? yearlySuffix : monthlySuffix}
                     </span>
                   </p>
                   {proYearlySavingsPercent > 0 && billingCycle === "yearly" && (
