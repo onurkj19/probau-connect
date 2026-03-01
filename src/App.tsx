@@ -14,6 +14,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import RegisterConfirm from "./pages/RegisterConfirm";
 import NotFound from "./pages/NotFound";
 import Banned from "./pages/Banned";
 import { AuthProvider } from "@/lib/auth";
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="terms" element={<Terms />} />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
+                <Route path="register/confirm" element={<RegisterConfirm />} />
                 <Route path="unauthorized" element={<Unauthorized />} />
                 <Route path="banned" element={<Banned />} />
               </Route>

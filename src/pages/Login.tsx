@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,10 @@ const Login = () => {
   const { t } = useTranslation();
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
+  const confirmed = searchParams.get("confirmed") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +44,13 @@ const Login = () => {
           {error && (
             <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {error}
+            </div>
+          )}
+          {confirmed && (
+            <div className="mt-4 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700">
+              {t("auth.email_confirmed_message", {
+                defaultValue: "Email confirmed successfully. You can sign in now.",
+              })}
             </div>
           )}
 

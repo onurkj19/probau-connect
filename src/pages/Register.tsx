@@ -7,9 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth, type UserRole } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { trackEvent } from "@/lib/analytics";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
-const STRONG_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+const PASSWORD_RULES = {
+  minLength: (value: string) => value.length >= 8,
+  uppercase: (value: string) => /[A-Z]/.test(value),
+  number: (value: string) => /\d/.test(value),
+  symbol: (value: string) => /[^A-Za-z0-9]/.test(value),
+};
 
 const Register = () => {
   const { t } = useTranslation();
@@ -30,11 +35,50 @@ const Register = () => {
   const [role, setRole] = useState<UserRole>("project_owner");
   const [error, setError] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success">("idle");
+  const passwordChecks = {
+    minLength: PASSWORD_RULES.minLength(password),
+    uppercase: PASSWORD_RULES.uppercase(password),
+    number: PASSWORD_RULES.number(password),
+    symbol: PASSWORD_RULES.symbol(password),
+  };
+  const passwordStrengthScore = (() => {
+    if (!password) return 0;
+    let score = 0;
+    if (passwordChecks.minLength) score += 1;
+    if (passwordChecks.uppercase) score += 1;
+    if (passwordChecks.number) score += 1;
+    if (passwordChecks.symbol) score += 1;
+    if (password.length >= 12) score += 1;
+    return Math.min(4, score);
+  })();
+  const passwordStrength = (() => {
+    if (passwordStrengthScore <= 2) {
+      return {
+        label: t("auth.password_strength_weak", { defaultValue: "Weak" }),
+        className: "text-red-600",
+        barClassName: "bg-red-500",
+      };
+    }
+    if (passwordStrengthScore === 3) {
+      return {
+        label: t("auth.password_strength_medium", { defaultValue: "Medium" }),
+        className: "text-amber-600",
+        barClassName: "bg-amber-500",
+      };
+    }
+    return {
+      label: t("auth.password_strength_strong", { defaultValue: "Strong" }),
+      className: "text-emerald-600",
+      barClassName: "bg-emerald-500",
+    };
+  })();
+  const isStrongPassword = Object.values(passwordChecks).every(Boolean);
+  const hasConfirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!STRONG_PASSWORD_REGEX.test(password)) {
+    if (!isStrongPassword) {
       setError(t("auth.password_strength_error"));
       return;
     }
@@ -58,12 +102,11 @@ const Register = () => {
         profileTitle,
         avatarFile,
         role,
+        emailRedirectTo: `${window.location.origin}/${lang}/login?confirmed=1`,
       });
       trackEvent("register_success", { role });
       setSubmitState("success");
-      setTimeout(() => {
-        navigate(`/${lang}/login`);
-      }, 900);
+      navigate(`/${lang}/register/confirm?email=${encodeURIComponent(email)}`);
     } catch (err) {
       trackEvent("register_failure", { role });
       setSubmitState("idle");
@@ -129,6 +172,31 @@ const Register = () => {
               <Label htmlFor="password">{t("auth.password")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <p className="text-xs text-muted-foreground">{t("auth.password_requirements")}</p>
+              <div className="space-y-1">
+                <div className="h-1.5 w-full rounded-full bg-muted">
+                  <div
+                    className={`h-1.5 rounded-full transition-all duration-300 ${passwordStrength.barClassName}`}
+                    style={{ width: `${(passwordStrengthScore / 4) * 100}%` }}
+                  />
+                </div>
+                <p className={`text-xs font-medium ${passwordStrength.className}`}>
+                  {t("auth.password_strength_label", { defaultValue: "Password strength" })}: {passwordStrength.label}
+                </p>
+              </div>
+              <div className="space-y-1 text-xs">
+                <p className={passwordChecks.minLength ? "text-emerald-600" : "text-muted-foreground"}>
+                  {passwordChecks.minLength ? "✓" : "•"} {t("auth.password_req_min", { defaultValue: "At least 8 characters" })}
+                </p>
+                <p className={passwordChecks.uppercase ? "text-emerald-600" : "text-muted-foreground"}>
+                  {passwordChecks.uppercase ? "✓" : "•"} {t("auth.password_req_upper", { defaultValue: "At least 1 uppercase letter" })}
+                </p>
+                <p className={passwordChecks.number ? "text-emerald-600" : "text-muted-foreground"}>
+                  {passwordChecks.number ? "✓" : "•"} {t("auth.password_req_number", { defaultValue: "At least 1 number" })}
+                </p>
+                <p className={passwordChecks.symbol ? "text-emerald-600" : "text-muted-foreground"}>
+                  {passwordChecks.symbol ? "✓" : "•"} {t("auth.password_req_symbol", { defaultValue: "At least 1 symbol" })}
+                </p>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">{t("auth.confirm_password")}</Label>
@@ -139,6 +207,12 @@ const Register = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
+              {hasConfirmMismatch && (
+                <p className="inline-flex items-center gap-1 text-xs text-destructive">
+                  <XCircle className="h-3.5 w-3.5" />
+                  {t("auth.password_mismatch")}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>{t("auth.role_select")}</Label>

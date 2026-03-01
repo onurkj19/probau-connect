@@ -59,12 +59,14 @@ interface RegisterData {
   profileTitle?: string;
   avatarFile?: File | null;
   role: "project_owner" | "contractor";
+  emailRedirectTo?: string;
 }
 
 const OFFER_LIMITS: Record<PlanType, number | null> = {
   basic: 10,
   pro: null,
 };
+const STRONG_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -204,10 +206,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (data: RegisterData) => {
     setState((s) => ({ ...s, isLoading: true }));
+    if (!STRONG_PASSWORD_REGEX.test(data.password)) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw new Error("Password must include at least 8 characters, one uppercase letter, one number, and one symbol.");
+    }
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: data.emailRedirectTo,
         data: {
           name: data.name,
           company_name: data.companyName,
