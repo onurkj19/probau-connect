@@ -394,11 +394,11 @@ async function handleSubscriptionPromosList(req: VercelRequest, res: VercelRespo
   ]);
   const mergedCodes = [...activeCodesRes.data, ...inactiveCodesRes.data];
   const resolveCoupon = (promo: Stripe.PromotionCode): Stripe.Coupon | null => {
-    const legacy = promo.coupon && typeof promo.coupon !== "string" ? promo.coupon as Stripe.Coupon : null;
-    const promoCoupon = promo.promotion?.coupon && typeof promo.promotion.coupon !== "string"
-      ? promo.promotion.coupon as Stripe.Coupon
-      : null;
-    return legacy ?? promoCoupon;
+    const legacyCoupon = (promo as Stripe.PromotionCode & { coupon?: string | Stripe.Coupon | null }).coupon;
+    const legacy = legacyCoupon && typeof legacyCoupon !== "string" ? legacyCoupon : null;
+    const nestedCoupon = promo.promotion?.coupon;
+    const nested = nestedCoupon && typeof nestedCoupon !== "string" ? nestedCoupon : null;
+    return legacy ?? nested;
   };
   return res.status(200).json({
     discountConfig,
