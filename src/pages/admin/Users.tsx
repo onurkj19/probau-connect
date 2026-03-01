@@ -36,6 +36,7 @@ type UserActionPayload = {
     | "change_role"
     | "set_subscription"
     | "soft_delete"
+    | "hard_delete"
     | "impersonate";
   userId?: string;
   userIds?: string[];
@@ -345,6 +346,20 @@ const AdminUsers = () => {
                         onClick={() => void runAction({ action: "soft_delete", userId: row.id })}
                       >
                         Soft delete
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={activeActionId === row.id || isSuperAdmin}
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            "This will permanently delete the user if no related records exist. Continue?",
+                          );
+                          if (!confirmed) return;
+                          void runAction({ action: "hard_delete", userId: row.id });
+                        }}
+                      >
+                        Delete permanently
                       </Button>
                       <Button
                         size="sm"

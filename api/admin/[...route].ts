@@ -249,6 +249,7 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
     "change_role",
     "set_subscription",
     "soft_delete",
+    "hard_delete",
     "impersonate",
   ]);
   if (protectedActions.has(action)) {
@@ -279,6 +280,54 @@ async function handleUsersAction(req: VercelRequest, res: VercelResponse) {
   } else if (action === "soft_delete") {
     await supabaseAdmin.from("profiles").update({ deleted_at: new Date().toISOString(), is_banned: true }).in("id", validTargetIds);
     await setAuthBanStatus(validTargetIds, true);
+  } else if (action === "hard_delete") {
+    if (actor.role !== "super_admin") {
+      return res.status(403).json({ error: "Only super admins can permanently delete users" });
+    }
+
+    const dependencyChecks = [
+      { table: "projects", column: "owner_id", label: "projects" },
+      { table: "offers", column: "owner_id", label: "offers_as_owner" },
+      { table: "offers", column: "contractor_id", label: "offers_as_contractor" },
+      { table: "chats", column: "owner_id", label: "chats_as_owner" },
+      { table: "chats", column: "contractor_id", label: "chats_as_contractor" },
+      { table: "chat_messages", column: "sender_id", label: "chat_messages" },
+      { table: "bookmarks", column: "user_id", label: "bookmarks" },
+      { table: "notifications", column: "user_id", label: "notifications" },
+      { table: "reports", column: "reporter_id", label: "reports_reporter" },
+      { table: "reports", column: "resolved_by", label: "reports_resolver" },
+      { table: "blocked_users", column: "blocker_id", label: "blocked_users_blocker" },
+      { table: "blocked_users", column: "blocked_id", label: "blocked_users_blocked" },
+      { table: "security_events", column: "actor_id", label: "security_events_actor" },
+      { table: "security_events", column: "target_user_id", label: "security_events_target" },
+    ] as const;
+
+    for (const targetId of validTargetIds) {
+      const checks = await Promise.all(
+        dependencyChecks.map(async (check) => {
+          const { count } = await supabaseAdmin
+            .from(check.table)
+            .select("id", { count: "exact", head: true })
+            .eq(check.column, targetId);
+          return { label: check.label, count: count ?? 0 };
+        }),
+      );
+      const blocking = checks.filter((item) => item.count > 0);
+      if (blocking.length > 0) {
+        const details = blocking.map((item) => `${item.label}:${item.count}`).join(", ");
+        return res.status(409).json({
+          error: `Cannot permanently delete user with related records (${details}). Use soft delete first.`,
+        });
+      }
+
+      const deleteAuthResult = await supabaseAdmin.auth.admin.deleteUser(targetId);
+      if (deleteAuthResult.error) {
+        return res.status(400).json({
+          error: `Failed to permanently delete auth user: ${getErrorMessage(deleteAuthResult.error)}`,
+        });
+      }
+      await supabaseAdmin.from("profiles").delete().eq("id", targetId);
+    }
   } else if (action === "impersonate") {
     if (validTargetIds.length !== 1) return res.status(400).json({ error: "Impersonation requires a single user target" });
     const token = crypto.randomUUID();
