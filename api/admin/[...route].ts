@@ -1552,6 +1552,83 @@ async function handleHealth(req: VercelRequest, res: VercelResponse) {
   }
 }
 
+async function handleHealthDashboard(req: VercelRequest, res: VercelResponse) {
+  const actor = await requireAdmin(req, res);
+  if (!actor) return;
+
+  const windowHours = Math.max(1, Math.min(168, Number(req.query.windowHours ?? 24)));
+  const sinceIso = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
+
+  const [
+    { count: newUsers24h },
+    { count: activeSubscriptions },
+    { count: currentPastDue },
+    { count: failedPayments24h },
+    { count: resetEmailSent24h },
+    { count: resetEmailFailed24h },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sinceIso)
+      .is("deleted_at", null),
+    supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("subscription_status", "active")
+      .not("plan_type", "is", null)
+      .is("deleted_at", null),
+    supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("subscription_status", "past_due")
+      .is("deleted_at", null),
+    supabaseAdmin
+      .from("security_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", "stripe_invoice_payment_failed")
+      .gte("created_at", sinceIso),
+    supabaseAdmin
+      .from("security_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", "email_reset_requested")
+      .gte("created_at", sinceIso),
+    supabaseAdmin
+      .from("security_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", "email_reset_failed")
+      .gte("created_at", sinceIso),
+  ]);
+
+  const sentCount = resetEmailSent24h ?? 0;
+  const failedCount = resetEmailFailed24h ?? 0;
+  const totalEmailAttempts = sentCount + failedCount;
+  const emailSuccessRate = totalEmailAttempts > 0
+    ? Number(((sentCount / totalEmailAttempts) * 100).toFixed(2))
+    : 100;
+  const emailStatus: "healthy" | "degraded" | "down" =
+    emailSuccessRate >= 95 ? "healthy" : emailSuccessRate >= 70 ? "degraded" : "down";
+
+  return res.status(200).json({
+    windowHours,
+    updatedAt: new Date().toISOString(),
+    metrics: {
+      newUsers: newUsers24h ?? 0,
+      activeSubscriptions: activeSubscriptions ?? 0,
+      failedPayments: {
+        recent: failedPayments24h ?? 0,
+        currentPastDue: currentPastDue ?? 0,
+      },
+      emailDelivery: {
+        sent: sentCount,
+        failed: failedCount,
+        successRate: emailSuccessRate,
+        status: emailStatus,
+      },
+    },
+  });
+}
+
 async function handleAlerts(req: VercelRequest, res: VercelResponse) {
   const actor = await requireAdmin(req, res);
   if (!actor) return;
@@ -1617,6 +1694,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET" && endpoint === "analytics") return await handleAnalytics(req, res);
     if (req.method === "GET" && endpoint === "security-events-list") return await handleSecurityEventsList(req, res);
     if (req.method === "GET" && endpoint === "health") return await handleHealth(req, res);
+    if (req.method === "GET" && endpoint === "health-dashboard") return await handleHealthDashboard(req, res);
     if (req.method === "GET" && endpoint === "alerts") return await handleAlerts(req, res);
     return res.status(404).json({ error: "Admin endpoint not found" });
   } catch (error) {

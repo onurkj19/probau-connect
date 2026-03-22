@@ -22,7 +22,8 @@
   "home": {
     "trending_title": "Trending now",
     "trending_subtitle": "Top 5 des projets publiés récemment",
-    "trending_view_all": "Voir tous les projets"
+    "trending_view_all": "Voir tous les projets",
+    "stats_transparency_note": "Compteurs de plateforme en direct. ProjektMarkt vient d'être lancé et évolue en continu."
   },
   "features": {
     "title": "Pourquoi ProjektMarkt ?",

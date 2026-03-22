@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import OwnerLogoTicker from "@/components/OwnerLogoTicker";
 import { supabase } from "@/lib/supabase";
 
 const Layout = () => {
@@ -42,6 +43,7 @@ const Layout = () => {
         </div>
       )}
       <Header />
+      <OwnerLogoTicker />
       <div className="flex-1">
         <Outlet />
       </div>

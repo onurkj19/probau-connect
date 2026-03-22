@@ -42,6 +42,8 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  requestPasswordReset: (email: string, redirectTo: string, locale?: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   getToken: () => Promise<string | null>;
@@ -252,6 +254,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string, redirectTo: string, locale?: string) => {
+    setState((s) => ({ ...s, isLoading: true }));
+    const res = await fetch("/api/auth/request-password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        redirectTo,
+        locale: locale ?? "en",
+      }),
+    });
+    if (!res.ok) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw new Error("Failed to send reset password email.");
+    }
+    setState((s) => ({ ...s, isLoading: false }));
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    setState((s) => ({ ...s, isLoading: true }));
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw new Error("Password must include at least 8 characters, one uppercase letter, one number, and one symbol.");
+    }
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setState((s) => ({ ...s, isLoading: false }));
+      throw error;
+    }
+    setState((s) => ({ ...s, isLoading: false }));
+  }, []);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setState({ user: null, session: null, isLoading: false });
@@ -290,6 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...state,
         login,
         register,
+        requestPasswordReset,
+        updatePassword,
         logout,
         refreshUser,
         getToken,

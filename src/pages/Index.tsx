@@ -32,6 +32,11 @@ interface TrendingProject {
   created_at: string;
 }
 
+interface PlatformStatsResponse {
+  totalProjects: number;
+  totalContractors: number;
+}
+
 const Index = () => {
   const { t, i18n } = useTranslation();
   const localePath = useLocalePath();
@@ -41,6 +46,7 @@ const Index = () => {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [pricingConfig, setPricingConfig] = useState<SubscriptionPricingConfig | null>(null);
   const [stripePrices, setStripePrices] = useState<StripePlanPrices | null>(null);
+  const [platformStats, setPlatformStats] = useState<PlatformStatsResponse | null>(null);
 
   const contractorPrimaryPath = user
     ? user.role === "contractor"
@@ -73,8 +79,18 @@ const Index = () => {
   ];
 
   const stats = [
-    { value: "500+", label: t("stats.projects") },
-    { value: "200+", label: t("stats.contractors") },
+    {
+      value: platformStats
+        ? `+${platformStats.totalProjects.toLocaleString(i18n.language)}`
+        : "—",
+      label: t("stats.projects"),
+    },
+    {
+      value: platformStats
+        ? `+${platformStats.totalContractors.toLocaleString(i18n.language)}`
+        : "—",
+      label: t("stats.contractors"),
+    },
     { value: "26", label: t("stats.cantons") },
     { value: "98%", label: t("stats.satisfaction") },
   ];
@@ -98,6 +114,25 @@ const Index = () => {
     };
 
     void loadTrending();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let canceled = false;
+    const loadPlatformStats = async () => {
+      try {
+        const response = await fetch("/api/public?scope=platform-stats");
+        if (!response.ok) return;
+        const data = (await response.json()) as PlatformStatsResponse;
+        if (!canceled) setPlatformStats(data);
+      } catch {
+        // Keep fallback placeholder values on fetch failure.
+      }
+    };
+
+    void loadPlatformStats();
     return () => {
       canceled = true;
     };
@@ -259,6 +294,11 @@ const Index = () => {
               </motion.div>
             ))}
           </div>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            {t("home.stats_transparency_note", {
+              defaultValue: "Live platform counters. ProjektMarkt is newly launched and growing continuously.",
+            })}
+          </p>
         </div>
       </section>
 

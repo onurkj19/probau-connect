@@ -575,7 +575,7 @@ const DashboardOffers = () => {
     if (!selectedChatId) return;
     try {
       await upsertChatSetting(selectedChatId, {
-        is_favorite: !Boolean(selectedChatSettings?.is_favorite),
+        is_favorite: !selectedChatSettings?.is_favorite,
       });
     } catch (err) {
       setComposerError(err instanceof Error ? err.message : t("dashboard.chat_action_error"));
@@ -586,7 +586,7 @@ const DashboardOffers = () => {
     if (!selectedChatId) return;
     try {
       await upsertChatSetting(selectedChatId, {
-        is_muted: !Boolean(selectedChatSettings?.is_muted),
+        is_muted: !selectedChatSettings?.is_muted,
       });
     } catch (err) {
       setComposerError(err instanceof Error ? err.message : t("dashboard.chat_action_error"));

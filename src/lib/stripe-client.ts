@@ -1,6 +1,14 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 
 let stripePromise: Promise<Stripe | null>;
+type SyncedSubscription = {
+  success: boolean;
+  status: string;
+  planType: string | null;
+  billingCycle: "monthly" | "yearly" | null;
+  priceChf: number | null;
+  renewalDate: string | null;
+};
 
 export function getStripe() {
   if (!stripePromise) {
@@ -74,6 +82,41 @@ export async function createPortalSession(token: string) {
   }
 
   throw new Error("Portal URL missing in API response");
+}
+
+export async function syncCheckoutSession(sessionId: string, token: string) {
+  const res = await fetch("/api/stripe/sync-session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ sessionId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Failed to sync checkout session");
+  }
+
+  return res.json() as Promise<SyncedSubscription>;
+}
+
+export async function syncCurrentSubscription(token: string) {
+  const res = await fetch("/api/stripe/sync-subscription", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || "Failed to sync current subscription");
+  }
+
+  return res.json() as Promise<SyncedSubscription>;
 }
 
 export async function submitOffer(

@@ -25,4 +25,30 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("/scheduler/") ||
+            id.includes("react-router")
+          ) {
+            return "vendor-react";
+          }
+          if (id.includes("recharts")) {
+            return "vendor-charts";
+          }
+          if (id.includes("@radix-ui")) {
+            return "vendor-ui";
+          }
+          if (id.includes("stripe")) {
+            return "vendor-stripe";
+          }
+        },
+      },
+    },
+  },
 }));

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { authenticateRequest } from "./auth.js";
 import { supabaseAdmin } from "./supabase.js";
 import type { UserSubscription } from "./db.js";
+import { getRequestUrl } from "./request-url.js";
 
 export type AdminRole = "super_admin" | "admin" | "moderator";
 
@@ -58,7 +59,7 @@ function checkAdminRateLimit(
   options: RateLimitOptions = { max: 120, windowMs: 60_000 },
 ): boolean {
   const ip = getRequestIp(req) || "unknown";
-  const route = req.url?.split("?")[0] || "admin";
+  const route = getRequestUrl(req).pathname || "/admin";
   const key = `${ip}:${route}`;
   const now = Date.now();
   const current = RATE_LIMIT_BUCKETS.get(key);
@@ -93,7 +94,7 @@ function checkAdminIdempotency(req: VercelRequest, res: VercelResponse, userId: 
   }
 
   const now = Date.now();
-  const route = req.url?.split("?")[0] || "admin";
+  const route = getRequestUrl(req).pathname || "/admin";
   const bucketKey = `${userId}:${route}:${key}`;
   const existingUntil = IDEMPOTENCY_BUCKETS.get(bucketKey);
 

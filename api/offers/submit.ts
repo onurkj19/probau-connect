@@ -139,7 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       offerCountThisMonth: newCount,
       limit: plan.monthlyOfferLimit,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Offer submission error:", err);
     return res.status(500).json({ error: "Failed to submit offer" });
   }

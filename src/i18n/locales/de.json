@@ -22,7 +22,8 @@
   "home": {
     "trending_title": "Trending now",
     "trending_subtitle": "Top 5 der zuletzt veröffentlichten Projekte",
-    "trending_view_all": "Alle Projekte ansehen"
+    "trending_view_all": "Alle Projekte ansehen",
+    "stats_transparency_note": "Live-Plattformzähler. ProjektMarkt ist neu gestartet und wächst kontinuierlich."
   },
   "features": {
     "title": "Warum ProjektMarkt?",

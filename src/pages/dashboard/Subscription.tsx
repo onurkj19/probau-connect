@@ -1,10 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
-import { CreditCard, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { CreditCard, CheckCircle, AlertTriangle, XCircle, ExternalLink } from "lucide-react";
 import { useAuth, type PlanType } from "@/lib/auth";
-import { createCheckoutSession, createPortalSession } from "@/lib/stripe-client";
+import {
+  createCheckoutSession,
+  createPortalSession,
+  syncCheckoutSession,
+  syncCurrentSubscription,
+} from "@/lib/stripe-client";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -25,7 +30,7 @@ import {
 
 const Subscription = () => {
   const { t } = useTranslation();
-  const { user, getToken } = useAuth();
+  const { user, getToken, refreshUser } = useAuth();
   const { locale } = useParams<{ locale: string }>();
   const [searchParams] = useSearchParams();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
@@ -37,7 +42,19 @@ const Subscription = () => {
   );
   const [pricingConfig, setPricingConfig] = useState<SubscriptionPricingConfig | null>(null);
   const [stripePrices, setStripePrices] = useState<StripePlanPrices | null>(null);
+  const [subscriptionSummary, setSubscriptionSummary] = useState<{
+    planType: PlanType | null;
+    billingCycle: BillingCycle | null;
+    priceChf: number | null;
+    renewalDate: string | null;
+  }>({
+    planType: null,
+    billingCycle: null,
+    priceChf: null,
+    renewalDate: null,
+  });
   const autoTriggered = useRef(false);
+  const autoSyncedCurrentSubscription = useRef(false);
 
   const requestedPlan = searchParams.get("plan");
   const requestedCycle = searchParams.get("cycle");
@@ -47,7 +64,74 @@ const Subscription = () => {
     else if (requestedCycle === "monthly") setBillingCycle("monthly");
   }, [requestedCycle]);
 
-  const handleSubscribe = async (plan: PlanType, promoOverride?: string, cycleOverride?: BillingCycle) => {
+  useEffect(() => {
+    if (!user || user.role !== "contractor") return;
+    const sessionId = searchParams.get("session_id");
+    if (!sessionId) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+        const synced = await syncCheckoutSession(sessionId, token);
+        if (!cancelled) {
+          setSubscriptionSummary({
+            planType: synced.planType === "basic" || synced.planType === "pro" ? synced.planType : null,
+            billingCycle: synced.billingCycle,
+            priceChf: synced.priceChf,
+            renewalDate: synced.renewalDate,
+          });
+        }
+        if (!cancelled) await refreshUser();
+      } catch (err) {
+        if (!cancelled) {
+          setActionError(
+            err instanceof Error
+              ? err.message
+              : "Payment succeeded but subscription sync is pending. Please refresh shortly.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, searchParams, getToken, refreshUser]);
+
+  useEffect(() => {
+    if (!user || user.role !== "contractor") return;
+    if (!user.stripeCustomerId) return;
+    if (autoSyncedCurrentSubscription.current) return;
+    autoSyncedCurrentSubscription.current = true;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+        const synced = await syncCurrentSubscription(token);
+        if (!cancelled) {
+          setSubscriptionSummary({
+            planType: synced.planType === "basic" || synced.planType === "pro" ? synced.planType : null,
+            billingCycle: synced.billingCycle,
+            priceChf: synced.priceChf,
+            renewalDate: synced.renewalDate,
+          });
+        }
+        if (!cancelled) await refreshUser();
+      } catch {
+        // Silent: this is a best-effort recovery path.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, getToken, refreshUser]);
+
+  const handleSubscribe = useCallback(async (plan: PlanType, promoOverride?: string, cycleOverride?: BillingCycle) => {
     setLoading(true);
     setActionError(null);
     const cycle = cycleOverride ?? billingCycle;
@@ -66,7 +150,7 @@ const Subscription = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [billingCycle, getToken, promoCode]);
 
   const handleManage = async () => {
     setLoading(true);
@@ -94,7 +178,7 @@ const Subscription = () => {
     if (requestedPlan !== "basic" && requestedPlan !== "pro") return;
     autoTriggered.current = true;
     void handleSubscribe(requestedPlan, "", billingCycle);
-  }, [requestedPlan, user, loading, billingCycle]);
+  }, [requestedPlan, user, loading, billingCycle, handleSubscribe]);
   useEffect(() => {
     void Promise.all([fetchSubscriptionPricingConfig(), fetchStripePlanPrices()])
       .then(([config, prices]) => {
@@ -113,11 +197,15 @@ const Subscription = () => {
   const isPastDue = user.subscriptionStatus === "past_due";
   const isCanceled = user.subscriptionStatus === "canceled";
   const hasNoPlan = user.subscriptionStatus === "none";
+  const hasUnknownStatus = !isActive && !isPastDue && !isCanceled && !hasNoPlan;
   const isAutoCheckoutLoading =
     loading && (requestedPlan === "basic" || requestedPlan === "pro") && (hasNoPlan || isCanceled);
 
   const offerLimit = user.planType === "basic" ? 10 : null;
   const offerUsage = user.offerCountThisMonth;
+  const offerUsageDescription = user.planType
+    ? (offerLimit ? t("subscription.basic_limit") : t("subscription.unlimited"))
+    : t("subscription.plan_syncing", { defaultValue: "Plan syncing..." });
   const monthlyDiscountPercent =
     pricingConfig?.monthly.enabled && (!pricingConfig.monthly.validUntil || new Date(pricingConfig.monthly.validUntil).getTime() > Date.now())
       ? pricingConfig.monthly.percentOff
@@ -148,8 +236,18 @@ const Subscription = () => {
   const monthlySuffix = t("pricing.monthly", { defaultValue: "/month" });
   const yearlySuffix = t("pricing.yearly", { defaultValue: "/year" });
 
-  const renewalDate = user.subscriptionCurrentPeriodEnd
-    ? new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString(lang, {
+  const effectivePlanType = subscriptionSummary.planType ?? user.planType;
+  const effectiveBillingCycle = subscriptionSummary.billingCycle;
+  const effectiveRenewalDate = subscriptionSummary.renewalDate ?? user.subscriptionCurrentPeriodEnd;
+  const effectivePrice =
+    typeof subscriptionSummary.priceChf === "number"
+      ? subscriptionSummary.priceChf
+      : isActive && effectivePlanType && effectiveBillingCycle
+        ? getPlanPrice(effectivePlanType, effectiveBillingCycle, stripePrices)
+        : null;
+
+  const renewalDate = effectiveRenewalDate
+    ? new Date(effectiveRenewalDate).toLocaleDateString(lang, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -173,6 +271,67 @@ const Subscription = () => {
         </div>
       )}
 
+      <div className="mt-6 rounded-lg border border-border bg-card p-6 shadow-card">
+        <h2 className="font-display text-lg font-semibold text-foreground">
+          {t("subscription.current_plan", { defaultValue: "Subscription details" })}
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("subscription.current_plan_label", { defaultValue: "Current plan" })}
+            </p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {effectivePlanType ? t(`pricing.${effectivePlanType}.name`) : t("subscription.no_active_plan", { defaultValue: "No active plan" })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("subscription.billing_cycle_label", { defaultValue: "Billing cycle" })}
+            </p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {effectiveBillingCycle === "yearly"
+                ? yearlyToggleLabel
+                : effectiveBillingCycle === "monthly"
+                  ? monthlyToggleLabel
+                  : "-"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("subscription.next_renewal_label", { defaultValue: "Next renewal" })}
+            </p>
+            <p className="mt-1 text-sm font-medium text-foreground">{renewalDate ?? "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("subscription.price_label", { defaultValue: "Price" })}
+            </p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {typeof effectivePrice === "number"
+                ? `CHF ${formatChf(effectivePrice)}${
+                    effectiveBillingCycle === "yearly"
+                      ? yearlySuffix
+                      : effectiveBillingCycle === "monthly"
+                        ? monthlySuffix
+                        : ""
+                  }`
+                : "-"}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={handleManage}
+            disabled={loading || !user.stripeCustomerId}
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {t("subscription.invoice_history", { defaultValue: "Invoice history" })}
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
       {/* Status banner */}
       {isPastDue && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
@@ -195,15 +354,21 @@ const Subscription = () => {
       )}
 
       {/* Active subscription details */}
-      {isActive && user.planType && (
+      {isActive && (
         <div className="mt-6">
           <div className="rounded-lg border border-green-200 bg-green-50 p-6">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <p className="font-display text-lg font-bold text-green-900">
-                  {t(`pricing.${user.planType}.name`)} — CHF {user.planType === "basic" ? "79" : "149"}{monthlySuffix}
-                </p>
+                {effectivePlanType ? (
+                  <p className="font-display text-lg font-bold text-green-900">
+                    {t(`pricing.${effectivePlanType}.name`)}
+                  </p>
+                ) : (
+                  <p className="font-display text-lg font-bold text-green-900">
+                    {t("subscription.manage")}
+                  </p>
+                )}
                 {renewalDate && (
                   <p className="text-sm text-green-700">
                     {t("subscription.renews_on")}: {renewalDate}
@@ -218,7 +383,7 @@ const Subscription = () => {
               title={t("subscription.offers_used")}
               value={offerLimit ? `${offerUsage} / ${offerLimit}` : `${offerUsage}`}
               icon={CreditCard}
-              description={offerLimit ? t("subscription.basic_limit") : t("subscription.unlimited")}
+              description={offerUsageDescription}
             />
           </div>
 
@@ -236,7 +401,7 @@ const Subscription = () => {
       )}
 
       {/* No subscription — show plans */}
-      {(hasNoPlan || isCanceled) && (
+      {(hasNoPlan || isCanceled || hasUnknownStatus) && (
         <div className="mt-8">
           <p className="text-muted-foreground">{t("subscription.choose_plan")}</p>
           <div className="mt-4 inline-flex rounded-lg border border-border bg-muted/40 p-1">

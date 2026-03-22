@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { LayoutDashboard, FolderOpen, FileText, Settings, CreditCard, LogOut, X, Menu, Bell, Bookmark } from "lucide-react";
+import { LayoutDashboard, FolderOpen, FileText, Settings, CreditCard, LogOut, X, Menu, Bell, Bookmark, House } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
@@ -21,6 +21,7 @@ export function DashboardSidebar() {
   const basePath = `/${lang}/dashboard`;
 
   const ownerLinks = [
+    { to: `/${lang}`, icon: House, label: t("nav.home"), exact: true },
     { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.my_projects") },
     { to: `${basePath}/saved`, icon: Bookmark, label: t("dashboard.saved_projects") },
@@ -30,6 +31,7 @@ export function DashboardSidebar() {
   ];
 
   const contractorLinks = [
+    { to: `/${lang}`, icon: House, label: t("nav.home"), exact: true },
     { to: basePath, icon: LayoutDashboard, label: t("dashboard.overview"), exact: true },
     { to: `${basePath}/projects`, icon: FolderOpen, label: t("dashboard.find_projects") },
     { to: `${basePath}/saved`, icon: Bookmark, label: t("dashboard.saved_projects") },

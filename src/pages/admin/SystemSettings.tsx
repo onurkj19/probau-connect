@@ -3,11 +3,48 @@ import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SettingRow {
   key: string;
   value: Record<string, unknown>;
   updated_at: string;
+}
+
+const OWNER_LOGO_TICKER_SETTING_KEY = "active_project_owners_ticker";
+interface OwnerTickerItem {
+  name: string;
+  logoUrl: string;
+  active: boolean;
+}
+
+const DEFAULT_TICKER_ITEMS: OwnerTickerItem[] = [
+  { name: "AlpenBau AG", logoUrl: "https://via.placeholder.com/120x48?text=AlpenBau", active: true },
+  { name: "SwissConstruct GmbH", logoUrl: "https://via.placeholder.com/120x48?text=SwissConstruct", active: true },
+  { name: "Limmat Projekte", logoUrl: "https://via.placeholder.com/120x48?text=Limmat", active: true },
+  { name: "Zuri Developments", logoUrl: "https://via.placeholder.com/120x48?text=Zuri", active: true },
+  { name: "Helvetic Estates", logoUrl: "https://via.placeholder.com/120x48?text=Helvetic", active: true },
+];
+
+function parseTickerItems(value: unknown): OwnerTickerItem[] {
+  const items =
+    value && typeof value === "object" && "items" in value && Array.isArray((value as { items?: unknown }).items)
+      ? (value as { items: unknown[] }).items
+      : [];
+  const normalized = items
+    .map((raw) => {
+      if (!raw || typeof raw !== "object") return null;
+      const row = raw as { name?: unknown; logoUrl?: unknown; active?: unknown };
+      const name = typeof row.name === "string" ? row.name.trim() : "";
+      if (!name) return null;
+      return {
+        name,
+        logoUrl: typeof row.logoUrl === "string" ? row.logoUrl.trim() : "",
+        active: typeof row.active === "boolean" ? row.active : true,
+      } as OwnerTickerItem;
+    })
+    .filter((row): row is OwnerTickerItem => Boolean(row));
+  return normalized.length > 0 ? normalized : DEFAULT_TICKER_ITEMS;
 }
 
 const AdminSystemSettings = () => {
@@ -19,8 +56,14 @@ const AdminSystemSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tickerItems, setTickerItems] = useState<OwnerTickerItem[]>(DEFAULT_TICKER_ITEMS);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const selected = useMemo(() => rows.find((r) => r.key === selectedKey) ?? null, [rows, selectedKey]);
+  const ownerTickerRow = useMemo(
+    () => rows.find((r) => r.key === OWNER_LOGO_TICKER_SETTING_KEY) ?? null,
+    [rows],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,6 +94,10 @@ const AdminSystemSettings = () => {
   useEffect(() => {
     if (selected) setEditorValue(JSON.stringify(selected.value ?? {}, null, 2));
   }, [selected]);
+
+  useEffect(() => {
+    setTickerItems(parseTickerItems(ownerTickerRow?.value));
+  }, [ownerTickerRow]);
 
   const saveSetting = async (key: string, rawValue: string) => {
     setSaving(true);
@@ -85,6 +132,24 @@ const AdminSystemSettings = () => {
     }
   };
 
+  const saveTickerSetting = async () => {
+    const value = { items: tickerItems };
+    await saveSetting(OWNER_LOGO_TICKER_SETTING_KEY, JSON.stringify(value, null, 2));
+  };
+
+  const moveTickerItem = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setTickerItems((prev) => {
+      if (fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
+        return prev;
+      }
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -104,6 +169,107 @@ const AdminSystemSettings = () => {
         >
           Add setting
         </Button>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-foreground">Active Project Owners Ticker</h2>
+            <p className="text-xs text-muted-foreground">
+              Manage logos shown in the moving strip under navbar.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={saving}
+              onClick={() => setTickerItems(parseTickerItems(ownerTickerRow?.value))}
+            >
+              Reload from saved
+            </Button>
+            <Button
+              size="sm"
+              disabled={saving}
+              onClick={() => void saveTickerSetting()}
+            >
+              Save ticker list
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4 space-y-3">
+          {tickerItems.map((item, index) => (
+            <div
+              key={`${item.name}-${index}`}
+              className={`grid gap-2 rounded-lg border p-3 md:grid-cols-[auto_1fr_1fr_auto_auto] ${
+                dragIndex === index ? "border-primary bg-primary/5" : "border-border"
+              }`}
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragEnd={() => setDragIndex(null)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (dragIndex === null) return;
+                moveTickerItem(dragIndex, index);
+                setDragIndex(null);
+              }}
+            >
+              <div className="flex items-center justify-center rounded-md border border-dashed border-border px-2 text-xs text-muted-foreground">
+                Drag
+              </div>
+              <Input
+                value={item.name}
+                placeholder="Owner name"
+                onChange={(e) => {
+                  const next = [...tickerItems];
+                  next[index] = { ...next[index], name: e.target.value };
+                  setTickerItems(next);
+                }}
+              />
+              <Input
+                value={item.logoUrl}
+                placeholder="https://..."
+                onChange={(e) => {
+                  const next = [...tickerItems];
+                  next[index] = { ...next[index], logoUrl: e.target.value };
+                  setTickerItems(next);
+                }}
+              />
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <Checkbox
+                  checked={item.active}
+                  onCheckedChange={(checked) => {
+                    const next = [...tickerItems];
+                    next[index] = { ...next[index], active: checked === true };
+                    setTickerItems(next);
+                  }}
+                />
+                Active
+              </label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => {
+                  setTickerItems((prev) => prev.filter((_, i) => i !== index));
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              setTickerItems((prev) => [...prev, { name: "", logoUrl: "", active: true }])
+            }
+          >
+            Add logo
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">

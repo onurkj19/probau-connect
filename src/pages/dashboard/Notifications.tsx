@@ -27,7 +27,7 @@ interface NotificationRow {
 
 const DashboardNotifications = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
   const [rows, setRows] = useState<NotificationRow[]>([]);
@@ -115,16 +115,31 @@ const DashboardNotifications = () => {
     setMarkingSelected(false);
   };
 
+  const deleteNotifications = async (
+    options: { ids?: string[]; all?: boolean },
+  ): Promise<boolean> => {
+    const token = await getToken();
+    if (!token) return false;
+    const response = await fetch("/api/notifications/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(options),
+    });
+    if (!response.ok) {
+      return false;
+    }
+    return true;
+  };
+
   const deleteSelected = async () => {
     if (!user || selectedIds.length === 0) return;
     setDeletingSelected(true);
     const ids = [...selectedIds];
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("user_id", user.id)
-      .in("id", ids);
-    if (!error) {
+    const success = await deleteNotifications({ ids });
+    if (success) {
       setRows((prev) => prev.filter((row) => !ids.includes(row.id)));
       setSelectedIds([]);
     }
@@ -134,11 +149,8 @@ const DashboardNotifications = () => {
   const deleteAll = async () => {
     if (!user || rows.length === 0) return;
     setDeletingAll(true);
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("user_id", user.id);
-    if (!error) {
+    const success = await deleteNotifications({ all: true });
+    if (success) {
       setRows([]);
       setSelectedIds([]);
     }
@@ -148,12 +160,8 @@ const DashboardNotifications = () => {
   const deleteOne = async (notificationId: string) => {
     if (!user) return;
     setDeletingOneId(notificationId);
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("id", notificationId);
-    if (!error) {
+    const success = await deleteNotifications({ ids: [notificationId] });
+    if (success) {
       setRows((prev) => prev.filter((row) => row.id !== notificationId));
       setSelectedIds((prev) => prev.filter((id) => id !== notificationId));
     }

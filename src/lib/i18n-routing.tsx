@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams, useNavigate, useLocation, Navigate, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
 
 export const SUPPORTED_LOCALES = ["de", "fr", "it", "en"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -74,6 +75,18 @@ export function useChangeLocale() {
     const currentLocale = locale && isValidLocale(locale) ? locale : i18n.language;
     const pathWithoutLocale = location.pathname.replace(`/${currentLocale}`, "") || "/";
     i18n.changeLanguage(newLocale);
+    // Keep auth metadata in sync so Supabase email templates can use preferred_locale.
+    void supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (!data.session?.user) return;
+        await supabase.auth.updateUser({
+          data: { preferred_locale: newLocale },
+        });
+      })
+      .catch(() => {
+        // Ignore locale sync errors to avoid blocking navigation.
+      });
     navigate(`/${newLocale}${pathWithoutLocale}${location.search}${location.hash}`, { replace: true });
   };
 }

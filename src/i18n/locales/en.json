@@ -22,7 +22,8 @@
   "home": {
     "trending_title": "Trending now",
     "trending_subtitle": "Top 5 latest published projects",
-    "trending_view_all": "View all projects"
+    "trending_view_all": "View all projects",
+    "stats_transparency_note": "Live platform counters. ProjektMarkt is newly launched and growing continuously."
   },
   "features": {
     "title": "Why ProjektMarkt?",

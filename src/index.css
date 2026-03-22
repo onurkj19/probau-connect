@@ -87,6 +87,86 @@
     --sidebar-border: 236 25% 16%;
     --sidebar-ring: 172 66% 50%;
   }
+
+  [data-theme="default"] {
+    --primary: 238 43% 24%;
+    --accent: 172 66% 50%;
+    --ring: 238 43% 24%;
+    --sidebar-primary: 172 66% 50%;
+    --swiss-red: 172 66% 50%;
+  }
+
+  [data-theme="ocean"] {
+    --primary: 213 70% 42%;
+    --accent: 193 95% 45%;
+    --ring: 213 70% 42%;
+    --sidebar-primary: 193 95% 45%;
+    --swiss-red: 193 95% 45%;
+  }
+
+  [data-theme="emerald"] {
+    --primary: 154 62% 32%;
+    --accent: 143 70% 45%;
+    --ring: 154 62% 32%;
+    --sidebar-primary: 143 70% 45%;
+    --swiss-red: 143 70% 45%;
+  }
+
+  [data-theme="sunset"] {
+    --primary: 14 76% 42%;
+    --accent: 28 94% 53%;
+    --ring: 14 76% 42%;
+    --sidebar-primary: 28 94% 53%;
+    --swiss-red: 28 94% 53%;
+  }
+
+  [data-theme="violet"] {
+    --primary: 263 62% 44%;
+    --accent: 276 85% 58%;
+    --ring: 263 62% 44%;
+    --sidebar-primary: 276 85% 58%;
+    --swiss-red: 276 85% 58%;
+  }
+
+  [data-theme="rose"] {
+    --primary: 336 66% 40%;
+    --accent: 340 82% 52%;
+    --ring: 336 66% 40%;
+    --sidebar-primary: 340 82% 52%;
+    --swiss-red: 340 82% 52%;
+  }
+
+  [data-theme="amber"] {
+    --primary: 34 88% 38%;
+    --accent: 43 96% 50%;
+    --ring: 34 88% 38%;
+    --sidebar-primary: 43 96% 50%;
+    --swiss-red: 43 96% 50%;
+  }
+
+  [data-theme="graphite"] {
+    --primary: 220 14% 28%;
+    --accent: 199 18% 50%;
+    --ring: 220 14% 28%;
+    --sidebar-primary: 199 18% 50%;
+    --swiss-red: 199 18% 50%;
+  }
+
+  [data-theme="forest"] {
+    --primary: 138 47% 24%;
+    --accent: 160 84% 39%;
+    --ring: 138 47% 24%;
+    --sidebar-primary: 160 84% 39%;
+    --swiss-red: 160 84% 39%;
+  }
+
+  [data-theme="sky"] {
+    --primary: 206 82% 40%;
+    --accent: 187 92% 46%;
+    --ring: 206 82% 40%;
+    --sidebar-primary: 187 92% 46%;
+    --swiss-red: 187 92% 46%;
+  }
 }
 
 @layer base {
@@ -135,6 +215,29 @@
 
   .shadow-hero {
     box-shadow: var(--shadow-hero);
+  }
+
+  .logo-ticker-mask {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .logo-ticker-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
+    min-width: max-content;
+    animation: logo-ticker-ltr 36s linear infinite;
+  }
+
+  @keyframes logo-ticker-ltr {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
 }
 

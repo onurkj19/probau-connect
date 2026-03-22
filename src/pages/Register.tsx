@@ -275,6 +275,11 @@ const Register = () => {
               {t("auth.login_button")}
             </Link>
           </p>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            <Link to={`/${lang}/forgot-password`} className="font-medium text-primary hover:underline">
+              {t("auth.forgot_password", { defaultValue: "Forgot password?" })}
+            </Link>
+          </p>
         </div>
       </div>
     </main>

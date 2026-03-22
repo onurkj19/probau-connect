@@ -16,6 +16,7 @@ const Login = () => {
   const { locale } = useParams<{ locale: string }>();
   const lang = locale && isValidLocale(locale) ? locale : DEFAULT_LOCALE;
   const confirmed = searchParams.get("confirmed") === "1";
+  const reset = searchParams.get("reset") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +54,13 @@ const Login = () => {
               })}
             </div>
           )}
+          {reset && (
+            <div className="mt-4 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700">
+              {t("auth.password_reset_success", {
+                defaultValue: "Password updated successfully. You can sign in now.",
+              })}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
@@ -79,6 +87,11 @@ const Login = () => {
               {isLoading ? "..." : t("auth.login_button")}
             </Button>
           </form>
+          <p className="mt-3 text-right text-sm">
+            <Link to={`/${lang}/forgot-password`} className="font-medium text-primary hover:underline">
+              {t("auth.forgot_password", { defaultValue: "Forgot password?" })}
+            </Link>
+          </p>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             {t("auth.no_account")}{" "}

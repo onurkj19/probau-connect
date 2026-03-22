@@ -22,7 +22,8 @@
   "home": {
     "trending_title": "Trending now",
     "trending_subtitle": "Top 5 progetti pubblicati di recente",
-    "trending_view_all": "Vedi tutti i progetti"
+    "trending_view_all": "Vedi tutti i progetti",
+    "stats_transparency_note": "Contatori piattaforma in tempo reale. ProjektMarkt è appena stato lanciato ed è in crescita continua."
   },
   "features": {
     "title": "Perché ProjektMarkt?",

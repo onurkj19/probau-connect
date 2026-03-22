@@ -133,6 +133,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await updateUserSubscription(user.id, {
         stripeCustomerId: customerId,
       });
+    } else {
+      // Keep Stripe customer email in sync so receipt/invoice emails are always delivered.
+      try {
+        await stripe.customers.update(customerId, { email: user.email });
+      } catch (emailSyncError) {
+        console.warn("Failed to sync Stripe customer email", emailSyncError);
+      }
     }
 
     const appUrl = process.env.VITE_APP_URL || "http://localhost:8080";

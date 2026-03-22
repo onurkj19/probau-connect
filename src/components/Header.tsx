@@ -1,12 +1,22 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, X, Globe, ChevronDown } from "lucide-react";
+import { Menu, X, Globe, ChevronDown, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useChangeLocale, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/lib/i18n-routing";
 import { useAuth } from "@/lib/auth";
 import { BrandLogo } from "@/components/BrandLogo";
+import { THEME_OPTIONS, getStoredTheme, setTheme, type ThemeId } from "@/lib/theme";
 
 const languages: { code: Locale; label: string; flag: string }[] = [
   { code: "de", label: "Deutsch", flag: "🇩🇪" },
@@ -24,6 +34,14 @@ const Header = () => {
   const { user, logout } = useAuth();
 
   const currentLang = languages.find((l) => l.code === i18n.language) || languages[0];
+  const [themeId, setThemeId] = useState<ThemeId>(() => getStoredTheme());
+
+  const handleThemeChange = (value: string) => {
+    const selected = THEME_OPTIONS.find((theme) => theme.id === value);
+    if (!selected) return;
+    setThemeId(selected.id);
+    setTheme(selected.id);
+  };
 
   const navLinks = [
     { to: `/${lang}`, label: t("nav.home") },
@@ -68,6 +86,24 @@ const Header = () => {
                   {l.label}
                 </DropdownMenuItem>
               ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-muted-foreground" aria-label="Select theme">
+                <Palette className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Select theme</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={themeId} onValueChange={handleThemeChange}>
+                {THEME_OPTIONS.map((theme) => (
+                  <DropdownMenuRadioItem key={theme.id} value={theme.id}>
+                    {theme.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -122,6 +158,32 @@ const Header = () => {
                   {l.code.toUpperCase()}
                 </button>
               ))}
+            </div>
+            <div className="pt-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    aria-label="Select theme"
+                  >
+                    <Palette className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuLabel>Select theme</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={themeId} onValueChange={handleThemeChange}>
+                    {THEME_OPTIONS.map((theme) => (
+                      <DropdownMenuRadioItem key={theme.id} value={theme.id}>
+                        {theme.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex gap-2 pt-2">
               {user ? (

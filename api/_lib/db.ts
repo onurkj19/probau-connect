@@ -16,7 +16,20 @@ export interface UserSubscription {
   subscriptionCurrentPeriodEnd: string | null;
 }
 
-function mapRow(row: any): UserSubscription {
+interface ProfileSubscriptionRow {
+  id: string;
+  role: UserSubscription["role"];
+  email: string;
+  is_banned: boolean | null;
+  deleted_at: string | null;
+  stripe_customer_id: string | null;
+  subscription_status: SubscriptionStatus;
+  plan_type: PlanType | null;
+  offer_count_this_month: number | null;
+  subscription_current_period_end: string | null;
+}
+
+function mapRow(row: ProfileSubscriptionRow): UserSubscription {
   return {
     id: row.id,
     role: row.role,
@@ -26,7 +39,7 @@ function mapRow(row: any): UserSubscription {
     stripeCustomerId: row.stripe_customer_id,
     subscriptionStatus: row.subscription_status,
     planType: row.plan_type,
-    offerCountThisMonth: row.offer_count_this_month,
+    offerCountThisMonth: Number(row.offer_count_this_month ?? 0),
     subscriptionCurrentPeriodEnd: row.subscription_current_period_end,
   };
 }
@@ -68,7 +81,7 @@ export async function updateUserSubscription(
     >
   >,
 ): Promise<void> {
-  const updateData: Record<string, any> = {};
+  const updateData: Record<string, unknown> = {};
   if (data.stripeCustomerId !== undefined) updateData.stripe_customer_id = data.stripeCustomerId;
   if (data.subscriptionStatus !== undefined) updateData.subscription_status = data.subscriptionStatus;
   if (data.planType !== undefined) updateData.plan_type = data.planType;
@@ -95,7 +108,7 @@ export async function updateUserByStripeCustomerId(
     >
   >,
 ): Promise<void> {
-  const updateData: Record<string, any> = {};
+  const updateData: Record<string, unknown> = {};
   if (data.subscriptionStatus !== undefined) updateData.subscription_status = data.subscriptionStatus;
   if (data.planType !== undefined) updateData.plan_type = data.planType;
   if (data.subscriptionCurrentPeriodEnd !== undefined) updateData.subscription_current_period_end = data.subscriptionCurrentPeriodEnd;

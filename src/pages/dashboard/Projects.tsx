@@ -117,15 +117,18 @@ const DashboardProjects = () => {
   const [projectToDelete, setProjectToDelete] = useState<DbProject | null>(null);
   const [deletingProject, setDeletingProject] = useState(false);
 
-  const categoryOptions = [
-    { value: "fassade", label: t("dashboard.category_fassade") },
-    { value: "gerust", label: t("dashboard.category_gerust") },
-    { value: "elektriker", label: t("dashboard.category_elektriker") },
-    { value: "reinigung", label: t("dashboard.category_reinigung") },
-    { value: "heizung", label: t("dashboard.category_heizung") },
-    { value: "sanitar", label: t("dashboard.category_sanitar") },
-    { value: "other", label: "Other" },
-  ];
+  const categoryOptions = useMemo(
+    () => [
+      { value: "fassade", label: t("dashboard.category_fassade") },
+      { value: "gerust", label: t("dashboard.category_gerust") },
+      { value: "elektriker", label: t("dashboard.category_elektriker") },
+      { value: "reinigung", label: t("dashboard.category_reinigung") },
+      { value: "heizung", label: t("dashboard.category_heizung") },
+      { value: "sanitar", label: t("dashboard.category_sanitar") },
+      { value: "other", label: "Other" },
+    ],
+    [t],
+  );
   const isCustomCategory = category === "other";
   const categoryLabelMap = useMemo(
     () => Object.fromEntries(categoryOptions.map((option) => [option.value, option.label])),
