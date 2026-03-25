@@ -3,6 +3,8 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { AdminAnalyticsSkeleton } from "@/components/common/AdminAnalyticsSkeleton";
 
 interface AnalyticsResponse {
   windowDays: number;
@@ -28,6 +30,13 @@ interface AnalyticsResponse {
     reports: { date: string; value: number }[];
   };
 }
+
+const chartTooltip = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  color: "hsl(var(--card-foreground))",
+};
 
 const AdminAnalytics = () => {
   const { getToken } = useAuth();
@@ -63,85 +72,88 @@ const AdminAnalytics = () => {
   }, [days, getToken, refreshNonce]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Advanced Analytics</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Funnel, retention and behavior trends.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value={30}>30d</option>
-            <option value={60}>60d</option>
-            <option value={90}>90d</option>
-            <option value={180}>180d</option>
-          </select>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              sessionStorage.removeItem(`admin_analytics_${days}`);
-              setRefreshNonce((n) => n + 1);
-            }}
-          >
-            Refresh
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6 md:space-y-8">
+      <PageHeader
+        align="end"
+        title="Advanced Analytics"
+        description="Funnel, retention and behavior trends."
+        actions={
+          <>
+            <select
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="native-form-control"
+            >
+              <option value={30}>30d</option>
+              <option value={60}>60d</option>
+              <option value={90}>90d</option>
+              <option value={180}>180d</option>
+            </select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                sessionStorage.removeItem(`admin_analytics_${days}`);
+                setRefreshNonce((n) => n + 1);
+              }}
+            >
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
-      {loading && <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Loading analytics...</div>}
-      {error && <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
+      {loading && <AdminAnalyticsSkeleton />}
+      {error && <div className="app-card border-destructive/20 bg-destructive/5 text-sm text-foreground">{error}</div>}
 
       {!loading && data && (
         <>
-          <div className="grid gap-3 md:grid-cols-4">
-            <div className="rounded-xl border border-border bg-card p-4">
+          <div className="dashboard-grid-4">
+            <div className="surface-panel-compact">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Project owners</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.kpis.projectOwners}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="surface-panel-compact">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Contractors</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.kpis.contractors}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="surface-panel-compact">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Paying users</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.kpis.payingUsers}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="surface-panel-compact">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Retention 30d</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.kpis.retentionRate30d}%</p>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border border-border bg-card p-4">
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+            <section className="surface-panel-compact">
               <h2 className="font-display text-xl font-semibold text-foreground">Growth trends</h2>
               <p className="text-xs text-muted-foreground">Users, projects and offers per day.</p>
               <div className="mt-3 h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.series.users.map((u, i) => ({
-                    date: u.date,
-                    users: u.value,
-                    projects: data.series.projects[i]?.value ?? 0,
-                    offers: data.series.offers[i]?.value ?? 0,
-                  }))}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Line dataKey="users" stroke="#1d4ed8" dot={false} />
-                    <Line dataKey="projects" stroke="#059669" dot={false} />
-                    <Line dataKey="offers" stroke="#d97706" dot={false} />
+                  <LineChart
+                    data={data.series.users.map((u, i) => ({
+                      date: u.date,
+                      users: u.value,
+                      projects: data.series.projects[i]?.value ?? 0,
+                      offers: data.series.offers[i]?.value ?? 0,
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <Tooltip contentStyle={chartTooltip} />
+                    <Line dataKey="users" stroke="hsl(var(--foreground))" strokeWidth={2} dot={false} />
+                    <Line dataKey="projects" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} />
+                    <Line dataKey="offers" stroke="hsl(var(--border))" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </section>
 
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className="surface-panel-compact">
               <h2 className="font-display text-xl font-semibold text-foreground">Acquisition funnel</h2>
               <p className="text-xs text-muted-foreground">User to paying conversion path.</p>
               <div className="mt-3 h-72">
@@ -154,31 +166,31 @@ const AdminAnalytics = () => {
                       { stage: "Paying", value: data.funnel.payingUsers },
                     ]}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#1d4ed8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="stage" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <Tooltip contentStyle={chartTooltip} />
+                    <Bar dataKey="value" fill="hsl(var(--foreground))" fillOpacity={0.85} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </section>
           </div>
 
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="surface-panel-compact">
             <h2 className="font-display text-xl font-semibold text-foreground">Risk and moderation signals</h2>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div className="rounded-md border border-border p-3">
+              <div className="rounded-md border border-border bg-secondary p-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Open reports</p>
-                <p className="mt-1 text-lg font-semibold">{data.kpis.openReports}</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{data.kpis.openReports}</p>
               </div>
-              <div className="rounded-md border border-border p-3">
+              <div className="rounded-md border border-border bg-muted p-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Warning events</p>
-                <p className="mt-1 text-lg font-semibold">{data.kpis.warningEvents}</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{data.kpis.warningEvents}</p>
               </div>
-              <div className="rounded-md border border-border p-3">
+              <div className="rounded-md border border-border bg-secondary p-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Critical events</p>
-                <p className="mt-1 text-lg font-semibold">{data.kpis.criticalEvents}</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{data.kpis.criticalEvents}</p>
               </div>
             </div>
           </section>

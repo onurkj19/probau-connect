@@ -105,7 +105,7 @@ const ServiceLanding = () => {
   };
 
   return (
-    <main className="bg-background py-16">
+    <main className="bg-background section-y">
       <SeoHead
         title={`${content.name} | ProjektMarkt Schweiz`}
         description={content.description}
@@ -113,16 +113,16 @@ const ServiceLanding = () => {
         schemas={[breadcrumbSchema, serviceSchema, faqSchema]}
       />
 
-      <div className="container max-w-5xl">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-card">
+      <div className="container max-w-5xl space-y-8 px-4">
+        <div className="app-card app-card--interactive">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">ProjektMarkt Schweiz</p>
-          <h1 className="mt-3 font-display text-3xl font-bold text-foreground md:text-4xl">{content.title}</h1>
+          <h1 className="mt-3 page-title">{content.title}</h1>
           <p className="mt-4 text-muted-foreground">{content.intro}</p>
           <p className="mt-3 text-sm text-muted-foreground">{labels.coverage}</p>
 
           <ul className="mt-6 space-y-2">
             {content.bullets.map((item) => (
-              <li key={item} className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-foreground">
+              <li key={item} className="card-nested bg-muted/30 px-4 py-3 text-sm text-foreground">
                 {item}
               </li>
             ))}
@@ -138,11 +138,11 @@ const ServiceLanding = () => {
           </div>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-border bg-card p-8 shadow-card">
-          <h2 className="font-display text-2xl font-semibold text-foreground">{labels.faq}</h2>
+        <section className="app-card app-card--interactive">
+          <h2 className="page-title text-left">{labels.faq}</h2>
           <div className="mt-5 space-y-4">
             {content.faqs.map((faq) => (
-              <article key={faq.question} className="rounded-lg border border-border bg-muted/30 p-4">
+              <article key={faq.question} className="card-nested bg-muted/30 p-4">
                 <h3 className="text-base font-semibold text-foreground">{faq.question}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{faq.answer}</p>
               </article>
@@ -165,7 +165,7 @@ const ServiceLanding = () => {
               <Link
                 key={item}
                 to={`/${lang}/services/${item}`}
-                className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+                className="rounded-full border border-border bg-card px-4 py-2 text-sm text-foreground transition-[color,border-color] duration-150 ease-smooth hover:border-primary hover:text-primary"
               >
                 {getServiceCategoryContent(lang, item as ServiceCategorySlug).name}
               </Link>

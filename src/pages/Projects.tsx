@@ -6,6 +6,9 @@ import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { supabase } from "@/lib/supabase";
 import { ProjectCard } from "@/components/dashboard/ProjectCard";
 import { useAuth } from "@/lib/auth";
+import { DashboardCardSkeleton } from "@/components/common/DashboardCardSkeleton";
+import { EmptyState } from "@/components/common/EmptyState";
+import { FolderOpen } from "lucide-react";
 
 interface PublicProject {
   id: string;
@@ -71,13 +74,13 @@ const Projects = () => {
   }, [loadProjects, user]);
 
   return (
-    <main className="bg-background py-20">
-      <div className="container">
-        <h1 className="font-display text-4xl font-bold text-foreground">{t("nav.projects")}</h1>
-        <p className="mt-2 text-muted-foreground">{t("projects.subtitle")}</p>
+    <main className="bg-background section-y">
+      <div className="container px-4">
+        <h1 className="page-title">{t("nav.projects")}</h1>
+        <p className="page-subtitle md:text-base">{t("projects.subtitle")}</p>
 
         {!isLoading && !user ? (
-          <div className="mt-10 rounded-2xl border border-border bg-card p-8 text-center shadow-card">
+          <div className="app-card app-card--interactive mt-10 text-center">
             <p className="text-sm text-muted-foreground">{t("projects.login_prompt")}</p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
               <Button asChild>
@@ -89,10 +92,14 @@ const Projects = () => {
             </div>
           </div>
         ) : (
-        <div className="mt-10 grid gap-4">
-          {loading && <p className="text-sm text-muted-foreground">{t("projects.loading")}</p>}
+        <div className="mt-10 grid gap-6 md:gap-8">
+          {loading && <DashboardCardSkeleton count={2} />}
           {!loading && projects.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t("projects.no_projects")}</p>
+            <EmptyState
+              icon={FolderOpen}
+              title={t("projects.no_projects")}
+              description={t("projects.subtitle")}
+            />
           )}
           {!loading &&
             projects.map((p) => (

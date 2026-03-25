@@ -19,16 +19,11 @@ export function AdminPanelCard({
   contentClassName,
 }: AdminPanelCardProps) {
   return (
-    <section
-      className={cn(
-        "rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_80px_-40px_rgba(30,41,59,0.8)] backdrop-blur-md transition-colors duration-200 hover:border-white/20",
-        className,
-      )}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className={cn("app-card app-card--interactive", className)}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl font-semibold text-white">{title}</h2>
-          {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
+          <h2 className="text-lg font-semibold">{title}</h2>
+          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
         </div>
         {actions}
       </div>

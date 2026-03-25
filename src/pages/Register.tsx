@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth, type UserRole } from "@/lib/auth";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { trackEvent } from "@/lib/analytics";
@@ -116,27 +117,29 @@ const Register = () => {
   };
 
   return (
-    <main className="bg-background py-20">
-      <div className="container flex justify-center">
-        <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-card">
-          <h1 className="font-display text-2xl font-bold text-foreground">{t("auth.register_title")}</h1>
+    <main className="auth-main">
+      <div className="container flex justify-center px-4">
+        <Card variant="static" className="w-full max-w-lg border-border shadow-sm motion-safe:animate-card-enter">
+          <CardHeader>
+            <CardTitle className="font-display text-2xl font-semibold tracking-tight">{t("auth.register_title")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
               <Label htmlFor="name">{t("auth.full_name")}</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="company">{t("auth.company_name")}</Label>
               <Input id="company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="vat-number">{t("auth.vat_number")}</Label>
               <Input
                 id="vat-number"
@@ -145,7 +148,7 @@ const Register = () => {
                 placeholder={t("auth.vat_number_placeholder")}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="profile-title">{t("auth.profile_title")}</Label>
               <Input
                 id="profile-title"
@@ -154,7 +157,7 @@ const Register = () => {
                 placeholder={t("auth.profile_title_placeholder")}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="avatar-file">{t("auth.profile_photo_upload")}</Label>
               <Input
                 id="avatar-file"
@@ -165,11 +168,11 @@ const Register = () => {
               <p className="text-xs text-muted-foreground">{t("auth.profile_photo_hint")}</p>
               {avatarFile && <p className="text-xs text-foreground">{avatarFile.name}</p>}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">{t("auth.email")}</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="password">{t("auth.password")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <p className="text-xs text-muted-foreground">{t("auth.password_requirements")}</p>
@@ -199,7 +202,7 @@ const Register = () => {
                 </p>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="confirm-password">{t("auth.confirm_password")}</Label>
               <Input
                 id="confirm-password"
@@ -209,13 +212,13 @@ const Register = () => {
                 required
               />
               {hasConfirmMismatch && (
-                <p className="inline-flex items-center gap-1 text-xs text-destructive">
+                <p className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
                   <XCircle className="h-3.5 w-3.5" />
                   {t("auth.password_mismatch")}
                 </p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>{t("auth.role_select")}</Label>
               <div className="flex gap-3">
                 <Button
@@ -239,7 +242,7 @@ const Register = () => {
             <label className="flex items-start gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-input"
+                className="mt-0.5 h-4 w-4 rounded border border-gray-300/50 bg-white/70 shadow-sm backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 supports-[backdrop-filter]:bg-white/60"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                 required
@@ -260,7 +263,7 @@ const Register = () => {
                 </>
               ) : submitState === "success" ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4 animate-bounce" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200" />
                   {t("auth.done")}
                 </>
               ) : (
@@ -269,18 +272,19 @@ const Register = () => {
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            {t("auth.has_account")}{" "}
-            <Link to={`/${lang}/login`} className="font-medium text-primary hover:underline">
-              {t("auth.login_button")}
-            </Link>
-          </p>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            <Link to={`/${lang}/forgot-password`} className="font-medium text-primary hover:underline">
-              {t("auth.forgot_password", { defaultValue: "Forgot password?" })}
-            </Link>
-          </p>
-        </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {t("auth.has_account")}{" "}
+              <Link to={`/${lang}/login`} className="font-medium text-primary hover:underline">
+                {t("auth.login_button")}
+              </Link>
+            </p>
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              <Link to={`/${lang}/forgot-password`} className="font-medium text-primary hover:underline">
+                {t("auth.forgot_password", { defaultValue: "Forgot password?" })}
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

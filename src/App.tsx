@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { AdminRoleGuard } from "@/components/auth/AdminRoleGuard";
 import ScrollToTop from "@/components/ScrollToTop";
+import { RouteFade } from "@/components/RouteFade";
 import { trackPageView } from "@/lib/analytics";
 import "./i18n";
 
@@ -75,8 +76,12 @@ const App = () => (
           <ScrollToTop />
           <Suspense
             fallback={
-              <div className="flex min-h-screen items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="app-canvas flex min-h-screen flex-col items-center justify-center gap-4 px-4">
+                <div
+                  className="h-9 w-9 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
+                  aria-hidden
+                />
+                <p className="text-sm text-muted-foreground">Loading…</p>
               </div>
             }
           >
@@ -132,7 +137,14 @@ const App = () => (
                 </Route>
               </Route>
 
-              <Route path="*" element={<NotFound />} />
+              <Route
+                path="*"
+                element={
+                  <RouteFade>
+                    <NotFound />
+                  </RouteFade>
+                }
+              />
             </Routes>
           </Suspense>
         </BrowserRouter>

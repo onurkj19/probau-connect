@@ -14,6 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/common/EmptyState";
+import { NotificationListSkeleton } from "@/components/common/NotificationListSkeleton";
 
 interface NotificationRow {
   id: string;
@@ -37,9 +39,13 @@ const DashboardNotifications = () => {
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
   const [deletingOneId, setDeletingOneId] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setInitialLoading(false);
+      return;
+    }
     const load = async () => {
       const { data } = await supabase
         .from("notifications")
@@ -48,6 +54,7 @@ const DashboardNotifications = () => {
         .order("created_at", { ascending: false });
       setRows((data ?? []) as NotificationRow[]);
       setSelectedIds((prev) => prev.filter((id) => (data ?? []).some((row) => row.id === id)));
+      setInitialLoading(false);
     };
     void load();
 
@@ -170,11 +177,13 @@ const DashboardNotifications = () => {
 
   return (
     <div>
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="app-card-frame">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
             <Inbox className="h-4 w-4 text-muted-foreground" />
-            <h1 className="font-display text-xl font-bold text-foreground">{t("dashboard.notifications")}</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight text-foreground md:text-2xl">
+              {t("dashboard.notifications")}
+            </h1>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {rows.length}
             </span>
@@ -252,16 +261,15 @@ const DashboardNotifications = () => {
         </div>
 
         <div className="divide-y divide-border">
-          {rows.length === 0 && (
-            <div className="py-14 text-center text-sm text-muted-foreground">
-              <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
-              {t("dashboard.no_notifications")}
-            </div>
+          {initialLoading && <NotificationListSkeleton rows={6} />}
+          {!initialLoading && rows.length === 0 && (
+            <EmptyState icon={Bell} title={t("dashboard.no_notifications")} />
           )}
-          {rows.map((item) => (
+          {!initialLoading &&
+            rows.map((item) => (
             <div
               key={item.id}
-              className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40 ${
+              className={`flex items-start gap-3 px-4 py-3 transition-colors duration-150 ease-smooth hover:bg-muted/40 ${
                 item.is_read ? "bg-card" : "bg-primary/5"
               }`}
             >
@@ -300,7 +308,7 @@ const DashboardNotifications = () => {
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+                  <Button type="button" variant="ghost" size="iconSm">
                     <MoreHorizontal className={`h-4 w-4 ${deletingOneId === item.id ? "animate-pulse" : ""}`} />
                   </Button>
                 </DropdownMenuTrigger>

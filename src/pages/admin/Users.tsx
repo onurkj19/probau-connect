@@ -12,7 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { downloadCsv } from "@/lib/csv";
-import { Check, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Check, Loader2, MoreHorizontal, Trash2, Users as UsersIcon } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AdminUserRow {
   id: string;
@@ -166,7 +169,11 @@ const AdminUsers = () => {
     if (isActionDone(userId, action)) {
       return (
         <>
-          {doneIcon === "trash" ? <Trash2 className="h-3.5 w-3.5 animate-bounce" /> : <Check className="h-3.5 w-3.5 animate-bounce" />}
+          {doneIcon === "trash" ? (
+            <Trash2 className="h-3.5 w-3.5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200" />
+          ) : (
+            <Check className="h-3.5 w-3.5 text-emerald-600 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200" />
+          )}
           {doneLabel}
         </>
       );
@@ -175,13 +182,13 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Users</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Role, moderation, subscription and lifecycle control.</p>
+        <h1 className="page-title">Users</h1>
+        <p className="page-subtitle">Role, moderation, subscription and lifecycle control.</p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="app-card dashboard-grid-6">
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -190,7 +197,7 @@ const AdminUsers = () => {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="native-form-control"
         >
           <option value="">All roles</option>
           {roleOptions.map((role) => (
@@ -202,7 +209,7 @@ const AdminUsers = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="native-form-control"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -270,18 +277,22 @@ const AdminUsers = () => {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading users..." : `${totalRows} users`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-32 border-0 bg-muted/60" />
+          ) : (
+            `${totalRows} users`
+          )}
         </div>
         {error && (
           <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>
         )}
         <div className="overflow-x-auto">
-          <table className="min-w-[1400px] w-full text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1400px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">
+                <th>
                   <input
                     type="checkbox"
                     checked={rows.length > 0 && selectedIds.length === rows.length}
@@ -294,26 +305,39 @@ const AdminUsers = () => {
                     }}
                   />
                 </th>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="px-3 py-2 font-medium">User ID</th>
-                <th className="px-3 py-2 font-medium">Email</th>
-                <th className="px-3 py-2 font-medium">Role</th>
-                <th className="px-3 py-2 font-medium">Plan</th>
-                <th className="px-3 py-2 font-medium">Verified</th>
-                <th className="px-3 py-2 font-medium">Banned</th>
-                <th className="px-3 py-2 font-medium">Projects</th>
-                <th className="px-3 py-2 font-medium">Offers</th>
-                <th className="px-3 py-2 font-medium">Last login</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Name</th>
+                <th>User ID</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Plan</th>
+                <th>Verified</th>
+                <th>Banned</th>
+                <th>Projects</th>
+                <th>Offers</th>
+                <th>Last login</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                (() => {
-                  const isSuperAdmin = row.role === "super_admin";
-                  return (
-                <tr key={row.id} className="border-t border-border align-top">
-                  <td className="px-3 py-2">
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={12} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={12} className="p-0">
+                    <EmptyState
+                      icon={UsersIcon}
+                      title="No users"
+                      description="No accounts match the current view or filters."
+                    />
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  (() => {
+                    const isSuperAdmin = row.role === "super_admin";
+                    return (
+                <tr key={row.id} className="align-top">
+                  <td>
                     <input
                       type="checkbox"
                       disabled={isSuperAdmin}
@@ -327,17 +351,17 @@ const AdminUsers = () => {
                       }}
                     />
                   </td>
-                  <td className="px-3 py-2">{row.name || "-"}</td>
-                  <td className="px-3 py-2">
+                  <td>{row.name || "-"}</td>
+                  <td>
                     <span className="font-mono text-xs text-muted-foreground">{row.id}</span>
                   </td>
-                  <td className="px-3 py-2">{row.email}</td>
-                  <td className="px-3 py-2">
+                  <td>{row.email}</td>
+                  <td>
                     <div className="flex items-center gap-2">
                       <select
                         value={roleDraft[row.id] ?? row.role}
                         onChange={(e) => setRoleDraft((prev) => ({ ...prev, [row.id]: e.target.value as UserRole }))}
-                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        className="native-form-control h-8 min-h-8 px-3 py-1.5 text-xs"
                         disabled={isSuperAdmin}
                       >
                         {roleOptions.map((role) => (
@@ -358,24 +382,24 @@ const AdminUsers = () => {
                       </Button>
                     </div>
                   </td>
-                  <td className="px-3 py-2">{row.planType ? `${row.planType} (${row.subscriptionStatus})` : row.subscriptionStatus}</td>
-                  <td className="px-3 py-2">
+                  <td>{row.planType ? `${row.planType} (${row.subscriptionStatus})` : row.subscriptionStatus}</td>
+                  <td>
                     <span className={statusPillClass(row.isVerified)}>
                       {row.isVerified ? "Yes" : "No"}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     <span className={statusPillClass(!row.isBanned)}>
                       {row.isBanned ? "Yes" : "No"}
                     </span>
                   </td>
-                  <td className="px-3 py-2">{row.projectsCount}</td>
-                  <td className="px-3 py-2">{row.offersCount}</td>
-                  <td className="px-3 py-2">{row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : "-"}</td>
-                  <td className="px-3 py-2">
+                  <td>{row.projectsCount}</td>
+                  <td>{row.offersCount}</td>
+                  <td>{row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : "-"}</td>
+                  <td>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="outline" className="h-8 w-8" disabled={isSuperAdmin}>
+                        <Button size="iconSm" variant="outline" disabled={isSuperAdmin}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -453,9 +477,10 @@ const AdminUsers = () => {
                     </DropdownMenu>
                   </td>
                 </tr>
-                  );
-                })()
-              ))}
+                    );
+                  })()
+                ))
+              )}
             </tbody>
           </table>
         </div>

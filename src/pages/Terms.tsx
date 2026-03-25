@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 const Terms = () => {
   const { t } = useTranslation();
   return (
-    <main className="bg-background py-20">
-      <div className="container max-w-2xl">
-        <h1 className="font-display text-3xl font-bold text-foreground">{t("terms.title")}</h1>
+    <main className="bg-background section-y">
+      <div className="container max-w-2xl px-4">
+        <h1 className="page-title">{t("terms.title")}</h1>
         <div className="mt-8 space-y-4 text-sm text-muted-foreground leading-relaxed">
           <p>{t("terms.intro")}</p>
           <h2 className="pt-4 font-display text-lg font-semibold text-foreground">{t("terms.scope_title")}</h2>

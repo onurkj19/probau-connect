@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { VerificationBadge } from "@/components/common/VerificationBadge";
+import { EmptyState } from "@/components/common/EmptyState";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -973,7 +974,7 @@ const DashboardOffers = () => {
       </h1>
 
       {isActive && user?.planType && (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 dashboard-grid-2">
           <StatsCard
             title={t("subscription.offers_used")}
             value={offerLimit ? `${user.offerCountThisMonth} / ${offerLimit}` : `${user.offerCountThisMonth}`}
@@ -997,8 +998,8 @@ const DashboardOffers = () => {
         </div>
       )}
 
-      <div className="mt-8 grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)_260px]">
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+      <div className="mt-8 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)_260px] xl:gap-8">
+        <div className="app-card flex flex-col">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">{t("dashboard.messages")}</p>
             <Badge variant="secondary">{chats.length}</Badge>
@@ -1014,9 +1015,12 @@ const DashboardOffers = () => {
           </div>
           <div className="max-h-[580px] space-y-2 overflow-y-auto pr-1">
             {filteredChats.length === 0 && (
-              <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
-                {t("dashboard.no_chats")}
-              </p>
+              <EmptyState
+                icon={MessageCircle}
+                title={t("dashboard.no_chats")}
+                size="compact"
+                className="rounded-lg border border-dashed border-border/80 bg-muted/15 py-6"
+              />
             )}
             {filteredChats.map((chat) => {
               const partnerId = user?.id === chat.owner_id ? chat.contractor_id : chat.owner_id;
@@ -1082,12 +1086,14 @@ const DashboardOffers = () => {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="app-card-frame flex min-h-[520px] flex-col">
           {!selectedChat && (
-            <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
-              <MessageCircle className="h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-3 text-sm text-muted-foreground">{t("dashboard.no_chats")}</p>
-            </div>
+            <EmptyState
+              icon={MessageCircle}
+              title={t("dashboard.no_chats")}
+              description={t("dashboard.select_chat_hint")}
+              className="min-h-[520px] py-16"
+            />
           )}
           {selectedChat && (
             <>
@@ -1132,7 +1138,7 @@ const DashboardOffers = () => {
                   </Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
+                      <Button type="button" size="iconSm" variant="ghost">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -1249,7 +1255,7 @@ const DashboardOffers = () => {
                 ))}
                 <div ref={endOfMessagesRef} />
               </div>
-              <form className="space-y-2 border-t border-border bg-background p-3" onSubmit={handleSendMessage}>
+              <form className="space-y-1.5 border-t border-border bg-background p-3" onSubmit={handleSendMessage}>
                 {(isBlockedByMe || isBlockedByOther) && (
                   <p className="text-xs font-medium text-destructive">
                     {isBlockedByOther
@@ -1323,7 +1329,7 @@ const DashboardOffers = () => {
                       )}
                     </div>
                   )}
-                  <div className="mt-2 grid gap-2 md:grid-cols-[160px_1fr_auto]">
+                  <div className="mt-2 grid gap-1.5 md:grid-cols-[160px_1fr_auto]">
                     <Input
                       type="number"
                       min="1"
@@ -1396,7 +1402,7 @@ const DashboardOffers = () => {
           )}
         </div>
 
-        <div className="hidden rounded-xl border border-border bg-card p-3 shadow-sm xl:block">
+        <div className="app-card hidden xl:block">
           <p className="mb-3 text-sm font-semibold text-foreground">Chat details</p>
           {!selectedChat && (
             <p className="text-xs text-muted-foreground">Select a conversation to see details.</p>

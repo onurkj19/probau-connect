@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
+import { KpiCardsSkeleton } from "@/components/common/KpiCardsSkeleton";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CreditCard } from "lucide-react";
 
 interface SubscriptionRow {
   id: string;
@@ -71,74 +76,96 @@ const AdminSubscriptions = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Subscriptions</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Stripe-linked customer and revenue controls.</p>
+        <h1 className="page-title">Subscriptions</h1>
+        <p className="page-subtitle">Stripe-linked customer and revenue controls.</p>
       </div>
 
-      {data && (
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Stripe customers</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.summary.totalCustomers}</p>
+      {loading ? (
+        <KpiCardsSkeleton count={3} />
+      ) : (
+        data && (
+          <div className="dashboard-grid-3">
+            <div className="app-card app-card--interactive">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Stripe customers</p>
+              <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.summary.totalCustomers}</p>
+            </div>
+            <div className="app-card app-card--interactive">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Active subscriptions</p>
+              <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.summary.activeSubscriptions}</p>
+            </div>
+            <div className="app-card app-card--interactive">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">MRR</p>
+              <p className="mt-2 font-display text-2xl font-semibold text-foreground">CHF {data.summary.mrr}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Active subscriptions</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.summary.activeSubscriptions}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">MRR</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-foreground">CHF {data.summary.mrr}</p>
-          </div>
-        </div>
+        )
       )}
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading subscriptions..." : `${data?.rows.length ?? 0} customers`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-44 border-transparent bg-muted/35" />
+          ) : (
+            `${data?.rows.length ?? 0} customers`
+          )}
         </div>
         {error && (
           <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>
         )}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1000px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Customer</th>
-                <th className="px-3 py-2 font-medium">Plan</th>
-                <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Renewal</th>
-                <th className="px-3 py-2 font-medium">Cancel period end</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Customer</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Renewal</th>
+                <th>Cancel period end</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && data?.rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2">
-                    <p className="font-medium">{row.name || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.email}</p>
-                  </td>
-                  <td className="px-3 py-2">{row.planType ?? "-"}</td>
-                  <td className="px-3 py-2">{row.status}</td>
-                  <td className="px-3 py-2">{row.renewalDate ? new Date(row.renewalDate).toLocaleString() : "-"}</td>
-                  <td className="px-3 py-2">{row.status === "canceled" ? "Yes" : "No"}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" disabled={activeRowId === row.id} onClick={() => void runAction(row, "force_sync")}>
-                        Force sync
-                      </Button>
-                      <Button size="sm" variant="outline" disabled={activeRowId === row.id} onClick={() => void runAction(row, "extend")}>
-                        Extend 30d
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={activeRowId === row.id} onClick={() => void runAction(row, "revoke")}>
-                        Revoke
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={6} />
+              ) : (data?.rows.length ?? 0) === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-0">
+                    <EmptyState
+                      icon={CreditCard}
+                      title="No subscription customers"
+                      description="Stripe-linked accounts will appear here once available."
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                (data?.rows ?? []).map((row) => (
+                  <tr key={row.id}>
+                    <td>
+                      <p className="font-medium">{row.name || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.email}</p>
+                    </td>
+                    <td>{row.planType ?? "-"}</td>
+                    <td>{row.status}</td>
+                    <td>{row.renewalDate ? new Date(row.renewalDate).toLocaleString() : "-"}</td>
+                    <td>{row.status === "canceled" ? "Yes" : "No"}</td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" disabled={activeRowId === row.id} onClick={() => void runAction(row, "force_sync")}>
+                          Force sync
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={activeRowId === row.id} onClick={() => void runAction(row, "extend")}>
+                          Extend 30d
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={activeRowId === row.id} onClick={() => void runAction(row, "revoke")}>
+                          Revoke
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 
 interface NotificationItem {
   id: string;
@@ -73,6 +74,10 @@ export function NotificationBell() {
       .eq("user_id", user.id);
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="relative">
       <Button
@@ -90,7 +95,7 @@ export function NotificationBell() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-96 rounded-xl border border-border bg-card p-0 shadow-lg">
+        <div className="surface-glass-card absolute right-0 z-50 mt-2 w-96 overflow-hidden rounded-xl p-0">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <p className="text-sm font-semibold text-foreground">Notifications</p>
             <Link
@@ -103,7 +108,12 @@ export function NotificationBell() {
           </div>
           <div className="max-h-96 divide-y divide-border overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="px-3 py-4 text-xs text-muted-foreground">No notifications yet.</p>
+              <EmptyState
+                icon={Bell}
+                title="No notifications yet"
+                size="compact"
+                className="py-6"
+              />
             )}
             {notifications.map((notification) => (
               <Link

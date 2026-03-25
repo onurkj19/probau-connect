@@ -64,12 +64,12 @@ const Pricing = () => {
   };
 
   return (
-    <main className="bg-background py-20">
-      <div className="container">
+    <main className="bg-background section-y">
+      <div className="container px-4">
         <div className="mx-auto max-w-xl text-center">
-          <h1 className="font-display text-4xl font-bold text-foreground">{t("pricing.title")}</h1>
-          <p className="mt-2 text-lg text-muted-foreground">{t("pricing.subtitle")}</p>
-          <p className="mt-1 text-sm font-medium text-accent">{t("pricing.free_owner")}</p>
+          <h1 className="page-title">{t("pricing.title")}</h1>
+          <p className="page-subtitle md:text-base">{t("pricing.subtitle")}</p>
+          <p className="mt-1 text-sm font-medium text-primary">{t("pricing.free_owner")}</p>
           <div className="mt-4 inline-flex rounded-lg border border-border bg-muted/40 p-1">
             <Button
               type="button"
@@ -89,7 +89,7 @@ const Pricing = () => {
             </Button>
           </div>
           {activeDiscountPercent > 0 && (
-            <p className="mt-2 text-sm text-accent">
+            <p className="mt-2 text-sm text-primary">
               {activeDescription || `-${activeDiscountPercent}% limited offer`}
               {activeValidUntil ? ` · valid until ${new Date(activeValidUntil).toLocaleDateString(lang)}` : ""}
             </p>
@@ -113,15 +113,15 @@ const Pricing = () => {
             return (
               <motion.div
                 key={plan}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative rounded-lg border p-6 ${
-                  isPopular ? "border-accent bg-card shadow-elevated" : "border-border bg-card shadow-card"
+                transition={{ delay: i * 0.06, duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                className={`relative rounded-2xl border p-6 shadow-sm transition-all duration-200 ease-smooth hover:shadow-md hover:scale-[1.01] hover:opacity-[0.99] ${
+                  isPopular ? "border-primary bg-card ring-1 ring-primary/20" : "border-border bg-card"
                 }`}
               >
                 {isPopular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-semibold text-accent-foreground">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
                     {t("pricing.popular")}
                   </span>
                 )}
@@ -131,7 +131,7 @@ const Pricing = () => {
                   {plan !== "enterprise" ? (
                     discountedPrice !== null ? (
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-accent">
+                        <p className="text-sm font-medium text-primary">
                           {activeDescription || `-${activeDiscountPercent}% limited offer`}
                         </p>
                         <div className="flex items-end gap-2">
@@ -146,7 +146,7 @@ const Pricing = () => {
                           </span>
                         </div>
                         {yearlySavingsPercent > 0 && billingCycle === "yearly" && (
-                          <p className="text-xs font-medium text-accent">
+                          <p className="text-xs font-medium text-primary">
                             Save {yearlySavingsPercent}% vs paying monthly for 12 months
                           </p>
                         )}
@@ -160,7 +160,7 @@ const Pricing = () => {
                           </span>
                         </span>
                         {yearlySavingsPercent > 0 && billingCycle === "yearly" && (
-                          <p className="text-xs font-medium text-accent">
+                          <p className="text-xs font-medium text-primary">
                             Save {yearlySavingsPercent}% vs paying monthly for 12 months
                           </p>
                         )}
@@ -173,18 +173,12 @@ const Pricing = () => {
                 <ul className="mt-6 space-y-2">
                   {(t(`pricing.${plan}.features`, { returnObjects: true }) as string[]).map((feat, fi) => (
                     <li key={fi} className="flex items-center gap-2 text-sm text-foreground">
-                      <CheckCircle className="h-4 w-4 text-accent" />
+                      <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                       {feat}
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className={`mt-6 w-full ${
-                    isPopular ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""
-                  }`}
-                  variant={isPopular ? "default" : "outline"}
-                  asChild
-                >
+                <Button className="mt-6 w-full" variant={isPopular ? "default" : "outline"} asChild>
                   {user ? (
                     <Link
                       to={getPlanTarget(plan)}

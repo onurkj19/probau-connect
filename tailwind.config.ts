@@ -8,9 +8,12 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1.5rem",
       screens: {
-        "2xl": "1400px",
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
       },
     },
     extend: {
@@ -75,6 +78,9 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -85,24 +91,37 @@ export default {
           to: { height: "0" },
         },
         "fade-in-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
+          from: { opacity: "0", transform: "translateY(6px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        /** Subtle stat / KPI reveal (no scale pop) */
         "count-up": {
-          from: { opacity: "0", transform: "scale(0.8)" },
-          to: { opacity: "1", transform: "scale(1)" },
+          from: { opacity: "0", transform: "translateY(4px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        /** Card mount: fade + slight lift */
+        "card-enter": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        /** Softer than default pulse for skeletons */
+        "skeleton-pulse": {
+          "0%, 100%": { opacity: "0.45" },
+          "50%": { opacity: "0.75" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
-        "fade-in": "fade-in 0.4s ease-out forwards",
-        "count-up": "count-up 0.5s ease-out forwards",
+        "fade-in-up": "fade-in-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "fade-in": "fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "count-up": "count-up 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "card-enter": "card-enter 0.35s cubic-bezier(0.4, 0, 0.2, 1) both",
+        "skeleton-pulse": "skeleton-pulse 1.75s ease-in-out infinite",
       },
     },
   },

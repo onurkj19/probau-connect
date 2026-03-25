@@ -27,11 +27,11 @@ export function BrandLogo({
           className={cn("h-10 w-auto object-contain", imageClassName)}
         />
       </div>
-      {showText && (
+      {showText ? (
         <span className={cn("font-display text-lg font-bold text-foreground", textClassName)}>
           Projekt<span className="text-accent">Markt</span>
         </span>
-      )}
+      ) : null}
     </Link>
   );
 }

@@ -18,7 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Lock, Pencil, Trash2, UploadCloud } from "lucide-react";
+import { AlertTriangle, FolderOpen, Lock, Pencil, Trash2, UploadCloud } from "lucide-react";
+import { DashboardCardSkeleton } from "@/components/common/DashboardCardSkeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { isValidLocale, DEFAULT_LOCALE } from "@/lib/i18n-routing";
 
 interface DbProject {
@@ -504,7 +506,7 @@ const DashboardProjects = () => {
       </div>
 
       {isOwner && (
-        <div id="owner-project-form" className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-elevated">
+        <div id="owner-project-form" className="app-card app-card--interactive mt-6 shadow-md">
           <div className="mb-5">
             <h2 className="font-display text-xl font-semibold text-foreground">{t("dashboard.create_project_title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.create_project_subtitle")}</p>
@@ -514,7 +516,7 @@ const DashboardProjects = () => {
           </div>
 
           <form onSubmit={handleOwnerSubmit} className="grid gap-4">
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-title">{t("dashboard.project_title")}</Label>
               <Input
                 id="project-title"
@@ -525,7 +527,7 @@ const DashboardProjects = () => {
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-address">{t("dashboard.project_address")}</Label>
               <Input
                 id="project-address"
@@ -536,13 +538,13 @@ const DashboardProjects = () => {
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-category">{t("dashboard.project_category")}</Label>
               <select
                 id="project-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                className="native-form-control"
               >
                 {categoryOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -552,7 +554,7 @@ const DashboardProjects = () => {
               </select>
             </div>
             {isCustomCategory && (
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 <Label htmlFor="project-custom-category">Custom category</Label>
                 <Input
                   id="project-custom-category"
@@ -564,7 +566,7 @@ const DashboardProjects = () => {
               </div>
             )}
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-service">{t("dashboard.project_service")}</Label>
               <Textarea
                 id="project-service"
@@ -578,7 +580,7 @@ const DashboardProjects = () => {
               {t("dashboard.vat_number")}: {user?.vatNumber || "-"}
             </p>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-deadline">{t("dashboard.project_deadline")}</Label>
               <Input
                 id="project-deadline"
@@ -589,9 +591,9 @@ const DashboardProjects = () => {
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="project-files">{t("dashboard.project_files")}</Label>
-              <label htmlFor="project-files" className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-4 text-sm text-muted-foreground hover:bg-muted">
+              <label htmlFor="project-files" className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300/50 bg-white/50 px-4 py-4 text-sm text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-white/70 supports-[backdrop-filter]:bg-white/40">
                 <UploadCloud className="h-4 w-4" />
                 {t("dashboard.project_files_hint")}
               </label>
@@ -720,29 +722,29 @@ const DashboardProjects = () => {
       )}
 
       {isContractor && selectedProject && (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className="surface-panel mt-6">
           <h2 className="font-display text-xl font-semibold text-foreground">{t("dashboard.submit_offer")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {selectedProject.title} · {selectedProject.address}
           </p>
 
           <form className="mt-5 grid gap-4" onSubmit={handleOfferSubmit}>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label>{t("auth.full_name")}</Label>
               <Input value={user?.name || ""} disabled />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label>{t("auth.company_name")}</Label>
               <Input value={user?.companyName || ""} disabled />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label>{t("auth.email")}</Label>
               <Input value={user?.email || ""} disabled />
             </div>
             <p className="text-xs text-muted-foreground">
               {t("dashboard.vat_number")}: {user?.vatNumber || "-"}
             </p>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label>{t("dashboard.offer_price_chf")}</Label>
               <Input
                 type="number"
@@ -754,7 +756,7 @@ const DashboardProjects = () => {
                 required
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label>{t("dashboard.offer_message")}</Label>
               <Textarea
                 value={offerMessage}
@@ -763,7 +765,7 @@ const DashboardProjects = () => {
                 required
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="offer-files">{t("dashboard.offer_files")}</Label>
               <label htmlFor="offer-files" className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-4 text-sm text-muted-foreground hover:bg-muted">
                 <UploadCloud className="h-4 w-4" />
@@ -818,11 +820,11 @@ const DashboardProjects = () => {
       )}
 
       <div className="mt-8 grid gap-4">
-        {loadingProjects && (
-          <p className="text-sm text-muted-foreground">{t("dashboard.loading_projects")}</p>
-        )}
+        {loadingProjects && <DashboardCardSkeleton count={2} />}
         {!loadingProjects && projects.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("dashboard.no_projects")}</p>
+          <div className="app-card">
+            <EmptyState icon={FolderOpen} title={t("dashboard.no_projects")} />
+          </div>
         )}
         {!loadingProjects &&
           projects.map((p) => (

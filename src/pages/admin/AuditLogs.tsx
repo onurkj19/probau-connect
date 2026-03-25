@@ -4,6 +4,10 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { downloadCsv } from "@/lib/csv";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollText } from "lucide-react";
 
 interface AuditRow {
   id: string;
@@ -61,17 +65,17 @@ const AdminAuditLogs = () => {
   }, [eventType, q, severity]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Audit Logs</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Append-only security events with advanced filters.</p>
+        <h1 className="page-title">Audit Logs</h1>
+        <p className="page-subtitle">Append-only security events with advanced filters.</p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="app-card grid sm:grid-cols-2 xl:grid-cols-4">
         <select
           value={severity}
           onChange={(e) => setSeverity(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="native-form-control"
         >
           <option value="">All severities</option>
           <option value="info">Info</option>
@@ -105,46 +109,64 @@ const AdminAuditLogs = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading audit logs..." : `${rows.length} events`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-40 border-0 bg-muted/60" />
+          ) : (
+            `${rows.length} events`
+          )}
         </div>
         {error && <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>}
         <div className="overflow-x-auto">
-          <table className="min-w-[1400px] w-full text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1400px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Time</th>
-                <th className="px-3 py-2 font-medium">Severity</th>
-                <th className="px-3 py-2 font-medium">Event</th>
-                <th className="px-3 py-2 font-medium">Actor</th>
-                <th className="px-3 py-2 font-medium">Target</th>
-                <th className="px-3 py-2 font-medium">IP</th>
-                <th className="px-3 py-2 font-medium">Details</th>
+                <th>Time</th>
+                <th>Severity</th>
+                <th>Event</th>
+                <th>Actor</th>
+                <th>Target</th>
+                <th>IP</th>
+                <th>Details</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                <tr key={row.id} className="border-t border-border align-top">
-                  <td className="px-3 py-2">{new Date(row.created_at).toLocaleString()}</td>
-                  <td className="px-3 py-2">{row.severity}</td>
-                  <td className="px-3 py-2">{row.event_type}</td>
-                  <td className="px-3 py-2">
-                    <p>{row.actorName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.actorEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">
-                    <p>{row.targetName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.targetEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">{row.ip_address || "-"}</td>
-                  <td className="px-3 py-2">
-                    <pre className="max-w-[460px] whitespace-pre-wrap text-xs text-muted-foreground">
-                      {JSON.stringify(row.details ?? {}, null, 2)}
-                    </pre>
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={7} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <EmptyState
+                      icon={ScrollText}
+                      title="No audit events"
+                      description="Try adjusting filters or refresh to load the latest security log."
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id} className="align-top">
+                    <td>{new Date(row.created_at).toLocaleString()}</td>
+                    <td>{row.severity}</td>
+                    <td>{row.event_type}</td>
+                    <td>
+                      <p>{row.actorName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.actorEmail || "-"}</p>
+                    </td>
+                    <td>
+                      <p>{row.targetName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.targetEmail || "-"}</p>
+                    </td>
+                    <td>{row.ip_address || "-"}</td>
+                    <td>
+                      <pre className="max-w-[460px] whitespace-pre-wrap text-xs text-muted-foreground">
+                        {JSON.stringify(row.details ?? {}, null, 2)}
+                      </pre>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

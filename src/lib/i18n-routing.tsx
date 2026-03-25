@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate, useLocation, Navigate, Outlet } from "react-router-dom";
+import { RouteFade } from "@/components/RouteFade";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 
@@ -21,7 +22,6 @@ export function LocaleLayout() {
   const { locale } = useParams<{ locale: string }>();
   const { i18n } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     if (!locale || !isValidLocale(locale)) {
@@ -39,7 +39,11 @@ export function LocaleLayout() {
 
   if (!locale || !isValidLocale(locale)) return null;
 
-  return <Outlet />;
+  return (
+    <RouteFade>
+      <Outlet />
+    </RouteFade>
+  );
 }
 
 export function useLocaleNavigate() {

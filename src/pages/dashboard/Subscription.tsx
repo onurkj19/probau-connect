@@ -256,22 +256,20 @@ const Subscription = () => {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-foreground">
-        {t("subscription.title")}
-      </h1>
+      <h1 className="page-title">{t("subscription.title")}</h1>
       {actionError && (
-        <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive shadow-sm backdrop-blur-sm">
           {actionError}
         </div>
       )}
       {isAutoCheckoutLoading && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-primary shadow-sm backdrop-blur-sm">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           <p>{t("subscription.redirecting_to_checkout")}</p>
         </div>
       )}
 
-      <div className="mt-6 rounded-lg border border-border bg-card p-6 shadow-card">
+      <div className="app-card mt-6">
         <h2 className="font-display text-lg font-semibold text-foreground">
           {t("subscription.current_plan", { defaultValue: "Subscription details" })}
         </h2>
@@ -334,7 +332,7 @@ const Subscription = () => {
 
       {/* Status banner */}
       {isPastDue && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-200/80 bg-red-50/95 p-6 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-red-50/85">
           <AlertTriangle className="h-5 w-5 text-red-600" />
           <div>
             <p className="text-sm font-medium text-red-800">{t("subscription.payment_failed")}</p>
@@ -347,7 +345,7 @@ const Subscription = () => {
       )}
 
       {isCanceled && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-yellow-200/80 bg-yellow-50/95 p-6 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-yellow-50/85">
           <XCircle className="h-5 w-5 text-yellow-600" />
           <p className="text-sm font-medium text-yellow-800">{t("subscription.canceled_info")}</p>
         </div>
@@ -356,7 +354,7 @@ const Subscription = () => {
       {/* Active subscription details */}
       {isActive && (
         <div className="mt-6">
-          <div className="rounded-lg border border-green-200 bg-green-50 p-6">
+          <div className="rounded-2xl border border-green-200/80 bg-green-50/95 p-6 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-green-50/85">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
@@ -378,7 +376,7 @@ const Subscription = () => {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 dashboard-grid-2">
             <StatsCard
               title={t("subscription.offers_used")}
               value={offerLimit ? `${offerUsage} / ${offerLimit}` : `${offerUsage}`}
@@ -404,7 +402,7 @@ const Subscription = () => {
       {(hasNoPlan || isCanceled || hasUnknownStatus) && (
         <div className="mt-8">
           <p className="text-muted-foreground">{t("subscription.choose_plan")}</p>
-          <div className="mt-4 inline-flex rounded-lg border border-border bg-muted/40 p-1">
+          <div className="mt-4 inline-flex rounded-xl border border-border bg-muted/40 p-1">
             <Button
               type="button"
               size="sm"
@@ -442,7 +440,7 @@ const Subscription = () => {
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {/* Basic Plan */}
-            <div className="rounded-lg border border-border bg-card p-6 shadow-card">
+            <div className="app-card app-card--interactive">
               <h3 className="font-display text-xl font-bold text-foreground">
                 {t("pricing.basic.name")}
               </h3>
@@ -498,8 +496,8 @@ const Subscription = () => {
             </div>
 
             {/* Pro Plan */}
-            <div className="relative rounded-lg border-2 border-accent bg-card p-6 shadow-elevated">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-xs font-semibold text-accent-foreground">
+            <div className="app-card app-card--interactive relative border-2 border-primary shadow-md ring-1 ring-primary/20">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
                 {t("pricing.popular")}
               </span>
               <h3 className="font-display text-xl font-bold text-foreground">
@@ -551,7 +549,7 @@ const Subscription = () => {
                   </li>
                 ))}
               </ul>
-              <Button type="button" className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => handleSubscribe("pro")} disabled={loading}>
+              <Button type="button" className="mt-6 w-full" variant="default" onClick={() => handleSubscribe("pro")} disabled={loading}>
                 {t("pricing.cta")}
               </Button>
             </div>

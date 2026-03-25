@@ -287,7 +287,7 @@ export function ProjectCard({
   }, [activeAttachmentIndex, fileLinks.length]);
 
   return (
-    <div className="relative rounded-lg border border-border bg-card p-5 shadow-none">
+    <div className="app-card app-card--interactive relative">
       <button
         type="button"
         onClick={() => {
@@ -297,7 +297,7 @@ export function ProjectCard({
           }
           setIsBookmarkedLocal((prev) => !prev);
         }}
-        className="absolute right-3 top-3 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="absolute right-3 top-3 rounded-md p-1.5 text-muted-foreground transition-all duration-200 ease-smooth hover:scale-[1.03] hover:bg-muted hover:text-foreground active:scale-[0.95]"
         aria-label="Toggle bookmark"
       >
         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-foreground text-foreground" : ""}`} />
@@ -376,7 +376,7 @@ export function ProjectCard({
           <div className="mt-2 flex items-center justify-between gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground transition-all duration-200 ease-smooth hover:scale-[1.01] hover:bg-muted active:scale-[0.95] disabled:opacity-50"
               onClick={() => moveAttachment("prev")}
               disabled={fileLinks.length <= 1}
             >
@@ -385,7 +385,7 @@ export function ProjectCard({
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-foreground transition-all duration-200 ease-smooth hover:scale-[1.01] hover:bg-muted active:scale-[0.95] disabled:opacity-50"
               onClick={() => moveAttachment("next")}
               disabled={fileLinks.length <= 1}
             >

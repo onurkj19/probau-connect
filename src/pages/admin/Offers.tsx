@@ -3,6 +3,10 @@ import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csv";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FileSignature } from "lucide-react";
 
 interface OfferRow {
   id: string;
@@ -70,16 +74,16 @@ const AdminOffers = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Offers Control</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Review, accept/reject, or remove offers.</p>
+        <h1 className="page-title">Offers Control</h1>
+        <p className="page-subtitle">Review, accept/reject, or remove offers.</p>
       </div>
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="app-card dashboard-grid-6">
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="native-form-control"
         >
           <option value="">All statuses</option>
           <option value="submitted">Submitted</option>
@@ -142,16 +146,20 @@ const AdminOffers = () => {
           Export CSV
         </Button>
       </div>
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading offers..." : `${rows.length} offers`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-32 border-0 bg-muted/60" />
+          ) : (
+            `${rows.length} offers`
+          )}
         </div>
         {error && <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>}
         <div className="overflow-x-auto">
-          <table className="min-w-[1200px] w-full text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1200px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">
+                <th>
                   <input
                     type="checkbox"
                     checked={rows.length > 0 && selectedIds.length === rows.length}
@@ -161,61 +169,75 @@ const AdminOffers = () => {
                     }}
                   />
                 </th>
-                <th className="px-3 py-2 font-medium">Project</th>
-                <th className="px-3 py-2 font-medium">Contractor</th>
-                <th className="px-3 py-2 font-medium">Owner</th>
-                <th className="px-3 py-2 font-medium">Price</th>
-                <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Created</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Project</th>
+                <th>Contractor</th>
+                <th>Owner</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(row.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedIds((prev) => [...prev, row.id]);
-                        else setSelectedIds((prev) => prev.filter((id) => id !== row.id));
-                      }}
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={8} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-0">
+                    <EmptyState
+                      icon={FileSignature}
+                      title="No offers"
+                      description="Contractor bids on projects will be listed here."
                     />
                   </td>
-                  <td className="px-3 py-2">{row.projectTitle || "-"}</td>
-                  <td className="px-3 py-2">
-                    <p>{row.contractorName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.contractorEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">
-                    <p>{row.ownerName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">CHF {row.price_chf}</td>
-                  <td className="px-3 py-2">{row.status}</td>
-                  <td className="px-3 py-2">{new Date(row.created_at).toLocaleString()}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction("accept", row.id)}>
-                        Accept
-                      </Button>
-                      <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction("reject", row.id)}>
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction("delete", row.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(row.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedIds((prev) => [...prev, row.id]);
+                          else setSelectedIds((prev) => prev.filter((id) => id !== row.id));
+                        }}
+                      />
+                    </td>
+                    <td>{row.projectTitle || "-"}</td>
+                    <td>
+                      <p>{row.contractorName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.contractorEmail || "-"}</p>
+                    </td>
+                    <td>
+                      <p>{row.ownerName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
+                    </td>
+                    <td>CHF {row.price_chf}</td>
+                    <td>{row.status}</td>
+                    <td>{new Date(row.created_at).toLocaleString()}</td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction("accept", row.id)}>
+                          Accept
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction("reject", row.id)}>
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction("delete", row.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

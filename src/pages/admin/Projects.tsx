@@ -4,6 +4,10 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { downloadCsv } from "@/lib/csv";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FolderKanban } from "lucide-react";
 
 interface ProjectRow {
   id: string;
@@ -75,17 +79,17 @@ const AdminProjects = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Projects Control</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Moderate active and closed projects.</p>
+        <h1 className="page-title">Projects Control</h1>
+        <p className="page-subtitle">Moderate active and closed projects.</p>
       </div>
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="app-card dashboard-grid-5">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title/category/custom/service" />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="native-form-control"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -127,16 +131,20 @@ const AdminProjects = () => {
           Delete selected
         </Button>
       </div>
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading projects..." : `${rows.length} projects`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-40 border-0 bg-muted/60" />
+          ) : (
+            `${rows.length} projects`
+          )}
         </div>
         {error && <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>}
         <div className="overflow-x-auto">
-          <table className="min-w-[1100px] w-full text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1100px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">
+                <th>
                   <input
                     type="checkbox"
                     checked={rows.length > 0 && selectedIds.length === rows.length}
@@ -146,61 +154,75 @@ const AdminProjects = () => {
                     }}
                   />
                 </th>
-                <th className="px-3 py-2 font-medium">Title</th>
-                <th className="px-3 py-2 font-medium">Owner</th>
-                <th className="px-3 py-2 font-medium">Category</th>
-                <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Deadline</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Title</th>
+                <th>Owner</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Deadline</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(row.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedIds((prev) => [...prev, row.id]);
-                        else setSelectedIds((prev) => prev.filter((id) => id !== row.id));
-                      }}
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={7} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <EmptyState
+                      icon={FolderKanban}
+                      title="No projects"
+                      description="Published projects from owners will appear in this table."
                     />
                   </td>
-                  <td className="px-3 py-2">
-                    <p className="font-medium">{row.title}</p>
-                    <p className="text-xs text-muted-foreground">{row.service}</p>
-                  </td>
-                  <td className="px-3 py-2">
-                    <p>{row.ownerName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">{row.custom_category || row.category}</td>
-                  <td className="px-3 py-2">{row.status}</td>
-                  <td className="px-3 py-2">{new Date(row.deadline).toLocaleString()}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction(row.status === "active" ? "close" : "reopen", row.id)}
-                      >
-                        {row.status === "active" ? "Close" : "Reopen"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction("delete", row.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(row.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedIds((prev) => [...prev, row.id]);
+                          else setSelectedIds((prev) => prev.filter((id) => id !== row.id));
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <p className="font-medium">{row.title}</p>
+                      <p className="text-xs text-muted-foreground">{row.service}</p>
+                    </td>
+                    <td>
+                      <p>{row.ownerName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
+                    </td>
+                    <td>{row.custom_category || row.category}</td>
+                    <td>{row.status}</td>
+                    <td>{new Date(row.deadline).toLocaleString()}</td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction(row.status === "active" ? "close" : "reopen", row.id)}
+                        >
+                          {row.status === "active" ? "Close" : "Reopen"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction("delete", row.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

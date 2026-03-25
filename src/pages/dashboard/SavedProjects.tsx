@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { ProjectCard } from "@/components/dashboard/ProjectCard";
+import { DashboardCardSkeleton } from "@/components/common/DashboardCardSkeleton";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Bookmark } from "lucide-react";
 
 interface DbProject {
   id: string;
@@ -90,9 +93,11 @@ const DashboardSavedProjects = () => {
     <div>
       <h1 className="font-display text-2xl font-bold text-foreground">{t("dashboard.saved_projects")}</h1>
       <div className="mt-6 grid gap-4">
-        {loading && <p className="text-sm text-muted-foreground">{t("dashboard.loading_saved_projects")}</p>}
+        {loading && <DashboardCardSkeleton count={2} />}
         {!loading && projects.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("dashboard.no_saved_projects")}</p>
+          <div className="app-card">
+            <EmptyState icon={Bookmark} title={t("dashboard.no_saved_projects")} />
+          </div>
         )}
         {!loading &&
           projects.map((project) => (

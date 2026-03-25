@@ -8,10 +8,10 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<Status, string> = {
-  active: "bg-green-100 text-green-700",
-  closed: "bg-muted text-muted-foreground",
-  pending: "bg-yellow-100 text-yellow-700",
-  draft: "bg-blue-100 text-blue-700",
+  active: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
+  closed: "border border-white/10 bg-white/5 text-zinc-400",
+  pending: "border border-yellow-500/20 bg-yellow-500/10 text-yellow-400",
+  draft: "border border-indigo-500/20 bg-indigo-500/10 text-indigo-400",
 };
 
 export function StatusBadge({ status, label }: StatusBadgeProps) {

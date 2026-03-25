@@ -268,6 +268,7 @@
     "loading_saved_projects": "Gespeicherte Projekte werden geladen...",
     "no_saved_projects": "Noch keine gespeicherten Projekte.",
     "no_chats": "Noch keine Chats vorhanden.",
+    "select_chat_hint": "Wählen Sie links eine Unterhaltung, um Nachrichten zu lesen und zu senden.",
     "type_message": "Nachricht eingeben...",
     "send_message": "Senden",
     "mark_all_read": "Alle als gelesen markieren",

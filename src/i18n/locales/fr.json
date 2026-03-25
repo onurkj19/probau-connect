@@ -268,6 +268,7 @@
     "loading_saved_projects": "Chargement des projets enregistrés...",
     "no_saved_projects": "Aucun projet enregistré pour le moment.",
     "no_chats": "Aucun chat pour le moment.",
+    "select_chat_hint": "Choisissez une conversation dans la liste pour lire et envoyer des messages.",
     "type_message": "Tapez votre message...",
     "send_message": "Envoyer",
     "mark_all_read": "Tout marquer comme lu",

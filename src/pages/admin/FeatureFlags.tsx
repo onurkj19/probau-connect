@@ -3,6 +3,10 @@ import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleLeft } from "lucide-react";
 
 interface FeatureFlagRow {
   id: string;
@@ -64,13 +68,13 @@ const AdminFeatureFlags = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Feature Flags</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Enable/disable platform capabilities safely.</p>
+        <h1 className="page-title">Feature Flags</h1>
+        <p className="page-subtitle">Enable/disable platform capabilities safely.</p>
       </div>
 
-      <div className="grid gap-2 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 xl:grid-cols-[1fr_2fr_auto]">
+      <div className="app-card grid gap-6 sm:grid-cols-2 xl:grid-cols-[1fr_2fr_auto]">
         <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="flag_name" />
         <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Description" />
         <Button
@@ -81,52 +85,70 @@ const AdminFeatureFlags = () => {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading flags..." : `${rows.length} flags`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-28 border-0 bg-muted/60" />
+          ) : (
+            `${rows.length} flags`
+          )}
         </div>
         {error && <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[900px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="px-3 py-2 font-medium">Description</th>
-                <th className="px-3 py-2 font-medium">Enabled</th>
-                <th className="px-3 py-2 font-medium">Updated</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Enabled</th>
+                <th>Updated</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2">{row.name}</td>
-                  <td className="px-3 py-2">{row.description || "-"}</td>
-                  <td className="px-3 py-2">{row.enabled ? "Yes" : "No"}</td>
-                  <td className="px-3 py-2">{new Date(row.updated_at).toLocaleString()}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction({ action: "toggle", id: row.id, enabled: !row.enabled })}
-                      >
-                        {row.enabled ? "Disable" : "Enable"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction({ action: "delete", id: row.id })}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={5} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-0">
+                    <EmptyState
+                      icon={ToggleLeft}
+                      title="No feature flags"
+                      description="Create a flag above to start toggling platform capabilities."
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.name}</td>
+                    <td>{row.description || "-"}</td>
+                    <td>{row.enabled ? "Yes" : "No"}</td>
+                    <td>{new Date(row.updated_at).toLocaleString()}</td>
+                    <td>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction({ action: "toggle", id: row.id, enabled: !row.enabled })}
+                        >
+                          {row.enabled ? "Disable" : "Enable"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction({ action: "delete", id: row.id })}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

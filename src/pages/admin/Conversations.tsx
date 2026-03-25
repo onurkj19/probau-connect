@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
+import { TableSkeletonRows } from "@/components/common/TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessagesSquare } from "lucide-react";
 
 interface ConversationRow {
   id: string;
@@ -70,69 +74,85 @@ const AdminConversations = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Conversations Moderation</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Monitor chats and take moderation actions.</p>
+        <h1 className="page-title">Conversations Moderation</h1>
+        <p className="page-subtitle">Monitor chats and take moderation actions.</p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
-          {loading ? "Loading conversations..." : `${rows.length} conversations`}
+      <div className="app-card-frame">
+        <div className="flex min-h-[44px] items-center border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {loading ? (
+            <Skeleton className="h-4 w-48 border-0 bg-muted/60" />
+          ) : (
+            `${rows.length} conversations`
+          )}
         </div>
         {error && <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>}
         <div className="overflow-x-auto">
-          <table className="min-w-[1300px] w-full text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[1300px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Project</th>
-                <th className="px-3 py-2 font-medium">Owner</th>
-                <th className="px-3 py-2 font-medium">Contractor</th>
-                <th className="px-3 py-2 font-medium">Messages</th>
-                <th className="px-3 py-2 font-medium">Last message</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Project</th>
+                <th>Owner</th>
+                <th>Contractor</th>
+                <th>Messages</th>
+                <th>Last message</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {!loading && rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2">{row.project_title || "-"}</td>
-                  <td className="px-3 py-2">
-                    <p>{row.ownerName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">
-                    <p>{row.contractorName || "-"}</p>
-                    <p className="text-xs text-muted-foreground">{row.contractorEmail || "-"}</p>
-                  </td>
-                  <td className="px-3 py-2">{row.messageCount}</td>
-                  <td className="px-3 py-2">
-                    {row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : "-"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "clear_messages")}>
-                        Clear messages
-                      </Button>
-                      <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "block_user")}>
-                        Block pair
-                      </Button>
-                      <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "unblock_user")}>
-                        Unblock pair
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={activeId === row.id}
-                        onClick={() => void runAction(row, "delete_chat")}
-                      >
-                        Delete chat
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableSkeletonRows rows={8} columns={6} />
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-0">
+                    <EmptyState
+                      icon={MessagesSquare}
+                      title="No conversations"
+                      description="Chats between owners and contractors will show here."
+                    />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.project_title || "-"}</td>
+                    <td>
+                      <p>{row.ownerName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.ownerEmail || "-"}</p>
+                    </td>
+                    <td>
+                      <p>{row.contractorName || "-"}</p>
+                      <p className="text-xs text-muted-foreground">{row.contractorEmail || "-"}</p>
+                    </td>
+                    <td>{row.messageCount}</td>
+                    <td>{row.lastMessageAt ? new Date(row.lastMessageAt).toLocaleString() : "-"}</td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "clear_messages")}>
+                          Clear messages
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "block_user")}>
+                          Block pair
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={activeId === row.id} onClick={() => void runAction(row, "unblock_user")}>
+                          Unblock pair
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          disabled={activeId === row.id}
+                          onClick={() => void runAction(row, "delete_chat")}
+                        >
+                          Delete chat
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

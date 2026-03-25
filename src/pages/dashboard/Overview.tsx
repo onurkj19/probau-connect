@@ -68,13 +68,13 @@ const DashboardOverview = () => {
   }, [isOwner, loadActiveProjectsCount, user]);
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold text-foreground">{t("dashboard.overview")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {user?.companyName}
-      </p>
+    <div className="stack-page">
+      <div>
+        <h1 className="page-title">{t("dashboard.overview")}</h1>
+        <p className="page-subtitle">{user?.companyName}</p>
+      </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="dashboard-grid">
         <StatsCard
           title={t("dashboard.active_projects")}
           value={activeProjectsCount}
@@ -98,7 +98,7 @@ const DashboardOverview = () => {
       </div>
 
       {isContractor && !isActive && (
-        <div className="mt-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+        <div className="rounded-2xl border border-yellow-200/80 bg-yellow-50/95 p-6 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-yellow-50/85">
           <div className="flex items-center gap-3">
             <CreditCard className="h-5 w-5 text-yellow-600" />
             <div className="flex-1">
@@ -112,7 +112,7 @@ const DashboardOverview = () => {
       )}
 
       {isContractor && isActive && user?.planType && (
-        <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
+        <div className="rounded-2xl border border-green-200/80 bg-green-50/95 p-6 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-green-50/85">
           <div className="flex items-center gap-3">
             <CreditCard className="h-5 w-5 text-green-600" />
             <p className="text-sm font-medium text-green-800">

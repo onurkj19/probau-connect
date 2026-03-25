@@ -3,6 +3,9 @@ import { adminFetch } from "@/lib/admin-api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCardsSkeleton } from "@/components/common/KpiCardsSkeleton";
+import { ListPanelSkeleton } from "@/components/common/ListPanelSkeleton";
 
 interface SecurityEventRow {
   id: string;
@@ -63,10 +66,10 @@ const AdminSecurity = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Security</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Sessions, security events, and maintenance controls.</p>
+        <h1 className="page-title">Security</h1>
+        <p className="page-subtitle">Sessions, security events, and maintenance controls.</p>
       </div>
 
       {error && (
@@ -74,27 +77,43 @@ const AdminSecurity = () => {
       )}
 
       {loading && (
-        <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">Loading security panel...</div>
+        <div className="space-y-6 md:space-y-8">
+          <KpiCardsSkeleton count={3} />
+          <div className="app-card app-card--interactive space-y-4">
+            <Skeleton className="h-7 w-48" />
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-9 w-44 rounded-lg" />
+              <Skeleton className="h-9 w-52 rounded-lg" />
+              <Skeleton className="h-9 max-w-sm flex-1 rounded-lg" />
+            </div>
+          </div>
+          <div className="app-card-frame overflow-hidden">
+            <div className="border-b border-border px-4 py-3">
+              <Skeleton className="h-4 w-40" />
+            </div>
+            <ListPanelSkeleton rows={6} />
+          </div>
+        </div>
       )}
 
       {!loading && data && (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-border bg-card p-4">
+          <div className="dashboard-grid-3">
+            <div className="app-card app-card--interactive">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Active sessions</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.activeSessions.length}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="app-card app-card--interactive">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Failed login attempts (7d)</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.failedLoginAttempts}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="app-card app-card--interactive">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Suspicious activity</p>
               <p className="mt-2 font-display text-2xl font-semibold text-foreground">{data.suspiciousActivity.length}</p>
             </div>
           </div>
 
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="app-card app-card--interactive">
             <h2 className="font-display text-xl font-semibold text-foreground">Security actions</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => void runAction({ action: "force_logout_all" })}>
@@ -121,7 +140,7 @@ const AdminSecurity = () => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card">
+          <section className="app-card-frame">
             <div className="border-b border-border px-4 py-3 text-sm font-medium text-foreground">Recent security events</div>
             <div className="max-h-[420px] overflow-y-auto">
               {(data.recentEvents ?? []).map((event) => (

@@ -5,167 +5,138 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light UI + indigo-600 accent (Stripe / Linear style) */
   :root {
-    --background: 230 45% 98%;
-    --foreground: 232 34% 14%;
+    color-scheme: light;
+
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 232 34% 14%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 232 34% 14%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 238 43% 24%;
+    /* indigo-600 */
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 235 38% 95%;
-    --secondary-foreground: 232 30% 20%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 232 40% 96%;
-    --muted-foreground: 230 16% 44%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 172 66% 50%;
-    --accent-foreground: 185 35% 12%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 232 28% 88%;
-    --input: 232 28% 88%;
-    --ring: 238 43% 24%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    /* indigo-500 for focus rings */
+    --ring: 239 84% 67%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 236 42% 18%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 172 66% 50%;
-    --sidebar-primary-foreground: 185 35% 12%;
-    --sidebar-accent: 236 34% 24%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 236 30% 28%;
-    --sidebar-ring: 172 66% 50%;
+    --sidebar-background: 220 14% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    /* indigo-50 */
+    --sidebar-accent: 226 100% 97%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 239 84% 67%;
 
-    /* Custom tokens */
-    --swiss-red: 172 66% 50%;
-    --navy: 236 42% 18%;
-    --navy-light: 236 34% 28%;
-    --surface: 230 45% 98%;
-    --surface-raised: 0 0% 100%;
-    --gradient-hero: linear-gradient(135deg, hsl(236 42% 18%) 0%, hsl(245 36% 30%) 56%, hsl(199 58% 28%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(172 66% 50%) 0%, hsl(188 72% 56%) 100%);
-    --shadow-card: 0 1px 3px 0 hsl(235 26% 16% / 0.06), 0 1px 2px -1px hsl(235 26% 16% / 0.06);
-    --shadow-elevated: 0 12px 26px -8px hsl(235 26% 16% / 0.12), 0 8px 10px -6px hsl(235 26% 16% / 0.05);
-    --shadow-hero: 0 22px 56px -16px hsl(236 42% 18% / 0.35);
+    --swiss-red: 0 72% 51%;
+    --navy: 222 47% 11%;
+    --navy-light: 215 16% 47%;
+    --surface: 0 0% 100%;
+    --surface-raised: 220 14% 98%;
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(239 77% 55%) 100%);
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-elevated: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --shadow-hero: 0 12px 40px rgba(15, 23, 42, 0.1);
   }
 
-  .dark {
-    --background: 236 34% 10%;
-    --foreground: 228 38% 96%;
-    --card: 236 30% 14%;
-    --card-foreground: 228 38% 96%;
-    --popover: 236 30% 14%;
-    --popover-foreground: 228 38% 96%;
-    --primary: 228 38% 96%;
-    --primary-foreground: 236 42% 18%;
-    --secondary: 236 24% 19%;
-    --secondary-foreground: 228 38% 96%;
-    --muted: 236 24% 19%;
-    --muted-foreground: 230 18% 70%;
-    --accent: 172 66% 50%;
-    --accent-foreground: 185 35% 12%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 236 20% 24%;
-    --input: 236 20% 24%;
-    --ring: 172 66% 50%;
-    --sidebar-background: 236 36% 8%;
-    --sidebar-foreground: 228 38% 96%;
-    --sidebar-primary: 172 66% 50%;
-    --sidebar-primary-foreground: 185 35% 12%;
-    --sidebar-accent: 236 25% 16%;
-    --sidebar-accent-foreground: 228 38% 96%;
-    --sidebar-border: 236 25% 16%;
-    --sidebar-ring: 172 66% 50%;
+}
+
+@layer components {
+  /** Primary card surface: p-6, frosted for readability on tinted page backgrounds */
+  .app-card {
+    @apply rounded-2xl border border-border/90 bg-card/95 p-6 text-card-foreground shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-card/90;
   }
 
-  [data-theme="default"] {
-    --primary: 238 43% 24%;
-    --accent: 172 66% 50%;
-    --ring: 238 43% 24%;
-    --sidebar-primary: 172 66% 50%;
-    --swiss-red: 172 66% 50%;
+  .app-card--interactive {
+    @apply transition-all duration-200 ease-smooth hover:shadow-md hover:scale-[1.01] hover:opacity-[0.99];
   }
 
-  [data-theme="ocean"] {
-    --primary: 213 70% 42%;
-    --accent: 193 95% 45%;
-    --ring: 213 70% 42%;
-    --sidebar-primary: 193 95% 45%;
-    --swiss-red: 193 95% 45%;
+  /** Table / split-pane shells: no outer padding, no lift on hover */
+  .app-card-frame {
+    @apply overflow-hidden rounded-2xl border border-border/90 bg-card/95 text-card-foreground shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-card/90;
   }
 
-  [data-theme="emerald"] {
-    --primary: 154 62% 32%;
-    --accent: 143 70% 45%;
-    --ring: 154 62% 32%;
-    --sidebar-primary: 143 70% 45%;
-    --swiss-red: 143 70% 45%;
+  /**
+   * Form controls: inputs, textareas, native selects, select triggers.
+   * Frosted surface so fields read clearly on `.app-canvas` (muted) backgrounds.
+   */
+  .native-form-control {
+    @apply min-h-10 w-full rounded-lg border border-border/70 bg-card/80 px-4 py-2 text-sm text-foreground shadow-sm backdrop-blur-sm transition-all duration-200 ease-smooth placeholder:text-muted-foreground ring-offset-background supports-[backdrop-filter]:bg-card/70;
+    @apply focus-visible:outline-none focus:outline-none focus-visible:ring-2 focus:ring-2 focus-visible:ring-ring focus:ring-ring focus-visible:ring-offset-2 focus:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  [data-theme="sunset"] {
-    --primary: 14 76% 42%;
-    --accent: 28 94% 53%;
-    --ring: 14 76% 42%;
-    --sidebar-primary: 28 94% 53%;
-    --swiss-red: 28 94% 53%;
+  /** Main content column: aligns with header chrome and max width */
+  .app-main {
+    @apply container max-w-7xl px-4 py-8 md:px-6 md:py-10;
   }
 
-  [data-theme="violet"] {
-    --primary: 263 62% 44%;
-    --accent: 276 85% 58%;
-    --ring: 263 62% 44%;
-    --sidebar-primary: 276 85% 58%;
-    --swiss-red: 276 85% 58%;
+  /** Tinted page canvas behind frosted cards (dashboard, admin, marketing shell) */
+  .app-canvas {
+    @apply bg-muted/30;
   }
 
-  [data-theme="rose"] {
-    --primary: 336 66% 40%;
-    --accent: 340 82% 52%;
-    --ring: 336 66% 40%;
-    --sidebar-primary: 340 82% 52%;
-    --swiss-red: 340 82% 52%;
+  /**
+   * Admin / list tables: matches shadcn `Table` density and typography.
+   * Checkbox columns get tighter horizontal padding via :has().
+   */
+  .app-data-table {
+    @apply w-full caption-bottom text-sm;
   }
 
-  [data-theme="amber"] {
-    --primary: 34 88% 38%;
-    --accent: 43 96% 50%;
-    --ring: 34 88% 38%;
-    --sidebar-primary: 43 96% 50%;
-    --swiss-red: 43 96% 50%;
+  .app-data-table thead tr {
+    @apply border-b border-border;
   }
 
-  [data-theme="graphite"] {
-    --primary: 220 14% 28%;
-    --accent: 199 18% 50%;
-    --ring: 220 14% 28%;
-    --sidebar-primary: 199 18% 50%;
-    --swiss-red: 199 18% 50%;
+  .app-data-table thead th {
+    @apply bg-muted/40 px-4 py-3 text-left align-middle text-xs font-semibold uppercase tracking-wide text-muted-foreground;
   }
 
-  [data-theme="forest"] {
-    --primary: 138 47% 24%;
-    --accent: 160 84% 39%;
-    --ring: 138 47% 24%;
-    --sidebar-primary: 160 84% 39%;
-    --swiss-red: 160 84% 39%;
+  .app-data-table thead th:has(input[type="checkbox"]) {
+    @apply w-12 px-3 text-center;
   }
 
-  [data-theme="sky"] {
-    --primary: 206 82% 40%;
-    --accent: 187 92% 46%;
-    --ring: 206 82% 40%;
-    --sidebar-primary: 187 92% 46%;
-    --swiss-red: 187 92% 46%;
+  .app-data-table tbody tr {
+    @apply border-t border-border transition-colors duration-200 ease-smooth hover:bg-muted/40;
+  }
+
+  .app-data-table tbody td {
+    @apply px-4 py-3 align-middle text-foreground;
+  }
+
+  .app-data-table tbody td:has(> input[type="checkbox"]) {
+    @apply w-12 px-3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-card--interactive:hover {
+    transform: none;
+    opacity: 1;
   }
 }
 
@@ -174,18 +145,51 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 13% 80%) transparent;
   }
 
-  a, button, input, textarea, select {
-    @apply transition-all duration-200;
+  html::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 78%);
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(79, 70, 229, 0.15);
+    color: inherit;
+  }
+
+  body {
+    @apply bg-background font-sans text-sm antialiased text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  a {
+    @apply transition-all duration-200 ease-smooth;
+  }
+
+  button {
+    @apply transition-all duration-200 ease-smooth;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply transition-all duration-200 ease-smooth;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
-    @apply tracking-tight;
+    @apply font-sans font-semibold tracking-tight text-foreground;
   }
 }
 
@@ -217,27 +221,93 @@
     box-shadow: var(--shadow-hero);
   }
 
-  .logo-ticker-mask {
-    overflow: hidden;
-    width: 100%;
+  /*
+    App UI vocabulary (see UI consistency standardization):
+    — Surfaces: cards use rounded-2xl; nested panels use .card-nested (rounded-xl).
+    — Marketing sections: .section-y = py-16 md:py-20.
+    — Auth vertical rhythm: .auth-main = min-h + centered padding.
+    — App pages: .stack-page = space-y-6 md:space-y-8; .app-main = padded content column.
+    — Page chrome: .page-title / .page-subtitle for H1 + line below.
+    — Standalone panels: prefer .app-card + .app-card--interactive; legacy aliases below.
+    — Dashboard grids: .dashboard-grid (2–3 cols), .dashboard-grid-4 / .dashboard-grid-6 for dense admin KPIs.
+    — Micro-motion: buttons/cards use transition-all duration-200; auth cards use motion-safe:animate-card-enter.
+  */
+  .surface-panel {
+    @apply app-card app-card--interactive;
   }
 
-  .logo-ticker-track {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    white-space: nowrap;
-    min-width: max-content;
-    animation: logo-ticker-ltr 36s linear infinite;
+  .surface-panel-compact {
+    @apply app-card app-card--interactive;
   }
 
-  @keyframes logo-ticker-ltr {
-    from {
-      transform: translateX(-50%);
-    }
-    to {
-      transform: translateX(0);
-    }
+  .surface-panel-tight {
+    @apply rounded-2xl border border-border/90 bg-card/95 px-4 py-3 text-card-foreground shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-card/90;
+  }
+
+  .dashboard-grid {
+    @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .dashboard-grid-2 {
+    @apply grid gap-6 sm:grid-cols-2;
+  }
+
+  .dashboard-grid-3 {
+    @apply grid grid-cols-1 gap-6 sm:grid-cols-3;
+  }
+
+  .dashboard-grid-4 {
+    @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .dashboard-grid-5 {
+    @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5;
+  }
+
+  .dashboard-grid-6 {
+    @apply grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6;
+  }
+
+  .page-title {
+    @apply font-display text-2xl font-semibold tracking-tight text-foreground md:text-3xl;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  .section-y {
+    @apply py-16 md:py-20;
+  }
+
+  /** Primary vertical rhythm inside dashboard / admin `<main>` */
+  .stack-page {
+    @apply space-y-6 md:space-y-8;
+  }
+
+  .auth-main {
+    @apply flex min-h-[70vh] items-center bg-background py-16 md:py-24;
+  }
+
+  .card-nested {
+    @apply rounded-xl border border-border;
+  }
+
+  /* Subtle glass: frosted fills + fallback opacity when backdrop-filter unsupported */
+  .surface-glass {
+    @apply border border-border/80 bg-background/95 shadow-md backdrop-blur-xl supports-[backdrop-filter]:bg-background/80;
+  }
+
+  .surface-glass-popover {
+    @apply border border-border/80 bg-popover/95 text-popover-foreground shadow-md backdrop-blur-xl supports-[backdrop-filter]:bg-popover/80;
+  }
+
+  .surface-glass-card {
+    @apply border border-border/80 bg-card/95 text-card-foreground shadow-lg backdrop-blur-xl supports-[backdrop-filter]:bg-card/85;
+  }
+
+  .surface-glass-chrome {
+    @apply border-b border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80;
   }
 }
 

@@ -347,10 +347,10 @@ const AdminSubscriptionPromos = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 md:space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-bold text-foreground">Subscription Promos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="page-title">Subscription Promos</h1>
+        <p className="page-subtitle">
           Super admin tools for default subscription discounts and promo code generation.
         </p>
       </div>
@@ -367,7 +367,7 @@ const AdminSubscriptionPromos = () => {
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="app-card">
         <p className="text-sm font-medium text-foreground">Base subscription prices (Stripe)</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Directly updates plan prices by creating new Stripe prices and switching active IDs.
@@ -444,7 +444,7 @@ const AdminSubscriptionPromos = () => {
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="app-card">
         <p className="text-sm font-medium text-foreground">Default subscription discount</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Applies automatically at checkout when no promo code is provided. Set `0` to disable.
@@ -487,7 +487,7 @@ const AdminSubscriptionPromos = () => {
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="app-card">
         <p className="text-sm font-medium text-foreground">Yearly offer</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Configure yearly subscription promotions (example: 3 months free = 25% off first yearly payment).
@@ -530,7 +530,7 @@ const AdminSubscriptionPromos = () => {
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="app-card">
         <p className="text-sm font-medium text-foreground">Create promo code</p>
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
           <Input
@@ -570,33 +570,33 @@ const AdminSubscriptionPromos = () => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="app-card-frame">
         <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
           {loading ? "Loading promo codes..." : `${data?.promoCodes.length ?? 0} promo codes`}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm">
-            <thead className="bg-muted/40 text-left">
+          <table className="app-data-table min-w-[980px]">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Code</th>
-                <th className="px-3 py-2 font-medium">Discount</th>
-                <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-3 py-2 font-medium">Redemptions</th>
-                <th className="px-3 py-2 font-medium">Expires</th>
-                <th className="px-3 py-2 font-medium">Created</th>
-                <th className="px-3 py-2 font-medium">Actions</th>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Status</th>
+                <th>Redemptions</th>
+                <th>Expires</th>
+                <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {!loading && (data?.promoCodes ?? []).map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  <td className="px-3 py-2 font-mono text-xs">{row.code}</td>
-                  <td className="px-3 py-2">{row.percentOff}%</td>
-                  <td className="px-3 py-2">{row.active ? "Active" : "Inactive"}</td>
-                  <td className="px-3 py-2">{row.timesRedeemed}{row.maxRedemptions ? ` / ${row.maxRedemptions}` : ""}</td>
-                  <td className="px-3 py-2">{row.expiresAt ? new Date(row.expiresAt).toLocaleString() : "-"}</td>
-                  <td className="px-3 py-2">{new Date(row.createdAt).toLocaleString()}</td>
-                  <td className="px-3 py-2">
+                <tr key={row.id}>
+                  <td className="font-mono text-xs">{row.code}</td>
+                  <td>{row.percentOff}%</td>
+                  <td>{row.active ? "Active" : "Inactive"}</td>
+                  <td>{row.timesRedeemed}{row.maxRedemptions ? ` / ${row.maxRedemptions}` : ""}</td>
+                  <td>{row.expiresAt ? new Date(row.expiresAt).toLocaleString() : "-"}</td>
+                  <td>{new Date(row.createdAt).toLocaleString()}</td>
+                  <td>
                     <div className="flex gap-2">
                       <Button
                         size="sm"

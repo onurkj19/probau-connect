@@ -180,24 +180,24 @@ const DashboardSettings = () => {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-foreground">{t("dashboard.settings")}</h1>
+      <h1 className="page-title">{t("dashboard.settings")}</h1>
 
-      <form className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]" onSubmit={handleSave}>
-        <div className="space-y-4">
-          <div className="rounded-lg border border-border bg-card p-4">
+      <form className="mt-8 grid gap-6 lg:gap-8 xl:grid-cols-[minmax(0,1fr)_320px]" onSubmit={handleSave}>
+        <div className="space-y-6 md:space-y-8">
+          <div className="app-card">
             <div className="mb-4 flex items-center gap-3">
               <h2 className="text-base font-semibold text-foreground">Public profile</h2>
               <VerificationBadge verified={Boolean(user?.isVerified)} />
             </div>
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.profile_photo_url")}</Label>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border border-border">
                     <AvatarImage src={avatarUrl || undefined} alt={user?.name || "User"} />
                     <AvatarFallback>{profileInitials || "PB"}</AvatarFallback>
                   </Avatar>
-                  <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted">
+                  <label className="inline-flex cursor-pointer items-center rounded-lg border border-gray-300/50 bg-white/70 px-4 py-2 text-sm font-medium text-foreground shadow-sm backdrop-blur-sm transition-colors duration-150 ease-smooth hover:bg-white/90 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 supports-[backdrop-filter]:bg-white/60">
                     <input
                       type="file"
                       accept="image/*"
@@ -225,19 +225,19 @@ const DashboardSettings = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.full_name")}</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.email")}</Label>
                 <Input defaultValue={user?.email} disabled />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.company_name")}</Label>
                 <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.vat_number")}</Label>
                 <Input
                   value={vatNumber}
@@ -245,7 +245,7 @@ const DashboardSettings = () => {
                   placeholder={t("auth.vat_number_placeholder")}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>{t("auth.profile_title")}</Label>
                 <Input
                   value={profileTitle}
@@ -253,7 +253,7 @@ const DashboardSettings = () => {
                   placeholder={t("auth.profile_title_placeholder")}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Bio</Label>
                 <Textarea
                   value={bio}
@@ -265,29 +265,29 @@ const DashboardSettings = () => {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-4">
+          <div className="app-card">
             <h2 className="mb-4 text-base font-semibold text-foreground">Contact details</h2>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Phone</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+41 ..." />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Website</Label>
                 <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>City</Label>
                 <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Zurich" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Address</Label>
                 <Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street, number" />
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>{t("auth.role_select")}</Label>
             <Input
               defaultValue={user?.role === "project_owner" ? t("auth.role_owner") : t("auth.role_contractor")}
@@ -311,9 +311,9 @@ const DashboardSettings = () => {
           )}
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="app-card">
           <h2 className="mb-3 text-base font-semibold text-foreground">Profile preview</h2>
-          <div className="rounded-lg border border-border bg-background p-4">
+          <div className="card-nested bg-background p-4">
             <div className="flex items-start gap-3">
               <Avatar className="h-12 w-12 border border-border">
                 <AvatarImage src={avatarUrl || undefined} alt={name || "User"} />
