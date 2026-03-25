@@ -135,6 +135,16 @@ const App = () => (
                   <Route path="system-settings" element={<AdminSystemSettings />} />
                   <Route path="subscription-promos" element={<AdminSubscriptionPromos />} />
                 </Route>
+
+                {/* Unknown paths under /:locale (e.g. /de/foo) — avoid empty Outlet / blank page */}
+                <Route
+                  path="*"
+                  element={
+                    <RouteFade>
+                      <NotFound />
+                    </RouteFade>
+                  }
+                />
               </Route>
 
               <Route

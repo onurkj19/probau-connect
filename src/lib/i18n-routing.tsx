@@ -21,23 +21,22 @@ export function LocaleRedirect() {
 export function LocaleLayout() {
   const { locale } = useParams<{ locale: string }>();
   const { i18n } = useTranslation();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!locale || !isValidLocale(locale)) {
-      navigate(`/${DEFAULT_LOCALE}`, { replace: true });
-      return;
-    }
+    if (!locale || !isValidLocale(locale)) return;
     if (i18n.language !== locale) {
-      i18n.changeLanguage(locale);
+      void i18n.changeLanguage(locale);
     }
-  }, [locale, i18n, navigate]);
+  }, [locale, i18n]);
 
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  if (!locale || !isValidLocale(locale)) return null;
+  /** Invalid /:locale (e.g. /xx) — redirect instead of rendering null (blank screen). */
+  if (!locale || !isValidLocale(locale)) {
+    return <Navigate to={`/${DEFAULT_LOCALE}`} replace />;
+  }
 
   return (
     <RouteFade>
