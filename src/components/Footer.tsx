@@ -198,7 +198,15 @@ const Footer = () => {
               {t("footer.description")}
             </p>
             <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="inline-block h-3 w-4 rounded-sm bg-primary" />
+              <img
+                src="/swiss-flag.jpg"
+                alt=""
+                width={20}
+                height={14}
+                className="h-3.5 w-auto max-w-[1.35rem] shrink-0 rounded-sm object-contain object-left ring-1 ring-border/60"
+                loading="lazy"
+                decoding="async"
+              />
               {t("footer.swiss_made")}
             </div>
           </div>
