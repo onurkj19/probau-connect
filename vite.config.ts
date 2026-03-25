@@ -38,9 +38,6 @@ export default defineConfig(({ mode }) => ({
           ) {
             return "vendor-react";
           }
-          if (id.includes("recharts")) {
-            return "vendor-charts";
-          }
           if (id.includes("@radix-ui")) {
             return "vendor-ui";
           }
